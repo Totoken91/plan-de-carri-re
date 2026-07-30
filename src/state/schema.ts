@@ -62,6 +62,7 @@ export interface Secret {
 // se former au-dessus des têtes et choisit lesquelles désamorcer.
 export type IntentKind =
   | 'plot' // monte un coup contre toi (compte à rebours)
+  | 'scheme' // monte un coup contre un AUTRE collègue (l'open space vit sans toi)
   | 'watch' // te surveille : fait monter la Suspicion chaque semaine
   | 'gossip' // colporte : peut te livrer un secret
   | 'climb' // grimpe pour son compte : devient un rival plus dur
@@ -75,6 +76,8 @@ export interface Intent {
   icon: string;
   tone: 'threat' | 'neutral' | 'good';
   weeksLeft: number; // 0 = se résout ce vendredi
+  victimId?: ColleagueId; // cible d'un 'scheme' — un collègue, pas toi
+  boost?: number; // bonus de réussite si tu as alimenté le coup
 }
 
 export interface Colleague {

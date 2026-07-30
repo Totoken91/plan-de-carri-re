@@ -36,6 +36,48 @@ function plot(rng: Rng): Intent {
   return { kind: 'plot', label: v.label, detail: v.detail, icon: '🗂️', tone: 'threat', weeksLeft: 2 };
 }
 
+// Coups montés entre collègues : l'open space a ses propres guerres, et
+// elles se jouent que tu regardes ou non. Pour toi, ce sont des leviers.
+const SCHEME_LABELS = [
+  'Monte un coup contre {victim}',
+  'Prépare un dossier sur {victim}',
+  'Travaille à faire sauter {victim}',
+  'Instruit le procès de {victim}',
+];
+
+const REVENGE_LABELS = [
+  'Rend la monnaie à {victim}',
+  'Prépare sa revanche sur {victim}',
+  'N’a pas digéré {victim}',
+];
+
+function scheme(rng: Rng, victim: Colleague, revenge = false): Intent {
+  const labels = revenge ? REVENGE_LABELS : SCHEME_LABELS;
+  return {
+    kind: 'scheme',
+    label: rng.pick(labels)!.replace('{victim}', victim.name),
+    detail: `Si ça aboutit, ${victim.name} y laisse sa réputation — et ne pèsera plus grand-chose comme appui.`,
+    icon: revenge ? '⚔️' : '🎯',
+    tone: 'neutral',
+    weeksLeft: 2,
+    victimId: victim.id,
+  };
+}
+
+/**
+ * Qui se fait viser : le concurrent le plus menaçant pour le comploteur,
+ * pris parmi les trois meilleurs rendements. Jamais un déjà discrédité —
+ * on n'achève pas un dossier clos.
+ */
+function pickVictim(state: GameState, schemer: Colleague, rng: Rng): Colleague | undefined {
+  const pool = aliveColleagues(state).filter(
+    (c) => c.id !== schemer.id && !c.flags.includes('discredite'),
+  );
+  if (pool.length === 0) return undefined;
+  const ranked = [...pool].sort((a, b) => b.stats.rendement - a.stats.rendement);
+  return rng.pick(ranked.slice(0, Math.min(3, ranked.length)));
+}
+
 const watch = (): Intent => ({
   kind: 'watch',
   label: 'Te surveille',
@@ -88,18 +130,36 @@ function buildIntent(c: Colleague, state: GameState, rng: Rng): Intent {
   // Un collègue sous emprise ne complote plus contre toi.
   if (c.flags.includes('sous_emprise')) return c.opinion >= 30 ? bond() : idle();
 
+  // Vendetta : qui s'est fait sortir la semaine dernière rend les coups.
+  // C'est ce qui empêche un seul comploteur de démonter tout l'étage.
+  const grudge = c.flags.find((f) => f.startsWith('rancune:'));
+  if (grudge) {
+    c.flags = c.flags.filter((f) => f !== grudge);
+    const foe = getColleague(state, grudge.slice('rancune:'.length));
+    if (foe?.alive && foe.id !== c.id) return scheme(rng, foe, true);
+  }
+
+  // Un comploteur qui ne t'a pas dans le viseur ne se repose pas pour
+  // autant : il s'occupe d'un autre concurrent.
+  const schemeOrElse = (fallback: Intent): Intent => {
+    const victim = pickVictim(state, c, rng);
+    return victim ? scheme(rng, victim) : fallback;
+  };
+
   switch (c.archetype) {
     case 'carrieriste':
-      return c.opinion < 25 ? plot(rng) : climb();
+      return c.opinion < 25 ? plot(rng) : schemeOrElse(climb());
     case 'fayot':
-      return susp >= 35 && c.opinion < 30 ? watch() : climb();
+      // Couler un collègue est encore le plus court chemin pour briller.
+      return susp >= 35 && c.opinion < 30 ? watch() : schemeOrElse(climb());
     case 'parano':
       return susp >= 25 || c.opinion < -20 ? watch() : idle();
     case 'glandeur':
       return c.opinion >= 15 ? gossip() : idle();
     case 'veteran':
       if (c.opinion <= -30) return plot(rng);
-      return c.opinion >= 40 ? bond() : idle();
+      if (c.opinion >= 40) return bond();
+      return schemeOrElse(idle()); // le vétéran connaît les dossiers de tout le monde
     case 'nouveau':
       return c.opinion >= 10 ? bond() : idle();
     default:
@@ -161,6 +221,33 @@ export function resolveIntents(state: GameState, rng: Rng): IntentOutcome[] {
         });
         break;
       }
+      case 'scheme': {
+        const victim = getColleague(state, intent.victimId);
+        if (!victim || !victim.alive) break;
+        const chance = schemeChance(c, victim, intent);
+        if (rng.chance(chance)) {
+          victim.flags = victim.flags.filter(
+            (f) => !f.startsWith('discredite_since:') && !f.startsWith('rancune:'),
+          );
+          if (!victim.flags.includes('discredite')) victim.flags.push('discredite');
+          victim.flags.push(`discredite_since:${state.week}`);
+          victim.flags.push(`rancune:${c.id}`); // la victime rendra les coups
+          victim.stats.rendement = clamp(victim.stats.rendement - 8, 0, 100);
+          c.stats.rendement = clamp(c.stats.rendement + 4, 0, 100);
+          out.push({
+            tone: 'neutral',
+            text: `${c.name} a eu la peau de ${victim.name}. Compte-rendu accablant, silence gêné en réunion.`,
+          });
+        } else {
+          c.stats.rendement = clamp(c.stats.rendement - 3, 0, 100);
+          victim.opinion = clamp(victim.opinion + 3, -100, 100);
+          out.push({
+            tone: 'neutral',
+            text: `Le coup de ${c.name} contre ${victim.name} a fait long feu. Tout le monde a vu la manœuvre.`,
+          });
+        }
+        break;
+      }
       case 'watch': {
         const add = Math.round(3 * (arch?.suspicionSensitivity ?? 1));
         state.suspicion = clamp(state.suspicion + add, 0, 100);
@@ -196,6 +283,92 @@ export function resolveIntents(state: GameState, rng: Rng): IntentOutcome[] {
   }
 
   return out;
+}
+
+/** Nombre de semaines pendant lesquelles une réputation reste entamée. */
+const DISGRACE_WEEKS = 3;
+
+/**
+ * Retour en grâce : sans ça, chaque victime reste discréditée à vie et
+ * l'open space finit en champ de ruines où plus personne ne pèse rien.
+ */
+export function tickRecovery(state: GameState): IntentOutcome[] {
+  const out: IntentOutcome[] = [];
+  for (const c of aliveColleagues(state)) {
+    const marker = c.flags.find((f) => f.startsWith('discredite_since:'));
+    if (!marker) continue;
+    if (state.week - Number(marker.split(':')[1]) < DISGRACE_WEEKS) continue;
+
+    c.flags = c.flags.filter((f) => f !== marker && f !== 'discredite');
+    c.stats.rendement = clamp(c.stats.rendement + 5, 0, 100);
+    out.push({
+      tone: 'neutral',
+      text: `${c.name} a fini de purger l'affaire. On recommence à lui confier des dossiers.`,
+    });
+  }
+  return out;
+}
+
+/** Chances (0–100) qu'un coup monté entre collègues aboutisse. */
+export function schemeChance(schemer: Colleague, victim: Colleague, intent: Intent): number {
+  const vigilance = getArchetype(victim.archetype)?.baseVigilance ?? 40;
+  const raw = 45 + schemer.stats.combine * 0.5 - vigilance * 0.4 + (intent.boost ?? 0);
+  return Math.round(clamp(raw, 10, 92));
+}
+
+/** Le collègue monte-t-il un coup contre un autre, exploitable par toi ? */
+export function activeScheme(
+  state: GameState,
+  c: Colleague,
+): { intent: Intent; victim: Colleague } | undefined {
+  if (c.intent?.kind !== 'scheme') return undefined;
+  const victim = getColleague(state, c.intent.victimId);
+  if (!victim || !victim.alive) return undefined;
+  return { intent: c.intent, victim };
+}
+
+/**
+ * Prévenir la victime : tu grilles le comploteur pour te faire un obligé.
+ * Le coup tombe à l'eau, la cible t'en sait gré, le comploteur beaucoup moins.
+ */
+export function warnVictim(state: GameState, schemerId: string): ActionResult {
+  const schemer = getColleague(state, schemerId);
+  if (!schemer) return { ok: false, text: 'Cible introuvable.', tone: 'neutral' };
+  const found = activeScheme(state, schemer);
+  if (!found) return { ok: false, text: `${schemer.name} ne monte aucun coup.`, tone: 'neutral' };
+
+  schemer.intent = undefined;
+  found.victim.opinion = clamp(found.victim.opinion + 18, -100, 100);
+  schemer.opinion = clamp(schemer.opinion - 10, -100, 100);
+  return {
+    ok: true,
+    tone: 'good',
+    text: `Tu glisses un mot à ${found.victim.name} avant que ça ne parte. Un obligé de plus, un rival vexé.`,
+  };
+}
+
+/**
+ * Alimenter le coup : tu fournis la pièce manquante. Le comploteur te
+ * revaut ça, la victime se doute de quelque chose, et ça finit par se voir.
+ */
+export function abetScheme(state: GameState, schemerId: string): ActionResult {
+  const schemer = getColleague(state, schemerId);
+  if (!schemer) return { ok: false, text: 'Cible introuvable.', tone: 'neutral' };
+  const found = activeScheme(state, schemer);
+  if (!found) return { ok: false, text: `${schemer.name} ne monte aucun coup.`, tone: 'neutral' };
+  if (found.intent.boost) {
+    return { ok: false, text: 'Tu as déjà fourni ce qu’il fallait.', tone: 'neutral' };
+  }
+
+  found.intent.boost = 25;
+  schemer.opinion = clamp(schemer.opinion + 14, -100, 100);
+  found.victim.opinion = clamp(found.victim.opinion - 12, -100, 100);
+  state.suspicion = clamp(state.suspicion + 3, 0, 100);
+  return {
+    ok: true,
+    tone: 'neutral',
+    text: `Tu fournis la pièce manquante à ${schemer.name}. Le dossier contre ${found.victim.name} s'alourdit (+25% de réussite).`,
+  };
 }
 
 /** Le désamorçage est-il pertinent sur cette cible ? */

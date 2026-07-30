@@ -23,7 +23,7 @@ import { resolveChoice } from '@engine/events';
 import { beginWeekend, finalizeWeek, type WeekSummary } from '@engine/week';
 import { generateOpportunities, resolveOpportunity, type OppResolution } from '@engine/opportunities';
 import { useHook, type HookMode } from '@engine/hooks';
-import { assignIntents, defuseIntent } from '@engine/intents';
+import { abetScheme, assignIntents, defuseIntent, warnVictim } from '@engine/intents';
 import type { ActionId } from '@engine/preview';
 
 const SAVE_KEY = 'plan-de-carriere/save/v3';
@@ -293,6 +293,25 @@ export class GameStore {
     return result;
   }
 
+  /** Intervient dans le coup qu'un collègue monte contre un autre. Coûte 1 PA. */
+  private performOnScheme(
+    schemerId: string,
+    fn: (draft: GameState, id: string) => ActionResult,
+  ): ActionResult {
+    if (!this.canAct()) {
+      return { ok: false, text: 'Aucune action possible pour le moment.', tone: 'neutral' };
+    }
+    let result: ActionResult = { ok: false, text: '', tone: 'neutral' };
+    this.commit((draft) => {
+      result = fn(draft, schemerId);
+      if (result.ok) {
+        draft.actionPointsRemaining -= 1;
+        draft.log.push({ week: draft.week, text: result.text, tone: result.tone });
+      }
+    });
+    return result;
+  }
+
   /**
    * Point d'entrée unique de l'UI : exécute l'action décrite par un
    * `ActionId` (celui-là même que `preview.ts` a chiffré). Garantit que
@@ -310,6 +329,10 @@ export class GameStore {
         return this.performAction('fouiner', { targetId: id.targetId });
       case 'defuse':
         return this.performDefuse(id.targetId);
+      case 'warn':
+        return this.performOnScheme(id.targetId, warnVictim);
+      case 'abet':
+        return this.performOnScheme(id.targetId, abetScheme);
       case 'hook':
         return this.performHook(id.targetId, id.secretId, id.mode);
     }

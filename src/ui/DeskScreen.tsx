@@ -124,7 +124,7 @@ export function DeskScreen({ onEndWeek }: { onEndWeek: () => void }) {
                   .map((c) => (
                     <li key={c.id}>
                       <button
-                        className={`agendaitem agendaitem--${c.intent!.tone}`}
+                        className={`agendaitem agendaitem--${c.intent!.tone} agendaitem--${c.intent!.kind}`}
                         onClick={() => setSelection({ kind: 'colleague', id: c.id })}
                       >
                         <span className="agendaitem__icon">{c.intent!.icon}</span>

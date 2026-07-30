@@ -40,7 +40,7 @@ export function useHook(
     return {
       ok: true,
       tone: 'neutral',
-      text: `Tu fais comprendre à ${c.name} que tu sais. Le voilà dans ta poche (+opinion, sous emprise).`,
+      text: `Tu fais comprendre à ${c.name} que tu sais. Te voilà avec un appui contraint (+opinion, sous emprise).`,
     };
   }
 

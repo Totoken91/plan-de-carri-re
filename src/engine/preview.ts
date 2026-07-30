@@ -10,7 +10,7 @@ import type { Colleague, Effect, GameState, StatKey } from '@state/schema';
 import { balance } from '@data/balance';
 import { getPlanDef } from '@data/content';
 import { diminishingFactor } from './actions';
-import { canDefuse, defuseChance } from './intents';
+import { activeScheme, canDefuse, defuseChance, schemeChance } from './intents';
 import { availableHooks } from './hooks';
 import { STAT_KEYS } from './util';
 
@@ -25,6 +25,8 @@ export type ActionId =
   | { kind: 'cafe'; targetId: string }
   | { kind: 'fouiner'; targetId: string }
   | { kind: 'defuse'; targetId: string }
+  | { kind: 'warn'; targetId: string } // targetId = le comploteur
+  | { kind: 'abet'; targetId: string } // targetId = le comploteur
   | { kind: 'hook'; targetId: string; secretId: string; mode: 'coerce' | 'expose' };
 
 export interface ActionOption {
@@ -163,6 +165,47 @@ export function previewDefuse(state: GameState, c: Colleague): ActionOption {
   };
 }
 
+/** Interventions dans le coup qu'un collègue monte contre un autre. */
+export function previewScheme(state: GameState, c: Colleague): ActionOption[] {
+  const found = activeScheme(state, c);
+  if (!found) return [];
+  const chance = schemeChance(c, found.victim, found.intent);
+  const boosted = !!found.intent.boost;
+
+  return [
+    {
+      key: `warn:${c.id}`,
+      id: { kind: 'warn', targetId: c.id },
+      label: `Prévenir ${found.victim.name.split(' ')[0]}`,
+      icon: '🕊️',
+      cost: 1,
+      available: true,
+      summary: `Faire capoter le coup et te faire un obligé.`,
+      lines: [
+        good(`+18 opinion de ${found.victim.name}`),
+        good('Le coup est annulé'),
+        bad(`−10 opinion de ${c.name}`),
+      ],
+    },
+    {
+      key: `abet:${c.id}`,
+      id: { kind: 'abet', targetId: c.id },
+      label: 'Alimenter le coup',
+      icon: '🔥',
+      cost: 1,
+      available: !boosted,
+      reason: boosted ? 'Tu as déjà fourni ce qu’il fallait.' : undefined,
+      danger: true,
+      summary: `Fournir la pièce manquante (${chance}% → ${Math.min(92, chance + 25)}%).`,
+      lines: [
+        good(`+14 opinion de ${c.name}`),
+        bad(`−12 opinion de ${found.victim.name}`),
+        bad('+3 Suspicion'),
+      ],
+    },
+  ];
+}
+
 export function previewHooks(state: GameState, c: Colleague): ActionOption[] {
   return availableHooks(state, c.id).flatMap((s) => {
     const coerceGain = Math.round(30 + s.severity * 0.2);
@@ -248,6 +291,7 @@ export function describeEffect(effect: Effect, targetName = 'la cible'): Preview
 export function colleagueActions(state: GameState, c: Colleague): ActionOption[] {
   return [
     previewDefuse(state, c),
+    ...previewScheme(state, c),
     previewCafe(state, c),
     previewFouiner(state, c),
     ...previewHooks(state, c),

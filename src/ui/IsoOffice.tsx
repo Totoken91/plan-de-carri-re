@@ -230,7 +230,7 @@ function IntentBubble({ c, x, y }: { c: Colleague; x: number; y: number }) {
   return (
     <g
       transform={`translate(${x},${y})`}
-      className={`iso-intent iso-intent--${intent.tone}`}
+      className={`iso-intent iso-intent--${intent.tone} iso-intent--${intent.kind}`}
       filter={threat ? 'url(#glowThreat)' : undefined}
     >
       <rect x={-w / 2} y="-13" width={w} height="25" rx="8" className="iso-intent__box" />
@@ -583,7 +583,36 @@ export function IsoOffice({
           );
         })}
 
-        {/* ── Surcouches : intentions puis opportunités ── */}
+        {/* ── Surcouches ── */}
+        {/* Les guerres internes : un trait animé du comploteur vers sa cible.
+            C'est ce qui rend visible le fait que l'open space vit sans toi. */}
+        {state.colleagues.map((c, i) => {
+          if (!c.alive || c.intent?.kind !== 'scheme') return null;
+          const vIdx = state.colleagues.findIndex((x) => x.id === c.intent!.victimId);
+          const victim = state.colleagues[vIdx];
+          if (vIdx < 0 || !victim?.alive) return null;
+
+          const s = seatOf(i);
+          const v = seatOf(vIdx);
+          const a = iso(s.gx, s.gy);
+          const b = iso(v.gx, v.gy);
+          const mx = (a.x + b.x) / 2;
+          const my = (a.y + b.y) / 2 - 58;
+
+          return (
+            <g
+              key={`scheme-${c.id}`}
+              className={`iso-scheme ${c.intent.boost ? 'is-boosted' : ''}`}
+            >
+              <path
+                d={`M ${a.x} ${a.y - 24} Q ${mx} ${my} ${b.x} ${b.y - 24}`}
+                className="iso-scheme__link"
+              />
+              <circle cx={b.x} cy={b.y - 24} r="4.5" className="iso-scheme__mark" />
+            </g>
+          );
+        })}
+
         {state.colleagues.map((c, i) => {
           if (!c.alive || !c.intent) return null;
           const seat = seatOf(i);

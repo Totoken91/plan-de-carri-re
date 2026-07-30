@@ -133,7 +133,9 @@ export function Inspector({
             <p className="inspector__sub">
               {archetypeName(c.archetype)}
               {c.flags.includes('sous_emprise') && <span className="tag tag--hold"> ⛓️ sous emprise</span>}
-              {c.flags.includes('discredite') && <span className="tag tag--bad"> discrédité</span>}
+              {c.flags.includes('discredite') && (
+                <span className="tag tag--bad"> réputation entamée</span>
+              )}
             </p>
           </div>
           <button className="btn btn--ghost" onClick={() => onSelect(null)}>
@@ -144,7 +146,7 @@ export function Inspector({
         <OpinionPip value={c.opinion} />
 
         {c.intent && c.intent.kind !== 'idle' && (
-          <div className={`intentcard intentcard--${c.intent.tone}`}>
+          <div className={`intentcard intentcard--${c.intent.tone} intentcard--${c.intent.kind}`}>
             <span className="intentcard__icon">{c.intent.icon}</span>
             <div>
               <div className="intentcard__label">

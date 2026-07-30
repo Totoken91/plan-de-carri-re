@@ -199,6 +199,21 @@ body {
 .iso-intent--threat { animation: threatBreathe 2.4s ease-in-out infinite; }
 .iso-intent--good .iso-intent__box,
 .iso-intent--good .iso-intent__tail { fill: #14291d; stroke: var(--good); }
+/* Coup monté contre un autre collègue : ambre, ni menace ni cadeau — un levier. */
+.iso-intent--scheme .iso-intent__box,
+.iso-intent--scheme .iso-intent__tail { fill: #33280f; stroke: var(--warn); }
+
+/* Guerres internes : trait animé du comploteur vers sa cible */
+.iso-scheme { pointer-events: none; }
+.iso-scheme__link {
+  fill: none; stroke: rgba(233, 169, 79, 0.6); stroke-width: 2;
+  stroke-dasharray: 6 7; stroke-linecap: round;
+  animation: schemeFlow 1.7s linear infinite;
+}
+.iso-scheme__mark { fill: var(--warn); }
+.iso-scheme.is-boosted .iso-scheme__link { stroke: rgba(232, 97, 92, 0.85); stroke-width: 2.6; }
+.iso-scheme.is-boosted .iso-scheme__mark { fill: var(--bad); }
+@keyframes schemeFlow { to { stroke-dashoffset: -26; } }
 @keyframes threatBreathe {
   0%, 100% { opacity: 0.92; }
   50% { opacity: 1; }
@@ -247,6 +262,7 @@ body {
 .agendaitem--threat { border-left-color: var(--bad); }
 .agendaitem--good { border-left-color: var(--good); }
 .agendaitem--neutral { border-left-color: var(--muted); }
+.agendaitem--scheme { border-left-color: var(--warn); }
 .agendaitem--opp { border-left-color: var(--gold); }
 
 /* ── Journal ─────────────────────────────────────────────── */
@@ -296,6 +312,7 @@ body {
 .intentcard__detail { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
 .intentcard--threat { border-left-color: var(--bad); background: rgba(232, 97, 92, 0.07); }
 .intentcard--good { border-left-color: var(--good); background: rgba(76, 192, 125, 0.06); }
+.intentcard--scheme { border-left-color: var(--warn); background: rgba(233, 169, 79, 0.07); }
 
 /* ── Boutons d'action auto-documentés ────────────────────── */
 .actlist { display: flex; flex-direction: column; gap: 8px; }

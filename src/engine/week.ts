@@ -16,7 +16,7 @@ import { balance } from '@data/balance';
 import { clamp } from './util';
 import { pickWeeklyEvent, resolveEventTarget } from './events';
 import { resolveDuePlans } from './plans';
-import { assignIntents, resolveIntents } from './intents';
+import { assignIntents, resolveIntents, tickRecovery } from './intents';
 import { runAudit, checkBurnout } from './suspicion';
 import { checkPromotion, isAtTop } from './promotion';
 import { generateOpportunities } from './opportunities';
@@ -87,6 +87,11 @@ export function finalizeWeek(state: GameState, rng: Rng): WeekSummary {
 
   // 2) Ce que les collègues fabriquaient de leur côté.
   for (const outcome of resolveIntents(state, rng)) {
+    record(outcome.text, outcome.tone);
+  }
+
+  // 2 bis) Fin de disgrâce pour ceux qui ont purgé leur affaire.
+  for (const outcome of tickRecovery(state)) {
     record(outcome.text, outcome.tone);
   }
 

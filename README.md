@@ -39,7 +39,8 @@ src/
     events.ts      Filtrage + tirage pondéré + résolution des choix
     suspicion.ts   Audit de conformité RH, burn-out, game over
     promotion.ts   Progression de rang via réputation
-    intents.ts     Intentions hebdo des PNJ (complots visibles + désamorçage)
+    intents.ts     Intentions hebdo des PNJ : complots contre toi (désamorçage)
+                   et guerres entre collègues (prévenir / alimenter)
     preview.ts     Chiffre l'impact d'une action AVANT le clic (lecture seule)
     week.ts        Orchestration de la résolution du vendredi
   state/
@@ -132,6 +133,22 @@ Chaque lundi, tout collègue vivant reçoit une **intention** affichée au-dessu
 sa tête : complot contre toi (compte à rebours de 2 semaines), surveillance,
 ragot, ascension, rapprochement. C'est le cœur de la tension : on voit les coups
 arriver et on choisit lesquels payer pour désamorcer.
+
+### L'open space vit sans toi
+
+Un comploteur qui ne t'a pas dans le viseur s'occupe d'un **autre collègue**
+(intention `scheme`). Le plateau relie alors l'agresseur à sa cible par un trait
+animé. Ces guerres se résolvent que tu regardes ou non — mais elles t'offrent
+deux leviers, tous deux à 1 PA :
+
+| Levier | Effet |
+|---|---|
+| **Prévenir la cible** | Le coup capote. La victime t'est redevable (+18 opinion), le comploteur t'en veut (−10). |
+| **Alimenter le coup** | +25 % de réussite. Le comploteur te revaut ça (+14), la victime se doute (−12), +3 Suspicion. |
+
+Une victime qui tombe garde une **réputation entamée** : elle perd du Rendement
+et vaut nettement moins comme appui. Choisir qui protéger, c'est choisir ses
+alliés futurs.
 
 Le vendredi : événement hebdomadaire → résolution des plans → résolution des
 intentions → audit RH → promotion. **Suspicion** trop haute → audit ; sans alibi
