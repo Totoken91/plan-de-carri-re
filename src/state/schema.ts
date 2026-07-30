@@ -54,6 +54,7 @@ export interface Secret {
   label: string; // « Marc truque ses notes de frais »
   severity: number; // 0–100, poids comme levier
   discovered: boolean;
+  spent?: boolean; // levier (hook) déjà consommé par un chantage
 }
 
 export interface Colleague {
@@ -102,6 +103,36 @@ export interface ActivePlan {
   scapegoatId?: ColleagueId; // bouc émissaire préparé (V2)
   weeksRemaining: number;
   preparation: number; // 0–100, accumulé par l'action « Comploter »
+}
+
+// ── Opportunités (données) — le cœur du tour, façon CK3 ──────
+// Situations éphémères tirées chaque semaine et placées sur la carte.
+// Réutilise Condition (éligibilité) et Effect (conséquences).
+export type OppPlace = 'desk' | 'cafe' | 'archive' | 'manager' | 'meeting' | 'target';
+
+export interface Opportunity {
+  id: string;
+  title: string; // « Session restée ouverte »
+  description: string;
+  icon: string; // emoji marqueur sur la carte
+  weight: number;
+  minRank?: RankId;
+  conditions?: Condition;
+  target?: EventTargetMode | 'none'; // à qui se rattache l'opportunité
+  targetArchetype?: ArchetypeId;
+  place?: OppPlace; // où poser le marqueur (défaut : près de la cible / bureau)
+  cost?: number; // coût en PA (défaut 1)
+  effects: Effect;
+  outcomeText: string;
+  successChance?: number; // issue incertaine optionnelle
+  failureEffects?: Effect;
+  failureText?: string;
+}
+
+export interface ActiveOpportunity {
+  defId: string;
+  targetId?: ColleagueId;
+  place: OppPlace;
 }
 
 // ── Événements (données) ─────────────────────────────────────
@@ -171,6 +202,8 @@ export interface GameState {
   colleagues: Colleague[];
   suspicion: number; // 0–100 globale
   activePlans: ActivePlan[];
+  opportunities: ActiveOpportunity[]; // opportunités de la semaine en cours
+  weeklyActionCounts: Record<string, number>; // anti-spam : usages/semaine par action
   flags: string[]; // drapeaux narratifs globaux
   eventHistory: Array<{ id: EventId; week: number }>; // pour once/cooldown
   pendingEvent?: EventId; // événement du vendredi en attente de résolution
@@ -185,4 +218,5 @@ export interface ContentCatalog {
   plans: PlanDef[];
   ranks: Rank[];
   events: GameEvent[];
+  opportunities: Opportunity[];
 }

@@ -21,9 +21,11 @@ import {
 } from '@engine/actions';
 import { resolveChoice } from '@engine/events';
 import { beginWeekend, finalizeWeek, type WeekSummary } from '@engine/week';
+import { generateOpportunities, resolveOpportunity, type OppResolution } from '@engine/opportunities';
+import { useHook, type HookMode } from '@engine/hooks';
 
-const SAVE_KEY = 'plan-de-carriere/save/v1';
-export const SAVE_VERSION = 1;
+const SAVE_KEY = 'plan-de-carriere/save/v2';
+export const SAVE_VERSION = 2;
 
 // ── Création d'une partie ────────────────────────────────────
 export function createInitialState(seed = randomSeed(), playerName = 'Toi'): GameState {
@@ -43,6 +45,8 @@ export function createInitialState(seed = randomSeed(), playerName = 'Toi'): Gam
     colleagues: structuredClone(startingColleagues),
     suspicion: balance.startSuspicion,
     activePlans: [],
+    opportunities: [],
+    weeklyActionCounts: {},
     flags: [],
     eventHistory: [],
     pendingEvent: undefined,
@@ -107,6 +111,12 @@ export class GameStore {
   constructor(initial: GameState) {
     this.state = initial;
     this.rng = new Rng(initial.seed, initial.rngCursor);
+    // Première génération d'opportunités (nouvelle partie) ; un save en
+    // cours de semaine conserve les siennes.
+    if (this.state.status === 'playing' && this.state.opportunities.length === 0) {
+      generateOpportunities(this.state, this.rng);
+      this.persist();
+    }
   }
 
   static newGame(seed?: number, name?: string): GameStore {
@@ -188,6 +198,35 @@ export class GameStore {
     return result;
   }
 
+  /** Saisit une opportunité de la semaine (coûte des PA). */
+  performOpportunity(index: number): OppResolution {
+    if (this.state.status !== 'playing' || this.state.pendingEvent) {
+      return { ok: false, text: 'Impossible pour le moment.', tone: 'neutral' };
+    }
+    let result: OppResolution = { ok: false, text: '', tone: 'neutral' };
+    this.commit((draft) => {
+      result = resolveOpportunity(draft, index, this.rng);
+      if (result.ok) draft.log.push({ week: draft.week, text: result.text, tone: result.tone });
+    });
+    return result;
+  }
+
+  /** Utilise un secret comme levier (chantage / divulgation). Coûte 1 PA. */
+  performHook(colleagueId: string, secretId: string, mode: HookMode): ActionResult {
+    if (!this.canAct()) {
+      return { ok: false, text: 'Aucune action possible pour le moment.', tone: 'neutral' };
+    }
+    let result: ActionResult = { ok: false, text: '', tone: 'neutral' };
+    this.commit((draft) => {
+      result = useHook(draft, colleagueId, secretId, mode);
+      if (result.ok) {
+        draft.actionPointsRemaining -= 1;
+        draft.log.push({ week: draft.week, text: result.text, tone: result.tone });
+      }
+    });
+    return result;
+  }
+
   /**
    * Termine la semaine : ouvre le week-end. Si un événement est tiré,
    * il faut ensuite appeler chooseEventOption. Sinon la semaine est
@@ -232,6 +271,7 @@ export class GameStore {
   reset(seed?: number, name?: string): void {
     this.state = createInitialState(seed, name);
     this.rng = new Rng(this.state.seed, 0);
+    generateOpportunities(this.state, this.rng);
     this.persist();
     this.emit();
   }

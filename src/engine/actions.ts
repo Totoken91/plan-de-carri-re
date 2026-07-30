@@ -27,13 +27,28 @@ const adjust = (state: GameState, key: keyof GameState['player']['stats'], delta
   state.player.stats[key] = clamp(state.player.stats[key] + delta, 0, 100);
 };
 
-/** Bosser un projet : +Rendement, +réputation légitime, −Nerfs. */
+/**
+ * Facteur de rendement décroissant : répéter la MÊME action de base dans la
+ * semaine rapporte de moins en moins (1 → 0,6 → 0,36 …). L'anti-spam : la
+ * variété et les opportunités deviennent le bon jeu.
+ */
+function diminishing(state: GameState, key: string): number {
+  const count = state.weeklyActionCounts[key] ?? 0;
+  state.weeklyActionCounts[key] = count + 1;
+  return Math.pow(0.6, count);
+}
+
+/** Bosser un projet : +Rendement, +réputation légitime, −Nerfs (rendement décroissant). */
 export function actBosser(state: GameState): ActionResult {
   const cfg = balance.actions.bosser;
-  adjust(state, 'rendement', cfg.rendement);
-  adjust(state, 'nerfs', cfg.nerfs);
-  state.player.reputation += cfg.reputation;
-  return good(`Tu abats du travail sérieux. +${cfg.rendement} Rendement, ${cfg.nerfs} Nerfs.`);
+  const f = diminishing(state, 'bosser');
+  const rendement = Math.round(cfg.rendement * f);
+  const reputation = Math.round(cfg.reputation * f);
+  adjust(state, 'rendement', rendement);
+  adjust(state, 'nerfs', cfg.nerfs); // le coût nerveux, lui, ne diminue pas
+  state.player.reputation += reputation;
+  const worn = f < 0.9 ? ' (rendement en baisse — tu tournes en rond)' : '';
+  return good(`Tu abats du travail. +${rendement} Rendement, +${reputation} réput., ${cfg.nerfs} Nerfs.${worn}`);
 }
 
 /** Machine à café : réseauter avec un collègue → +son opinion. */
@@ -96,17 +111,20 @@ export function actComploter(
   return neutral(`Tu avances « ${def.name} » (préparation ${plan.preparation}/100).`);
 }
 
-/** Glander : +Nerfs (récupération). Un Fayot peut te griller. */
+/** Glander : +Nerfs (récupération décroissante). Un Fayot peut te griller. */
 export function actGlander(state: GameState, rng: Rng): ActionResult {
   const cfg = balance.actions.glander;
-  adjust(state, 'nerfs', cfg.nerfs);
+  const f = diminishing(state, 'glander');
+  const nerfs = Math.round(cfg.nerfs * f);
+  adjust(state, 'nerfs', nerfs);
 
   const fayotWatching = state.colleagues.some(
     (c) => c.alive && c.archetype === 'fayot' && c.opinion < 20,
   );
   if (fayotWatching && rng.chance(40)) {
     state.suspicion = clamp(state.suspicion + cfg.fayotSuspicion, 0, 100);
-    return bad(`Tu récupères (+${cfg.nerfs} Nerfs)… mais un Fayot t'a repéré. +${cfg.fayotSuspicion} Suspicion.`);
+    return bad(`Tu récupères (+${nerfs} Nerfs)… mais un Fayot t'a repéré. +${cfg.fayotSuspicion} Suspicion.`);
   }
-  return good(`Tu glandes tranquillement. +${cfg.nerfs} Nerfs.`);
+  const worn = f < 0.9 ? ' (tu culpabilises, ça repose moins)' : '';
+  return good(`Tu glandes tranquillement. +${nerfs} Nerfs.${worn}`);
 }

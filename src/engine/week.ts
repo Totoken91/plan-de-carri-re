@@ -14,6 +14,7 @@ import { pickWeeklyEvent, resolveEventTarget } from './events';
 import { resolveDuePlans } from './plans';
 import { runAudit, checkBurnout } from './suspicion';
 import { checkPromotion, isAtTop } from './promotion';
+import { generateOpportunities } from './opportunities';
 import type { Rng } from './rng';
 
 const log = (state: GameState, text: string, tone: LogEntry['tone'] = 'neutral') =>
@@ -141,6 +142,8 @@ export function finalizeWeek(state: GameState, rng: Rng): WeekSummary {
   state.actionPointsRemaining = balance.actionPointsPerWeek;
   state.pendingEvent = undefined;
   state.pendingTargetId = undefined;
+  state.weeklyActionCounts = {}; // reset anti-spam
+  generateOpportunities(state, rng); // nouvelles opportunités de la semaine
 
   return summary;
 }

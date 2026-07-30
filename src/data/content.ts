@@ -8,6 +8,7 @@ import type {
   Colleague,
   ContentCatalog,
   GameEvent,
+  Opportunity,
   PlanDef,
   Rank,
 } from '@state/schema';
@@ -17,12 +18,14 @@ import plansRaw from './plans.json';
 import ranksRaw from './ranks.json';
 import eventsRaw from './events.json';
 import colleaguesRaw from './colleagues.json';
+import opportunitiesRaw from './opportunities.json';
 
 export const catalog: ContentCatalog = {
   archetypes: archetypesRaw as Archetype[],
   plans: plansRaw as PlanDef[],
   ranks: (ranksRaw as Rank[]).slice().sort((a, b) => a.order - b.order),
   events: eventsRaw as GameEvent[],
+  opportunities: opportunitiesRaw as Opportunity[],
 };
 
 /** Roster de collègues au démarrage d'une partie (deep-cloné à l'usage). */
@@ -33,11 +36,13 @@ const archetypeById = new Map(catalog.archetypes.map((a) => [a.id, a]));
 const planById = new Map(catalog.plans.map((p) => [p.id, p]));
 const rankById = new Map(catalog.ranks.map((r) => [r.id, r]));
 const eventById = new Map(catalog.events.map((e) => [e.id, e]));
+const opportunityById = new Map(catalog.opportunities.map((o) => [o.id, o]));
 
 export const getArchetype = (id: string): Archetype | undefined => archetypeById.get(id);
 export const getPlanDef = (id: string): PlanDef | undefined => planById.get(id);
 export const getRank = (id: string): Rank | undefined => rankById.get(id);
 export const getEvent = (id: string): GameEvent | undefined => eventById.get(id);
+export const getOpportunity = (id: string): Opportunity | undefined => opportunityById.get(id);
 
 /** Ordre d'un rang (−1 si inconnu). Sert aux comparaisons minRank/maxRank. */
 export function rankOrder(id: string | undefined): number {

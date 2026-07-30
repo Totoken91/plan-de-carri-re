@@ -44,14 +44,21 @@ src/
     schema.ts      TOUTES les interfaces typées (le contrat moteur ↔ contenu)
     store.ts       État, save/load localStorage, API mutative (pub/sub React)
   data/            LE CONTENU
-    events.json    Catalogue d'événements
-    archetypes.json Définitions des archétypes (comportement des PNJ)
-    plans.json     Définitions des plans
-    ranks.json     Échelle hiérarchique
-    colleagues.json Roster de départ
-    balance.json   Tuning mécanique des actions de base (magnitudes)
-    content.ts     Charge et expose les catalogues typés (point d'entrée unique)
-  ui/            Écrans React (bureau, fiche collègue, événement, résolution, game over)
+    events.json        Catalogue d'événements
+    opportunities.json Opportunités hebdo (situations éphémères sur la carte)
+    archetypes.json    Définitions des archétypes (comportement des PNJ)
+    plans.json         Définitions des plans
+    ranks.json         Échelle hiérarchique
+    colleagues.json    Roster de départ
+    balance.json       Tuning mécanique des actions de base (magnitudes)
+    content.ts         Charge et expose les catalogues typés (point d'entrée unique)
+  engine/
+    opportunities.ts   Génère/résout les opportunités de la semaine
+    hooks.ts           Chantage : utiliser un secret comme levier
+  ui/            Écrans React
+    OfficeMap.tsx      Carte de l'open space vue du dessus (bureaux + zones + opportunités)
+    office.ts          Géométrie de la carte (zones, sièges, emplacements)
+    ...                bureau, fiche collègue, événement, résolution, game over
 ```
 
 ## Ajouter du contenu
@@ -84,6 +91,13 @@ Ajoute un objet dans `src/data/events.json` :
 - `target` : `rival` (le Carriériste), `random`, ou `archetype` (+ `targetArchetype`).
 - `effects` / `failureEffects` : structure `Effect` (deltas de stats, suspicion,
   opinions, drapeaux, lancement de plan…). `successChance` rend le choix incertain.
+
+### Une opportunité
+Ajoute un objet dans `src/data/opportunities.json`. Chaque semaine le moteur en
+tire quelques-unes (pondérées, filtrées) et les place sur la carte. Même logique
+`Condition`/`Effect` que les événements, plus un `icon` et un `place` (zone où
+poser le marqueur : `cafe`, `archive`, `manager`, `meeting`, `desk`, ou `target`
+pour le coller au bureau de la cible).
 
 ### Un archétype, un plan, un rang, un collègue
 Ajoute une entrée dans le JSON correspondant. Les champs sont typés dans

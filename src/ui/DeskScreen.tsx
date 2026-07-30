@@ -1,16 +1,31 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { STAT_KEYS } from '@engine/util';
-import { getRank } from '@data/content';
+import { getRank, getOpportunity } from '@data/content';
 import { suspicionTier } from '@engine/suspicion';
+import type { OppResolution } from '@engine/opportunities';
+import type { ActionResult } from '@engine/actions';
 import { useGame } from './useGame';
-import { StatBar, SuspicionGauge, OpinionPip } from './Bits';
+import { StatBar, SuspicionGauge } from './Bits';
 import { ColleagueSheet } from './ColleagueSheet';
-import { archetypeName } from './selectors';
+import { OfficeMap } from './OfficeMap';
+
+type Toast = { text: string; tone: 'good' | 'bad' | 'neutral' } | null;
 
 export function DeskScreen({ onEndWeek }: { onEndWeek: () => void }) {
   const { state, store } = useGame();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [toast, setToast] = useState<Toast>(null);
   const selected = state.colleagues.find((c) => c.id === selectedId) ?? null;
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3200);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  const flash = (r: ActionResult | OppResolution) => {
+    if (r.text) setToast({ text: r.text, tone: r.tone });
+  };
 
   const canAct = state.status === 'playing' && state.actionPointsRemaining > 0 && !state.pendingEvent;
   const rank = getRank(state.player.rank);
@@ -18,7 +33,6 @@ export function DeskScreen({ onEndWeek }: { onEndWeek: () => void }) {
 
   return (
     <div className="desk">
-      {/* En-tête joueur */}
       <header className="topbar">
         <div className="topbar__id">
           <span className="topbar__rank">{rank?.name ?? state.player.rank}</span>
@@ -33,6 +47,13 @@ export function DeskScreen({ onEndWeek }: { onEndWeek: () => void }) {
             <em> {state.actionPointsRemaining} PA</em>
           </span>
         </div>
+        <button
+          className="btn btn--primary btn--endweek"
+          disabled={state.status !== 'playing' || !!state.pendingEvent}
+          onClick={onEndWeek}
+        >
+          {state.actionPointsRemaining > 0 ? 'Terminer la semaine' : '→ Vendredi soir'}
+        </button>
       </header>
 
       <div className="playerstats">
@@ -43,37 +64,46 @@ export function DeskScreen({ onEndWeek }: { onEndWeek: () => void }) {
       </div>
 
       <div className="desk__body">
-        {/* Open space */}
-        <section className="openspace">
-          <h2 className="section-title">L'open space</h2>
-          <div className="colleagues">
-            {state.colleagues.map((c) => (
-              <button
-                key={c.id}
-                className={`colleague-card ${selectedId === c.id ? 'is-selected' : ''} ${!c.alive ? 'is-gone' : ''}`}
-                onClick={() => setSelectedId(c.id)}
-              >
-                <div className="colleague-card__name">{c.name}</div>
-                <div className="colleague-card__arch">{archetypeName(c.archetype)}</div>
-                <OpinionPip value={c.opinion} />
-              </button>
-            ))}
-          </div>
+        <section className="mapcol">
+          <OfficeMap
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            onAction={(a) => flash(store.performAction(a))}
+            onOpportunity={flash}
+          />
 
-          <div className="global-actions">
-            <button className="btn btn--big" disabled={!canAct} onClick={() => store.performAction('bosser')}>
-              💼 Bosser <span className="cost">1 PA</span>
-            </button>
-            <button className="btn btn--big" disabled={!canAct} onClick={() => store.performAction('glander')}>
-              🛋️ Glander <span className="cost">1 PA</span>
-            </button>
-            <button
-              className="btn btn--big btn--primary"
-              disabled={state.status !== 'playing' || !!state.pendingEvent}
-              onClick={onEndWeek}
-            >
-              {state.actionPointsRemaining > 0 ? 'Terminer la semaine (skip PA)' : '→ Vendredi soir'}
-            </button>
+          <div className="oppbar">
+            <h3 className="section-title">Opportunités de la semaine</h3>
+            {state.opportunities.length === 0 && (
+              <p className="muted">Rien à saisir cette semaine. Bosse, réseaute, ou complote.</p>
+            )}
+            <ul className="opplist">
+              {state.opportunities.map((opp, i) => {
+                const def = getOpportunity(opp.defId);
+                if (!def) return null;
+                const target = state.colleagues.find((c) => c.id === opp.targetId);
+                const desc = def.description.replace('{target}', target?.name ?? 'un collègue');
+                return (
+                  <li key={`${opp.defId}-${i}`} className="oppitem">
+                    <span className="oppitem__icon">{def.icon}</span>
+                    <span className="oppitem__body">
+                      <span className="oppitem__title">
+                        {def.title}
+                        {target && <em> · {target.name}</em>}
+                      </span>
+                      <span className="oppitem__desc">{desc}</span>
+                    </span>
+                    <button
+                      className="btn btn--small"
+                      disabled={!canAct}
+                      onClick={() => flash(store.performOpportunity(i))}
+                    >
+                      Saisir <span className="cost">1 PA</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
 
           <div className="feed">
@@ -88,9 +118,12 @@ export function DeskScreen({ onEndWeek }: { onEndWeek: () => void }) {
           </div>
         </section>
 
-        {/* Fiche collègue */}
-        {selected && <ColleagueSheet colleague={selected} onClose={() => setSelectedId(null)} />}
+        {selected && (
+          <ColleagueSheet colleague={selected} onClose={() => setSelectedId(null)} onResult={flash} />
+        )}
       </div>
+
+      {toast && <div className={`toast toast--${toast.tone}`}>{toast.text}</div>}
     </div>
   );
 }
