@@ -7,7 +7,7 @@ import { EventModal, SummaryLines } from './EventModal';
 import { GameOver } from './GameOver';
 
 function hasSummaryContent(s: WeekSummary): boolean {
-  return !!(s.audit || s.promotion || s.won || s.gameOver);
+  return s.lines.length > 0 || !!(s.audit || s.promotion || s.won || s.gameOver);
 }
 
 export function App() {

@@ -31,11 +31,18 @@ const adjust = (state: GameState, key: keyof GameState['player']['stats'], delta
  * Facteur de rendement décroissant : répéter la MÊME action de base dans la
  * semaine rapporte de moins en moins (1 → 0,6 → 0,36 …). L'anti-spam : la
  * variété et les opportunités deviennent le bon jeu.
+ *
+ * Lecture SEULE — l'UI s'en sert pour annoncer l'impact avant le clic.
  */
+export function diminishingFactor(state: GameState, key: string): number {
+  return Math.pow(0.6, state.weeklyActionCounts[key] ?? 0);
+}
+
+/** Idem, mais consomme un usage (à n'appeler qu'au moment d'agir). */
 function diminishing(state: GameState, key: string): number {
-  const count = state.weeklyActionCounts[key] ?? 0;
-  state.weeklyActionCounts[key] = count + 1;
-  return Math.pow(0.6, count);
+  const f = diminishingFactor(state, key);
+  state.weeklyActionCounts[key] = (state.weeklyActionCounts[key] ?? 0) + 1;
+  return f;
 }
 
 /** Bosser un projet : +Rendement, +réputation légitime, −Nerfs (rendement décroissant). */

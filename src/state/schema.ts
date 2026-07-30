@@ -57,6 +57,26 @@ export interface Secret {
   spent?: boolean; // levier (hook) déjà consommé par un chantage
 }
 
+// ── Intentions des PNJ — le « qui complote quoi », rendu VISIBLE ──
+// C'est le cœur de la lisibilité façon CK3 : le joueur voit les menaces
+// se former au-dessus des têtes et choisit lesquelles désamorcer.
+export type IntentKind =
+  | 'plot' // monte un coup contre toi (compte à rebours)
+  | 'watch' // te surveille : fait monter la Suspicion chaque semaine
+  | 'gossip' // colporte : peut te livrer un secret
+  | 'climb' // grimpe pour son compte : devient un rival plus dur
+  | 'bond' // se rapproche de toi
+  | 'idle'; // rien de notable
+
+export interface Intent {
+  kind: IntentKind;
+  label: string; // « Monte un dossier sur toi »
+  detail: string; // ce qui se passe si ça aboutit
+  icon: string;
+  tone: 'threat' | 'neutral' | 'good';
+  weeksLeft: number; // 0 = se résout ce vendredi
+}
+
 export interface Colleague {
   id: ColleagueId;
   name: string;
@@ -67,6 +87,7 @@ export interface Colleague {
   secrets: Secret[];
   alive: boolean; // false = « départ non planifié » (V2)
   flags: string[]; // état par-collègue (isolé, préparé comme bouc, …)
+  intent?: Intent; // ce qu'il fabrique cette semaine (visible sur la carte)
 }
 
 export interface Archetype {

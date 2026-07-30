@@ -23,9 +23,11 @@ import { resolveChoice } from '@engine/events';
 import { beginWeekend, finalizeWeek, type WeekSummary } from '@engine/week';
 import { generateOpportunities, resolveOpportunity, type OppResolution } from '@engine/opportunities';
 import { useHook, type HookMode } from '@engine/hooks';
+import { assignIntents, defuseIntent } from '@engine/intents';
+import type { ActionId } from '@engine/preview';
 
-const SAVE_KEY = 'plan-de-carriere/save/v2';
-export const SAVE_VERSION = 2;
+const SAVE_KEY = 'plan-de-carriere/save/v3';
+export const SAVE_VERSION = 3;
 
 // ── Création d'une partie ────────────────────────────────────
 export function createInitialState(seed = randomSeed(), playerName = 'Toi'): GameState {
@@ -111,11 +113,19 @@ export class GameStore {
   constructor(initial: GameState) {
     this.state = initial;
     this.rng = new Rng(initial.seed, initial.rngCursor);
-    // Première génération d'opportunités (nouvelle partie) ; un save en
-    // cours de semaine conserve les siennes.
-    if (this.state.status === 'playing' && this.state.opportunities.length === 0) {
-      generateOpportunities(this.state, this.rng);
-      this.persist();
+    // Amorçage : une nouvelle partie n'a ni opportunités ni intentions ;
+    // un save en cours de semaine conserve les siennes.
+    if (this.state.status === 'playing') {
+      let dirty = false;
+      if (this.state.opportunities.length === 0) {
+        generateOpportunities(this.state, this.rng);
+        dirty = true;
+      }
+      if (this.state.colleagues.some((c) => c.alive && !c.intent)) {
+        assignIntents(this.state, this.rng);
+        dirty = true;
+      }
+      if (dirty) this.persist();
     }
   }
 
@@ -255,7 +265,7 @@ export class GameStore {
   /** Résout le choix de l'événement puis finalise la semaine. */
   chooseEventOption(choiceIndex: number): { outcomeText: string; summary: WeekSummary } {
     let outcomeText = '';
-    let summary: WeekSummary = {};
+    let summary: WeekSummary = { lines: [] };
     this.commit((draft) => {
       const event = draft.pendingEvent ? getEvent(draft.pendingEvent) : undefined;
       if (!event) return;
@@ -267,11 +277,50 @@ export class GameStore {
     return { outcomeText, summary };
   }
 
+  /** Désamorce l'intention hostile d'un collègue. Coûte 1 PA. */
+  performDefuse(colleagueId: string): ActionResult {
+    if (!this.canAct()) {
+      return { ok: false, text: 'Aucune action possible pour le moment.', tone: 'neutral' };
+    }
+    let result: ActionResult = { ok: false, text: '', tone: 'neutral' };
+    this.commit((draft) => {
+      result = defuseIntent(draft, colleagueId, this.rng);
+      if (result.ok) {
+        draft.actionPointsRemaining -= 1;
+        draft.log.push({ week: draft.week, text: result.text, tone: result.tone });
+      }
+    });
+    return result;
+  }
+
+  /**
+   * Point d'entrée unique de l'UI : exécute l'action décrite par un
+   * `ActionId` (celui-là même que `preview.ts` a chiffré). Garantit que
+   * ce qui est annoncé au joueur et ce qui est exécuté ne divergent pas.
+   */
+  perform(id: ActionId): ActionResult {
+    switch (id.kind) {
+      case 'bosser':
+        return this.performAction('bosser');
+      case 'glander':
+        return this.performAction('glander');
+      case 'cafe':
+        return this.performAction('cafe', { targetId: id.targetId });
+      case 'fouiner':
+        return this.performAction('fouiner', { targetId: id.targetId });
+      case 'defuse':
+        return this.performDefuse(id.targetId);
+      case 'hook':
+        return this.performHook(id.targetId, id.secretId, id.mode);
+    }
+  }
+
   /** Redémarre une nouvelle partie (même store). */
   reset(seed?: number, name?: string): void {
     this.state = createInitialState(seed, name);
     this.rng = new Rng(this.state.seed, 0);
     generateOpportunities(this.state, this.rng);
+    assignIntents(this.state, this.rng);
     this.persist();
     this.emit();
   }

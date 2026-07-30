@@ -39,6 +39,8 @@ src/
     events.ts      Filtrage + tirage pondéré + résolution des choix
     suspicion.ts   Audit de conformité RH, burn-out, game over
     promotion.ts   Progression de rang via réputation
+    intents.ts     Intentions hebdo des PNJ (complots visibles + désamorçage)
+    preview.ts     Chiffre l'impact d'une action AVANT le clic (lecture seule)
     week.ts        Orchestration de la résolution du vendredi
   state/
     schema.ts      TOUTES les interfaces typées (le contrat moteur ↔ contenu)
@@ -56,10 +58,23 @@ src/
     opportunities.ts   Génère/résout les opportunités de la semaine
     hooks.ts           Chantage : utiliser un secret comme levier
   ui/            Écrans React
-    OfficeMap.tsx      Carte de l'open space vue du dessus (bureaux + zones + opportunités)
-    office.ts          Géométrie de la carte (zones, sièges, emplacements)
-    ...                bureau, fiche collègue, événement, résolution, game over
+    iso.ts             Projection isométrique 2:1 + plan du plateau (zones, postes)
+    IsoOffice.tsx      Le plateau isométrique en SVG (décor, personnages, intentions)
+    Inspector.tsx      Panneau contextuel : actions auto-documentées et chiffrées
+    DeskScreen.tsx     Écran principal (HUD, plateau, agenda, journal)
+    ...                événement, résolution hebdo, game over
 ```
+
+### Deux règles d'interface
+
+1. **Aucun bouton muet.** Toute action affiche ses deltas exacts et sa
+   probabilité *avant* le clic. Les nombres sortent de `engine/preview.ts`,
+   qui relit l'arithmétique du moteur — jamais de valeur recopiée à la main.
+2. **Rien ne bouge sans responsable.** Ce qui touche le joueur produit une
+   ligne de journal nommant l'auteur et le montant.
+
+Le plateau est **100 % vectoriel** (SVG + CSS, aucun asset externe) : net à
+toutes les densités et animable au CSS.
 
 ## Ajouter du contenu
 
@@ -110,10 +125,17 @@ un plan peut exiger ou provoquer s'exprime avec elles — voir `schema.ts`.
 
 ## Boucle de jeu
 
-Une semaine = **5 points d'action** (Bosser, Café, Fouiner, Comploter, Glander).
-Le vendredi : événement hebdomadaire → résolution des plans → réactions des PNJ →
-audit RH → promotion. **Suspicion** trop haute → audit ; sans alibi ni bouc émissaire →
-licenciement. **Nerfs** à zéro trop longtemps → placard.
+Une semaine = **5 points d'action** (Bosser, Café, Fouiner, Comploter, Glander,
+Désamorcer), plus les opportunités éphémères posées sur le plateau.
+
+Chaque lundi, tout collègue vivant reçoit une **intention** affichée au-dessus de
+sa tête : complot contre toi (compte à rebours de 2 semaines), surveillance,
+ragot, ascension, rapprochement. C'est le cœur de la tension : on voit les coups
+arriver et on choisit lesquels payer pour désamorcer.
+
+Le vendredi : événement hebdomadaire → résolution des plans → résolution des
+intentions → audit RH → promotion. **Suspicion** trop haute → audit ; sans alibi
+ni bouc émissaire → licenciement. **Nerfs** à zéro trop longtemps → placard.
 
 ## Périmètre
 

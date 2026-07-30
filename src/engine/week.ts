@@ -4,7 +4,11 @@
 // Découpée en deux temps car l'événement hebdomadaire attend une
 // décision du joueur (UI) :
 //   1) beginWeekend  → tire l'événement, le met en attente
-//   2) finalizeWeek  → plans, PNJ, opinions, audit, promo, semaine+1
+//   2) finalizeWeek  → plans, intentions, audit, promo, semaine+1
+//
+// Règle de lisibilité : TOUT ce qui touche le joueur produit une ligne
+// dans le bilan, avec un responsable nommé. Pas de stat qui bouge sans
+// que le joueur puisse dire qui l'a fait bouger.
 // ─────────────────────────────────────────────────────────────
 import type { GameState, LogEntry } from '@state/schema';
 import { getArchetype } from '@data/content';
@@ -12,6 +16,7 @@ import { balance } from '@data/balance';
 import { clamp } from './util';
 import { pickWeeklyEvent, resolveEventTarget } from './events';
 import { resolveDuePlans } from './plans';
+import { assignIntents, resolveIntents } from './intents';
 import { runAudit, checkBurnout } from './suspicion';
 import { checkPromotion, isAtTop } from './promotion';
 import { generateOpportunities } from './opportunities';
@@ -45,26 +50,13 @@ function applyOpinionDrift(state: GameState): void {
   }
 }
 
-/**
- * Actions des PNJ (MVP minimal) : les archétypes sensibles à la suspicion
- * la font monter quand ils te trouvent louche et t'apprécient peu.
- */
-function npcReactions(state: GameState): void {
-  const tier = state.suspicion;
-  for (const c of state.colleagues) {
-    if (!c.alive) continue;
-    const arch = getArchetype(c.archetype);
-    if (!arch) continue;
-    // Un Fayot ou un Parano hostile qui te trouve suspect en rajoute une couche.
-    if (arch.denounceThreshold !== undefined && tier >= arch.denounceThreshold && c.opinion < 10) {
-      const add = Math.round(2 * arch.suspicionSensitivity);
-      state.suspicion = clamp(state.suspicion + add, 0, 100);
-      log(state, `${c.name} a glissé un mot sur toi en réunion. La Suspicion monte.`, 'bad');
-    }
-  }
+export interface SummaryLine {
+  text: string;
+  tone: 'good' | 'bad' | 'neutral';
 }
 
 export interface WeekSummary {
+  lines: SummaryLine[]; // le récit complet de la semaine
   audit?: string;
   promotion?: string;
   gameOver?: GameState['status'];
@@ -73,34 +65,39 @@ export interface WeekSummary {
 
 /**
  * Clôture la semaine après résolution de l'événement.
- * Ordre : plans → PNJ → opinions → audit → burn-out → promotion → semaine+1.
+ * Ordre : plans → intentions des PNJ → opinions → audit → burn-out →
+ *         promotion → victoire → semaine+1.
  */
 export function finalizeWeek(state: GameState, rng: Rng): WeekSummary {
-  const summary: WeekSummary = {};
+  const summary: WeekSummary = { lines: [] };
+  const record = (text: string, tone: SummaryLine['tone']) => {
+    summary.lines.push({ text, tone });
+    log(state, text, tone);
+  };
 
   // 1) Plans arrivés à terme.
-  const resolutions = resolveDuePlans(state, rng);
-  for (const r of resolutions) {
-    log(
-      state,
+  for (const r of resolveDuePlans(state, rng)) {
+    record(
       r.success
-        ? `Plan « ${r.planName} » : réussi (${r.chance}%).`
-        : `Plan « ${r.planName} » : échoué (${r.chance}%).`,
+        ? `Ton plan « ${r.planName} » a abouti (${r.chance}% de réussite).`
+        : `Ton plan « ${r.planName} » a échoué (${r.chance}% de réussite).`,
       r.success ? 'good' : 'bad',
     );
   }
 
-  // 2) Réactions des PNJ.
-  npcReactions(state);
+  // 2) Ce que les collègues fabriquaient de leur côté.
+  for (const outcome of resolveIntents(state, rng)) {
+    record(outcome.text, outcome.tone);
+  }
 
-  // 3) Dérive d'opinion.
+  // 3) Dérive d'opinion (silencieuse : lente et diffuse).
   applyOpinionDrift(state);
 
   // 4) Audit de conformité RH.
   const audit = runAudit(state);
   if (audit.triggered) {
     summary.audit = audit.reason;
-    log(state, `Audit de conformité RH : ${audit.reason}`, audit.survived ? 'good' : 'bad');
+    record(`Audit de conformité RH : ${audit.reason}`, audit.survived ? 'good' : 'bad');
     if (!audit.survived) {
       summary.gameOver = 'fired';
       return summary;
@@ -109,7 +106,7 @@ export function finalizeWeek(state: GameState, rng: Rng): WeekSummary {
 
   // 5) Burn-out prolongé.
   if (checkBurnout(state)) {
-    log(state, 'Mise au placard : tes Nerfs t’ont lâché trop longtemps.', 'bad');
+    record('Mise au placard : tes Nerfs t’ont lâché trop longtemps.', 'bad');
     summary.gameOver = 'burnout';
     return summary;
   }
@@ -118,7 +115,7 @@ export function finalizeWeek(state: GameState, rng: Rng): WeekSummary {
   const promo = checkPromotion(state);
   if (promo) {
     summary.promotion = promo;
-    log(state, `Promotion : te voilà ${promo}. On te sourit. On t’observe aussi.`, 'good');
+    record(`Promotion : te voilà ${promo}. On te sourit. On t’observe aussi.`, 'good');
   }
 
   // 7) Victoire : rester au sommet X semaines.
@@ -143,7 +140,8 @@ export function finalizeWeek(state: GameState, rng: Rng): WeekSummary {
   state.pendingEvent = undefined;
   state.pendingTargetId = undefined;
   state.weeklyActionCounts = {}; // reset anti-spam
-  generateOpportunities(state, rng); // nouvelles opportunités de la semaine
+  generateOpportunities(state, rng); // nouvelles opportunités
+  assignIntents(state, rng); // nouvelles intentions des collègues
 
   return summary;
 }
