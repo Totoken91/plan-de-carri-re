@@ -143,6 +143,12 @@ export function Inspector({
           </button>
         </header>
 
+        {c.flags.includes('discredite') && (
+          <span className="stampmark stampmark--file" aria-hidden="true">
+            Mis en cause
+          </span>
+        )}
+
         <OpinionPip value={c.opinion} />
 
         {c.intent && c.intent.kind !== 'idle' && (

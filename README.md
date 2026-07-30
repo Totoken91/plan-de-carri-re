@@ -60,11 +60,36 @@ src/
     hooks.ts           Chantage : utiliser un secret comme levier
   ui/            Écrans React
     iso.ts             Projection isométrique 2:1 + plan du plateau (zones, postes)
-    IsoOffice.tsx      Le plateau isométrique en SVG (décor, personnages, intentions)
+    sprites.tsx        Le dessin : personnages et mobilier en SVG pur
+    IsoOffice.tsx      Le plateau : placement des objets et ordre de rendu
     Inspector.tsx      Panneau contextuel : actions auto-documentées et chiffrées
     DeskScreen.tsx     Écran principal (HUD, plateau, agenda, journal)
     ...                événement, résolution hebdo, game over
 ```
+
+### Direction artistique
+
+Le jeu se joue dans des dossiers RH : **l'interface est la paperasse.** Des
+feuilles kraft posées sur un sous-main sombre ; le seul endroit qui reste
+dans le noir est le plateau — le monde qu'on observe.
+
+Ce qui tient la cohérence :
+
+- **Trois familles typographiques, trois rôles.** Serif pour les noms et
+  titres (registre officiel), sans pour le corps, **monospace** pour les
+  libellés de formulaire et tous les chiffres.
+- **Angles vifs, filets d'1 px.** Aucun coin arrondi décoratif, aucune
+  ombre portée douce : les feuilles se distinguent par leur filet.
+- **Les valeurs chiffrées ne sont jamais des pastilles colorées** — ce sont
+  des nombres alignés séparés par des points médians, avec un vrai signe
+  moins (U+2212) pour que les colonnes se lisent comme des écritures.
+- **Une seule couleur d'alerte**, le rouge tampon. Le vert de registre
+  et l'ambre de note ne servent qu'aux effets.
+
+Côté plateau, la lumière vient d'une source unique (les baies vitrées du
+fond-gauche) et la face à l'ombre ne descend jamais sous 0,74 du ton de
+base : plus bas, les volumes virent au noir et se lisent comme des trous
+dans la géométrie.
 
 ### Deux règles d'interface
 

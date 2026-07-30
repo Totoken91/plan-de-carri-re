@@ -44,7 +44,8 @@ export function EventModal({ event, onDone }: { event: GameEvent; onDone: () => 
                   >
                     <span className="choice__head">
                       <span className="choice__label">
-                        {c.label}
+                        {/* le libellé porte lui aussi des {target}/{rival} */}
+                        {fillTemplate(c.label, state)}
                         {!flags[i] && <span className="lock"> 🔒</span>}
                       </span>
                       {c.successChance !== undefined && (

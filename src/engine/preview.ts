@@ -44,7 +44,9 @@ export interface ActionOption {
 }
 
 // ── Formatage ────────────────────────────────────────────────
-const sign = (n: number): string => (n > 0 ? `+${n}` : `${n}`);
+// Vrai signe moins (U+2212), pas un trait d'union : les colonnes de
+// chiffres doivent s'aligner et se lire comme des écritures comptables.
+const sign = (n: number): string => (n > 0 ? `+${n}` : `−${Math.abs(n)}`);
 const good = (label: string): PreviewLine => ({ label, tone: 'good' });
 const bad = (label: string): PreviewLine => ({ label, tone: 'bad' });
 const flat = (label: string): PreviewLine => ({ label, tone: 'neutral' });

@@ -50,6 +50,9 @@ export function DeskScreen({ onEndWeek }: { onEndWeek: () => void }) {
           <span className="topbar__rank">{rank?.name ?? state.player.rank}</span>
           <span className="topbar__name">{state.player.name}</span>
         </div>
+        <span className="stampmark stampmark--corner" aria-hidden="true">
+          Confidentiel
+        </span>
 
         <div className="objective">
           <div className="objective__head">
