@@ -1,0 +1,23 @@
+{
+  "actionPointsPerWeek": 5,
+  "startStats": { "aura": 15, "rendement": 15, "combine": 12, "nerfs": 100 },
+  "startSuspicion": 0,
+  "suspicionAuditThreshold": 70,
+  "burnoutGraceWeeks": 2,
+  "winSurviveWeeks": 4,
+  "actions": {
+    "bosser": { "rendement": 4, "reputation": 6, "nerfs": -12 },
+    "cafe": { "opinion": 10, "nerfs": -2 },
+    "fouiner": { "suspicionRisk": 25, "suspicionOnCaught": 8 },
+    "comploter": { "preparationGain": 25, "suspicionPerPrep": 3 },
+    "glander": { "nerfs": 20, "fayotSuspicion": 5 }
+  },
+  "plan": {
+    "combineWeight": 0.8,
+    "vigilanceWeight": 0.7,
+    "preparationWeight": 0.4,
+    "suspicionVigilanceFactor": 0.3,
+    "minSuccess": 5,
+    "maxSuccess": 95
+  }
+}

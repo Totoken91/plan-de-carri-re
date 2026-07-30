@@ -1,0 +1,83 @@
+[
+  {
+    "id": "steal_credit",
+    "name": "Voler le crédit d'un projet",
+    "description": "T'attribuer discrètement le travail d'un collègue. Cheap, faible risque, effet immédiat sur ta réputation.",
+    "tier": 1,
+    "durationWeeks": 1,
+    "baseSuccess": 70,
+    "suspicionOnSuccess": 5,
+    "suspicionOnFailure": 15,
+    "successEffects": {
+      "reputation": 18,
+      "stats": { "rendement": 3 },
+      "targetOpinion": -15
+    },
+    "failureEffects": {
+      "targetOpinion": -25,
+      "reputation": -5
+    }
+  },
+  {
+    "id": "sabotage_presentation",
+    "name": "Saboter une présentation",
+    "description": "Glisser une erreur dans les slides d'un rival avant le comité. Risque moyen.",
+    "tier": 2,
+    "durationWeeks": 1,
+    "baseSuccess": 55,
+    "suspicionOnSuccess": 12,
+    "suspicionOnFailure": 25,
+    "minRank": "junior",
+    "successEffects": {
+      "targetOpinion": -10,
+      "rivalOpinion": -10,
+      "reputation": 8
+    },
+    "failureEffects": {
+      "suspicion": 5,
+      "targetOpinion": -20
+    }
+  },
+  {
+    "id": "spread_rumor",
+    "name": "Lancer une rumeur",
+    "description": "Faire circuler une histoire compromettante. Effet sur l'opinion collective, traçabilité faible.",
+    "tier": 3,
+    "durationWeeks": 2,
+    "baseSuccess": 60,
+    "suspicionOnSuccess": 10,
+    "suspicionOnFailure": 20,
+    "minRank": "junior",
+    "successEffects": {
+      "targetOpinion": -25,
+      "globalOpinion": -8
+    },
+    "failureEffects": {
+      "suspicion": 8,
+      "globalOpinion": -3
+    }
+  },
+  {
+    "id": "hr_dossier",
+    "name": "Monter un dossier RH",
+    "description": "Constituer un dossier à charge pour accompagner la transition professionnelle d'un rival. Coûteux, exige des preuves.",
+    "tier": 4,
+    "durationWeeks": 3,
+    "baseSuccess": 45,
+    "suspicionOnSuccess": 18,
+    "suspicionOnFailure": 35,
+    "minRank": "confirme",
+    "requires": { "requiresSecretDiscovered": true, "stats": { "combine": 35 } },
+    "successEffects": {
+      "targetOpinion": -40,
+      "rivalOpinion": -40,
+      "reputation": 25,
+      "setFlags": ["rival_en_sursis"]
+    },
+    "failureEffects": {
+      "suspicion": 10,
+      "targetOpinion": -30,
+      "reputation": -10
+    }
+  }
+]

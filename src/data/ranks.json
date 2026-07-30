@@ -1,0 +1,47 @@
+[
+  {
+    "id": "stagiaire",
+    "name": "Stagiaire",
+    "order": 0,
+    "reputationRequired": 0,
+    "backstabMultiplier": 0.5
+  },
+  {
+    "id": "alternant",
+    "name": "Alternant",
+    "order": 1,
+    "reputationRequired": 30,
+    "backstabMultiplier": 0.7
+  },
+  {
+    "id": "junior",
+    "name": "Junior",
+    "order": 2,
+    "reputationRequired": 70,
+    "backstabMultiplier": 1.0
+  },
+  {
+    "id": "confirme",
+    "name": "Confirmé",
+    "order": 3,
+    "reputationRequired": 130,
+    "unlocksActions": ["access_files"],
+    "backstabMultiplier": 1.3
+  },
+  {
+    "id": "senior",
+    "name": "Senior",
+    "order": 4,
+    "reputationRequired": 210,
+    "unlocksActions": ["access_files"],
+    "backstabMultiplier": 1.6
+  },
+  {
+    "id": "team_lead",
+    "name": "Team Lead",
+    "order": 5,
+    "reputationRequired": 320,
+    "unlocksActions": ["access_files", "fire_directly"],
+    "backstabMultiplier": 2.0
+  }
+]

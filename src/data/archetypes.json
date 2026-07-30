@@ -1,0 +1,52 @@
+[
+  {
+    "id": "fayot",
+    "name": "Le Fayot",
+    "description": "Colle le manager en permanence. Te dénonce si tu le menaces ou si ta Suspicion devient visible.",
+    "baseVigilance": 45,
+    "suspicionSensitivity": 1.4,
+    "denounceThreshold": 55,
+    "weeklyOpinionDrift": -1
+  },
+  {
+    "id": "carrieriste",
+    "name": "Le Carriériste",
+    "description": "Ton vrai rival. Joue au même jeu que toi et complote de son côté.",
+    "baseVigilance": 65,
+    "suspicionSensitivity": 1.1,
+    "plotsOnOwn": true,
+    "weeklyOpinionDrift": -2
+  },
+  {
+    "id": "glandeur",
+    "name": "Le Glandeur",
+    "description": "Inoffensif, mais traîne partout et sait des choses. Source intarissable de ragots.",
+    "baseVigilance": 20,
+    "suspicionSensitivity": 0.6,
+    "weeklyOpinionDrift": 0
+  },
+  {
+    "id": "parano",
+    "name": "Le Parano",
+    "description": "Difficile à approcher. Monte très vite en suspicion contre toi.",
+    "baseVigilance": 80,
+    "suspicionSensitivity": 1.8,
+    "weeklyOpinionDrift": -1
+  },
+  {
+    "id": "veteran",
+    "name": "Le Vétéran aigri",
+    "description": "Connaît TOUS les secrets de la boîte. Allié en or ou danger mortel.",
+    "baseVigilance": 70,
+    "suspicionSensitivity": 1.0,
+    "weeklyOpinionDrift": 0
+  },
+  {
+    "id": "nouveau",
+    "name": "Le Nouveau",
+    "description": "Malléable et sans repères. À recruter avant que ton rival ne le retourne.",
+    "baseVigilance": 30,
+    "suspicionSensitivity": 0.8,
+    "weeklyOpinionDrift": 1
+  }
+]

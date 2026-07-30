@@ -1,0 +1,69 @@
+[
+  {
+    "id": "marc",
+    "name": "Marc Deloin",
+    "archetype": "carrieriste",
+    "rank": "confirme",
+    "stats": { "aura": 55, "rendement": 60, "combine": 50, "nerfs": 70 },
+    "opinion": -5,
+    "alive": true,
+    "flags": [],
+    "secrets": [
+      { "id": "marc_frais", "label": "Marc gonfle systématiquement ses notes de frais.", "severity": 60, "discovered": false },
+      { "id": "marc_diplome", "label": "Le diplôme sur le LinkedIn de Marc n'existe pas.", "severity": 75, "discovered": false }
+    ]
+  },
+  {
+    "id": "sophie",
+    "name": "Sophie Vasseur",
+    "archetype": "fayot",
+    "rank": "junior",
+    "stats": { "aura": 45, "rendement": 55, "combine": 25, "nerfs": 80 },
+    "opinion": 10,
+    "alive": true,
+    "flags": [],
+    "secrets": [
+      { "id": "sophie_manager", "label": "Sophie rapporte tout au manager chaque vendredi soir.", "severity": 40, "discovered": false }
+    ]
+  },
+  {
+    "id": "kevin",
+    "name": "Kevin Braast",
+    "archetype": "glandeur",
+    "rank": "junior",
+    "stats": { "aura": 50, "rendement": 25, "combine": 30, "nerfs": 95 },
+    "opinion": 20,
+    "alive": true,
+    "flags": [],
+    "secrets": [
+      { "id": "kevin_jeux", "label": "Kevin joue en ligne toute la journée derrière un faux dashboard.", "severity": 30, "discovered": false }
+    ]
+  },
+  {
+    "id": "nadia",
+    "name": "Nadia Ferrand",
+    "archetype": "parano",
+    "rank": "senior",
+    "stats": { "aura": 40, "rendement": 70, "combine": 45, "nerfs": 50 },
+    "opinion": -10,
+    "alive": true,
+    "flags": [],
+    "secrets": [
+      { "id": "nadia_double", "label": "Nadia enregistre en douce toutes ses réunions.", "severity": 55, "discovered": false }
+    ]
+  },
+  {
+    "id": "gerard",
+    "name": "Gérard Toussaint",
+    "archetype": "veteran",
+    "rank": "senior",
+    "stats": { "aura": 60, "rendement": 45, "combine": 65, "nerfs": 60 },
+    "opinion": 0,
+    "alive": true,
+    "flags": [],
+    "secrets": [
+      { "id": "gerard_placard", "label": "Gérard a fait mettre au placard trois managers en quinze ans.", "severity": 80, "discovered": false },
+      { "id": "gerard_dg", "label": "Gérard a une photo compromettante du DG à une soirée de 2009.", "severity": 90, "discovered": false }
+    ]
+  }
+]

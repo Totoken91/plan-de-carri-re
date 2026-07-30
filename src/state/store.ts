@@ -1,0 +1,238 @@
+// ─────────────────────────────────────────────────────────────
+// store.ts — Création d'état, save/load localStorage, et API mutative.
+//
+// Toutes les mutations passent par le store : il clone l'état, appelle
+// le moteur (fonctions pures/mutatives sur le clone), persiste le curseur
+// RNG, sauvegarde et notifie les abonnés (React).
+// ─────────────────────────────────────────────────────────────
+import type { GameEvent, GameState, Player } from './schema';
+import { startingColleagues } from '@data/content';
+import { balance } from '@data/balance';
+import { Rng, randomSeed } from '@engine/rng';
+import { getEvent } from '@data/content';
+import {
+  actBosser,
+  actCafe,
+  actComploter,
+  actFouiner,
+  actGlander,
+  type ActionKind,
+  type ActionResult,
+} from '@engine/actions';
+import { resolveChoice } from '@engine/events';
+import { beginWeekend, finalizeWeek, type WeekSummary } from '@engine/week';
+
+const SAVE_KEY = 'plan-de-carriere/save/v1';
+export const SAVE_VERSION = 1;
+
+// ── Création d'une partie ────────────────────────────────────
+export function createInitialState(seed = randomSeed(), playerName = 'Toi'): GameState {
+  const player: Player = {
+    name: playerName,
+    stats: { ...balance.startStats },
+    rank: 'stagiaire',
+    reputation: 0,
+  };
+  return {
+    version: SAVE_VERSION,
+    seed,
+    rngCursor: 0,
+    week: 1,
+    actionPointsRemaining: balance.actionPointsPerWeek,
+    player,
+    colleagues: structuredClone(startingColleagues),
+    suspicion: balance.startSuspicion,
+    activePlans: [],
+    flags: [],
+    eventHistory: [],
+    pendingEvent: undefined,
+    pendingTargetId: undefined,
+    status: 'playing',
+    log: [{ week: 1, text: 'Premier jour. L’open space t’attend. Le sommet aussi.', tone: 'neutral' }],
+  };
+}
+
+// ── Persistance ──────────────────────────────────────────────
+export function saveState(state: GameState): void {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+  } catch {
+    /* quota / mode privé : on ignore silencieusement */
+  }
+}
+
+export function loadState(): GameState | undefined {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw) as GameState;
+    if (parsed.version !== SAVE_VERSION) return undefined; // migration future
+    return parsed;
+  } catch {
+    return undefined;
+  }
+}
+
+export function clearSave(): void {
+  try {
+    localStorage.removeItem(SAVE_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+export function hasSave(): boolean {
+  try {
+    return localStorage.getItem(SAVE_KEY) !== null;
+  } catch {
+    return false;
+  }
+}
+
+// ── Store réactif ────────────────────────────────────────────
+type Listener = () => void;
+
+export interface EndWeekOutcome {
+  pendingEvent?: GameEvent;
+  summary?: WeekSummary; // présent si aucun événement (semaine bouclée direct)
+}
+
+export class GameStore {
+  private state: GameState;
+  private rng: Rng;
+  private listeners = new Set<Listener>();
+  /** Dernier message d'action, pour un retour immédiat à l'UI. */
+  lastMessage: ActionResult | undefined;
+
+  constructor(initial: GameState) {
+    this.state = initial;
+    this.rng = new Rng(initial.seed, initial.rngCursor);
+  }
+
+  static newGame(seed?: number, name?: string): GameStore {
+    const store = new GameStore(createInitialState(seed, name));
+    store.persist();
+    return store;
+  }
+
+  static fromSaveOrNew(): GameStore {
+    const saved = loadState();
+    return saved ? new GameStore(saved) : GameStore.newGame();
+  }
+
+  getState(): GameState {
+    return this.state;
+  }
+
+  subscribe(fn: Listener): () => void {
+    this.listeners.add(fn);
+    return () => this.listeners.delete(fn);
+  }
+
+  private emit(): void {
+    for (const fn of this.listeners) fn();
+  }
+
+  private persist(): void {
+    this.state.rngCursor = this.rng.cursor;
+    saveState(this.state);
+  }
+
+  /** Applique une mutation sur un clone, persiste et notifie. */
+  private commit(mutator: (draft: GameState) => void): void {
+    const draft = structuredClone(this.state);
+    mutator(draft);
+    this.state = draft;
+    this.persist();
+    this.emit();
+  }
+
+  // ── Boucle de jeu ──────────────────────────────────────────
+  private canAct(): boolean {
+    return this.state.status === 'playing' && this.state.actionPointsRemaining > 0 && !this.state.pendingEvent;
+  }
+
+  /** Exécute une des 5 actions de base (coûte 1 PA). */
+  performAction(
+    kind: ActionKind,
+    params: { targetId?: string; planId?: string } = {},
+  ): ActionResult {
+    if (!this.canAct()) {
+      return { ok: false, text: 'Aucune action possible pour le moment.', tone: 'neutral' };
+    }
+    let result: ActionResult = { ok: false, text: '', tone: 'neutral' };
+    this.commit((draft) => {
+      switch (kind) {
+        case 'bosser':
+          result = actBosser(draft);
+          break;
+        case 'cafe':
+          result = actCafe(draft, params.targetId!);
+          break;
+        case 'fouiner':
+          result = actFouiner(draft, params.targetId!, this.rng);
+          break;
+        case 'comploter':
+          result = actComploter(draft, params.planId!, params.targetId);
+          break;
+        case 'glander':
+          result = actGlander(draft, this.rng);
+          break;
+      }
+      if (result.ok) {
+        draft.actionPointsRemaining -= 1;
+        draft.log.push({ week: draft.week, text: result.text, tone: result.tone });
+      }
+    });
+    this.lastMessage = result;
+    return result;
+  }
+
+  /**
+   * Termine la semaine : ouvre le week-end. Si un événement est tiré,
+   * il faut ensuite appeler chooseEventOption. Sinon la semaine est
+   * directement finalisée.
+   */
+  endWeek(): EndWeekOutcome {
+    if (this.state.status !== 'playing') return {};
+    let outcome: EndWeekOutcome = {};
+    this.commit((draft) => {
+      const hasEvent = beginWeekend(draft, this.rng);
+      if (!hasEvent) {
+        const summary = finalizeWeek(draft, this.rng);
+        outcome = { summary };
+      }
+    });
+    const ev = this.state.pendingEvent ? getEvent(this.state.pendingEvent) : undefined;
+    if (ev) outcome = { pendingEvent: ev };
+    return outcome;
+  }
+
+  /** L'événement en attente (le cas échéant). */
+  pendingEvent(): GameEvent | undefined {
+    return this.state.pendingEvent ? getEvent(this.state.pendingEvent) : undefined;
+  }
+
+  /** Résout le choix de l'événement puis finalise la semaine. */
+  chooseEventOption(choiceIndex: number): { outcomeText: string; summary: WeekSummary } {
+    let outcomeText = '';
+    let summary: WeekSummary = {};
+    this.commit((draft) => {
+      const event = draft.pendingEvent ? getEvent(draft.pendingEvent) : undefined;
+      if (!event) return;
+      const res = resolveChoice(draft, event, choiceIndex, draft.pendingTargetId, this.rng);
+      outcomeText = res.outcomeText;
+      draft.log.push({ week: draft.week, text: `${event.title} — ${res.outcomeText}`, tone: res.success ? 'good' : 'bad' });
+      summary = finalizeWeek(draft, this.rng);
+    });
+    return { outcomeText, summary };
+  }
+
+  /** Redémarre une nouvelle partie (même store). */
+  reset(seed?: number, name?: string): void {
+    this.state = createInitialState(seed, name);
+    this.rng = new Rng(this.state.seed, 0);
+    this.persist();
+    this.emit();
+  }
+}
