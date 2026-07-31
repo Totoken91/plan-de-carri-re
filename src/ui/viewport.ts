@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────
-// viewport.ts — Déplacement et zoom du plateau, à la souris.
+// viewport.ts — Déplacement et zoom du plateau.
 //
 // On écrit directement l'attribut `viewBox` du SVG, sans passer par
 // l'état React : repasser par un rendu à chaque cran de molette ferait
@@ -9,6 +9,15 @@
 // Le cadrage est borné : on ne peut ni dézoomer au-delà du plateau
 // entier, ni le faire sortir du cadre. Un joueur qui se perd dans du
 // vide noir n'a aucun moyen de comprendre comment revenir.
+//
+// Le geste ne doit RIEN déclencher d'autre. Trois sources d'interférence,
+// toutes neutralisées ici :
+//   · le pincement au pavé tactile n'est pas un événement tactile mais un
+//     `wheel` portant `ctrlKey` — sans interception, le navigateur zoome
+//     la page entière ;
+//   · Safari émet en plus ses `gesture*` non standard ;
+//   · un glissement sélectionne le texte alentour tant qu'on ne l'a pas
+//     interdit en CSS et annulé sur `dragstart`.
 // ─────────────────────────────────────────────────────────────
 
 export interface Box {
@@ -30,10 +39,10 @@ export function parseViewBox(s: string): Box {
 
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 
-/**
- * Branche le déplacement et le zoom sur un SVG.
- * @returns de quoi tout détacher, et une fonction de recadrage.
- */
+interface SafariGesture extends Event {
+  scale: number;
+}
+
 export function attachViewport(
   svg: SVGSVGElement,
   base: Box,
@@ -41,7 +50,6 @@ export function attachViewport(
   const view: Box = { ...base };
 
   const apply = () => {
-    // On garde la vue à l'intérieur du plateau, quel que soit le zoom.
     view.w = clamp(view.w, base.w / MAX_ZOOM, base.w);
     view.h = clamp(view.h, base.h / MAX_ZOOM, base.h);
     view.x = clamp(view.x, base.x, base.x + base.w - view.w);
@@ -49,26 +57,26 @@ export function attachViewport(
     svg.setAttribute('viewBox', `${view.x} ${view.y} ${view.w} ${view.h}`);
   };
 
-  /** Position du curseur en coordonnées du SVG. */
-  const toSvg = (e: { clientX: number; clientY: number }) => {
+  /** Point écran → coordonnées du SVG (tient compte du letterboxing). */
+  const toSvg = (clientX: number, clientY: number) => {
     const ctm = svg.getScreenCTM();
     if (!ctm) return { x: view.x + view.w / 2, y: view.y + view.h / 2 };
     const p = svg.createSVGPoint();
-    p.x = e.clientX;
-    p.y = e.clientY;
+    p.x = clientX;
+    p.y = clientY;
     const r = p.matrixTransform(ctm.inverse());
     return { x: r.x, y: r.y };
   };
 
-  // ── Molette : zoom centré sur le curseur ───────────────────
-  const onWheel = (e: WheelEvent) => {
-    e.preventDefault();
-    const c = toSvg(e);
-    const factor = Math.exp(-e.deltaY * 0.0015);
+  /**
+   * Zoome d'un facteur donné en gardant fixe le point (clientX, clientY).
+   * C'est ce point d'ancrage qui rend le geste prévisible : sans lui, on
+   * zoome vers le centre et on perd ce qu'on visait.
+   */
+  const zoomAt = (factor: number, clientX: number, clientY: number) => {
+    const c = toSvg(clientX, clientY);
     const newW = clamp(view.w / factor, base.w / MAX_ZOOM, base.w);
     const k = newW / view.w;
-    // Le point sous le curseur ne doit pas bouger : c'est ce qui rend le
-    // zoom prévisible plutôt que désorientant.
     view.x = c.x - (c.x - view.x) * k;
     view.y = c.y - (c.y - view.y) * k;
     view.w = newW;
@@ -76,64 +84,110 @@ export function attachViewport(
     apply();
   };
 
-  // ── Glisser : déplacement ──────────────────────────────────
-  let dragging = false;
+  /** Déplace la vue d'un vecteur exprimé en pixels écran. */
+  const panBy = (dxScreen: number, dyScreen: number) => {
+    const rect = svg.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    view.x -= (dxScreen * view.w) / rect.width;
+    view.y -= (dyScreen * view.h) / rect.height;
+    apply();
+  };
+
+  // ── Molette et pincement au pavé tactile ───────────────────
+  const onWheel = (e: WheelEvent) => {
+    e.preventDefault(); // sinon : défilement de page, ou zoom du navigateur
+    // Un pincement au pavé arrive en `wheel` + ctrlKey, avec des deltas
+    // bien plus petits qu'un cran de molette : il lui faut son gain.
+    const gain = e.ctrlKey ? 0.012 : 0.0015;
+    zoomAt(Math.exp(-e.deltaY * gain), e.clientX, e.clientY);
+  };
+
+  // ── Pointeurs : 1 = déplacement, 2 = pincement ─────────────
+  const active = new Map<number, { x: number; y: number }>();
   let moved = 0;
-  let lastX = 0;
-  let lastY = 0;
-  let pointerId: number | null = null;
+
+  const centreOf = () => {
+    const pts = [...active.values()];
+    const sx = pts.reduce((a, p) => a + p.x, 0) / pts.length;
+    const sy = pts.reduce((a, p) => a + p.y, 0) / pts.length;
+    return { x: sx, y: sy };
+  };
+  const spreadOf = () => {
+    const [a, b] = [...active.values()];
+    return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : 0;
+  };
 
   const onPointerDown = (e: PointerEvent) => {
-    if (e.button !== 0 && e.pointerType === 'mouse') return;
-    dragging = true;
-    moved = 0;
-    lastX = e.clientX;
-    lastY = e.clientY;
-    pointerId = e.pointerId;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    active.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (active.size === 1) moved = 0;
   };
 
   const onPointerMove = (e: PointerEvent) => {
-    if (!dragging || e.pointerId !== pointerId) return;
-    const dx = e.clientX - lastX;
-    const dy = e.clientY - lastY;
-    moved += Math.abs(dx) + Math.abs(dy);
+    if (!active.has(e.pointerId)) return;
+    const prev = centreOf();
+    const prevSpread = spreadOf();
+    active.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const next = centreOf();
+    const nextSpread = spreadOf();
+
+    moved += Math.abs(next.x - prev.x) + Math.abs(next.y - prev.y);
     if (moved > DRAG_SLOP && !svg.classList.contains('is-panning')) {
       svg.classList.add('is-panning');
-      svg.setPointerCapture(e.pointerId);
     }
-    if (svg.classList.contains('is-panning')) {
-      const rect = svg.getBoundingClientRect();
-      // Un pixel écran ne vaut pas une unité SVG : on convertit.
-      view.x -= (dx * view.w) / rect.width;
-      view.y -= (dy * view.h) / rect.height;
-      apply();
+
+    if (active.size >= 2) {
+      // Le pincement zoome ET déplace : deux doigts qui glissent de
+      // concert doivent faire glisser la vue, comme partout ailleurs.
+      if (prevSpread > 0 && nextSpread > 0) {
+        zoomAt(nextSpread / prevSpread, next.x, next.y);
+      }
+      panBy(next.x - prev.x, next.y - prev.y);
+    } else if (svg.classList.contains('is-panning')) {
+      panBy(next.x - prev.x, next.y - prev.y);
     }
-    lastX = e.clientX;
-    lastY = e.clientY;
   };
 
-  const endDrag = () => {
-    if (!dragging) return;
-    dragging = false;
-    if (pointerId !== null && svg.hasPointerCapture?.(pointerId)) {
-      svg.releasePointerCapture(pointerId);
-    }
-    pointerId = null;
+  const endPointer = (e: PointerEvent) => {
+    if (!active.delete(e.pointerId)) return;
+    if (active.size > 0) return;
+
     if (svg.classList.contains('is-panning')) {
       svg.classList.remove('is-panning');
-      // Un glissement ne doit pas déclencher la sélection du collègue
-      // survolé à l'arrivée. On avale le clic qui suit, une seule fois.
+      // Un glissement ne doit pas sélectionner le collègue survolé à
+      // l'arrivée : on avale le clic qui suit, une seule fois.
       const swallow = (ev: Event) => {
         ev.stopPropagation();
         ev.preventDefault();
       };
       svg.addEventListener('click', swallow, { capture: true, once: true });
-      // Filet de sécurité : si aucun clic ne suit, on ne laisse pas
-      // l'écouteur armé pour le prochain vrai clic.
       setTimeout(() => svg.removeEventListener('click', swallow, { capture: true }), 60);
     }
   };
 
+  // ── Gestes Safari (non standard) ───────────────────────────
+  let safariScale = 1;
+  const onGestureStart = (e: Event) => {
+    e.preventDefault();
+    safariScale = (e as SafariGesture).scale || 1;
+  };
+  const onGestureChange = (e: Event) => {
+    e.preventDefault();
+    const g = e as SafariGesture & { clientX?: number; clientY?: number };
+    const s = g.scale || 1;
+    if (safariScale > 0) {
+      const rect = svg.getBoundingClientRect();
+      zoomAt(
+        s / safariScale,
+        g.clientX ?? rect.left + rect.width / 2,
+        g.clientY ?? rect.top + rect.height / 2,
+      );
+    }
+    safariScale = s;
+  };
+  const onGestureEnd = (e: Event) => e.preventDefault();
+
+  const onDragStart = (e: Event) => e.preventDefault();
   const onDblClick = () => reset();
 
   function reset(): void {
@@ -147,18 +201,28 @@ export function attachViewport(
   svg.addEventListener('wheel', onWheel, { passive: false });
   svg.addEventListener('pointerdown', onPointerDown);
   svg.addEventListener('pointermove', onPointerMove);
-  svg.addEventListener('pointerup', endDrag);
-  svg.addEventListener('pointercancel', endDrag);
+  svg.addEventListener('pointerup', endPointer);
+  svg.addEventListener('pointercancel', endPointer);
+  svg.addEventListener('pointerleave', endPointer);
   svg.addEventListener('dblclick', onDblClick);
+  svg.addEventListener('dragstart', onDragStart);
+  svg.addEventListener('gesturestart', onGestureStart as EventListener, { passive: false });
+  svg.addEventListener('gesturechange', onGestureChange as EventListener, { passive: false });
+  svg.addEventListener('gestureend', onGestureEnd as EventListener, { passive: false });
 
   return {
     detach() {
       svg.removeEventListener('wheel', onWheel);
       svg.removeEventListener('pointerdown', onPointerDown);
       svg.removeEventListener('pointermove', onPointerMove);
-      svg.removeEventListener('pointerup', endDrag);
-      svg.removeEventListener('pointercancel', endDrag);
+      svg.removeEventListener('pointerup', endPointer);
+      svg.removeEventListener('pointercancel', endPointer);
+      svg.removeEventListener('pointerleave', endPointer);
       svg.removeEventListener('dblclick', onDblClick);
+      svg.removeEventListener('dragstart', onDragStart);
+      svg.removeEventListener('gesturestart', onGestureStart as EventListener);
+      svg.removeEventListener('gesturechange', onGestureChange as EventListener);
+      svg.removeEventListener('gestureend', onGestureEnd as EventListener);
     },
     reset,
   };

@@ -169,11 +169,19 @@ toutes les densités et animable au CSS.
 
 ### Cadrage du plateau
 
-Molette pour zoomer (centré sur le curseur, jusqu'à 4×), glisser pour se
-déplacer, double-clic ou bouton « Recadrer » pour revenir à la vue
-d'ensemble. Le cadrage est **borné** : impossible de dézoomer au-delà du
+Molette ou **pincement** (deux doigts, ou pavé tactile) pour zoomer, centré
+sur le curseur, jusqu'à 4× ; glisser à un doigt pour se déplacer ;
+double-clic ou bouton « Recadrer » pour revenir à la vue d'ensemble. Le cadrage est **borné** : impossible de dézoomer au-delà du
 plateau ni de le faire sortir de l'écran — un joueur perdu dans du vide
 noir n'a aucun moyen de comprendre comment revenir.
+
+**Le geste ne déclenche rien d'autre.** Trois sources d'interférence, toutes
+neutralisées : le pincement au pavé tactile n'est pas un événement tactile
+mais un `wheel` portant `ctrlKey` — sans interception, le navigateur zoome
+la page entière ; Safari émet en plus ses `gesture*` non standard ; et un
+glissement sélectionne le texte alentour tant qu'on ne l'a pas interdit en
+CSS. Le blocage de sélection est confiné au plateau : le reste de
+l'interface reste sélectionnable.
 
 Le `viewBox` est écrit directement sur le SVG, hors de l'état React :
 repasser par un rendu à chaque cran de molette reconstruirait tout
