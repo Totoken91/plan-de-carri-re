@@ -58,7 +58,8 @@ function IntentBubble({ c, x, y }: { c: Colleague; x: number; y: number }) {
     >
       <rect x={-w / 2} y="-13" width={w} height="25" rx="3" className="iso-intent__box" />
       <path d="M -4 11.5 L 0 18 L 4 11.5 Z" className="iso-intent__tail" />
-      <text x={intent.weeksLeft > 1 ? -6 : 0} y="4" textAnchor="middle" fontSize="13">
+      <text x={intent.weeksLeft > 1 ? -6 : 0} y="4" textAnchor="middle" fontSize="13"
+        className="iso-glyph">
         {intent.icon}
       </text>
       {intent.weeksLeft > 1 && (
@@ -70,17 +71,52 @@ function IntentBubble({ c, x, y }: { c: Colleague; x: number; y: number }) {
   );
 }
 
+/**
+ * Cloison vitrée : traverses haute et basse, montants réguliers, et un
+ * voile de verre à peine teinté. Peinte en dalle pleine translucide,
+ * elle se lisait comme un grand plan flottant en travers de la pièce.
+ */
+function GlassRun({
+  along,
+  from,
+  to,
+  at,
+  h = 70,
+}: {
+  along: 'x' | 'y';
+  from: number;
+  to: number;
+  at: number;
+  h?: number;
+}) {
+  const seg = (a: number, b: number, z1: number, z2: number) =>
+    along === 'x' ? panelAlongX(a, b, at, z1, z2) : panelAlongY(a, b, at, z1, z2);
+
+  const posts: number[] = [];
+  for (let p = from; p <= to + 0.001; p += 1.5) posts.push(Number(p.toFixed(2)));
+  if (posts[posts.length - 1] !== to) posts.push(to);
+
+  return (
+    <g className="iso-glass">
+      <polygon className="iso-glass__pane" points={seg(from, to, 3, h - 2)} />
+      <polygon className="iso-glass__rail" points={seg(from, to, h - 2.5, h)} />
+      <polygon className="iso-glass__rail" points={seg(from, to, 0, 3)} />
+      {posts.map((p) => (
+        <polygon key={p} className="iso-glass__post" points={seg(p - 0.045, p + 0.045, 0, h)} />
+      ))}
+    </g>
+  );
+}
+
 // ── Balise d'opportunité ─────────────────────────────────────
 function Beacon({
   x,
   y,
-  icon,
   onClick,
   disabled,
 }: {
   x: number;
   y: number;
-  icon: string;
   onClick: () => void;
   disabled: boolean;
 }) {
@@ -91,11 +127,12 @@ function Beacon({
       onClick={disabled ? undefined : onClick}
     >
       <ellipse rx="24" ry="11" fill="url(#oppPool)" className="iso-beacon__pool" />
+      {/* Losange nu : l'emoji du contenu, plaqué dessus, restait un
+          autocollant sur un décor en aplats. Il vit dans l'agenda et
+          l'inspecteur, à taille d'interface, où il est lisible. */}
       <g className="iso-beacon__float">
-        <polygon points="0,-46 7,-36 0,-26 -7,-36" fill="url(#oppGrad)" filter="url(#glowGold)" />
-        <text y="-32" textAnchor="middle" fontSize="12">
-          {icon}
-        </text>
+        <polygon points="0,-50 9,-37 0,-24 -9,-37" fill="url(#oppGrad)" filter="url(#glowGold)" />
+        <polygon points="0,-44 4,-37 0,-30 -4,-37" fill="rgba(60,32,8,0.55)" />
       </g>
       <circle r="26" fill="transparent" className="iso-hit" />
     </g>
@@ -154,7 +191,7 @@ export function IsoOffice({
                 <Person c={c} />
               </g>
             )}
-            <Desk gx={slot.gx} gy={slot.gy} />
+            <Desk gx={slot.gx} gy={slot.gy} seed={i + 1} />
             {c && (
               /* zone cliquable généreuse (tap target ≥ 44px) */
               <rect
@@ -203,6 +240,24 @@ export function IsoOffice({
             <stop offset="0%" stopColor="rgba(150,180,225,0.13)" />
             <stop offset="100%" stopColor="rgba(150,180,225,0)" />
           </radialGradient>
+          {/* Nappe d'un luminaire de plafond. Les néons eux-mêmes ne sont
+              pas dessinés : sans plafond, ils flotteraient. On ne garde
+              que leur trace au sol, qui suffit à rythmer la pièce. */}
+          <radialGradient id="ceilPool">
+            <stop offset="0%" stopColor="rgba(228,232,240,0.115)" />
+            <stop offset="55%" stopColor="rgba(228,232,240,0.045)" />
+            <stop offset="100%" stopColor="rgba(228,232,240,0)" />
+          </radialGradient>
+          <linearGradient id="cityGlow" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="rgba(255,190,120,0)" />
+            <stop offset="100%" stopColor="rgba(255,178,96,0.38)" />
+          </linearGradient>
+          {/* Un tableau blanc dans une pièce éteinte n'est pas blanc :
+              il rend un gris bleuté. Peint clair, il crevait l'image. */}
+          <linearGradient id="boardFace" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#6d757f" />
+            <stop offset="100%" stopColor="#525a64" />
+          </linearGradient>
 
           {/* Glow doré : hot core → corps ambre → halo décalé rouge */}
           <filter id="glowGold" x="-150%" y="-150%" width="400%" height="400%">
@@ -281,13 +336,48 @@ export function IsoOffice({
               stroke="rgba(160,196,255,0.3)" strokeWidth="1.6" />
           </g>
         ))}
+        {/* lueur de la ville en bas des baies */}
+        {[
+          [0.6, 3.9],
+          [4.8, 8.6],
+          [9.6, 13.4],
+        ].map(([a, b]) => (
+          <polygon key={`glow${a}`} points={panelAlongX(a!, b!, 0, 26, 52)} fill="url(#cityGlow)" />
+        ))}
         {/* nappe de lumière des baies sur le sol */}
         <polygon points={quad(0.4, 0, 13.2, 2.8)} fill="url(#ambient)" />
+
+        {/* tableau blanc sur le mur du fond-gauche, qui sonnait creux */}
+        <g>
+          <polygon points={panelAlongY(4.6, 8.4, 0.05, 40, 82)} fill="#2f3742" />
+          <polygon points={panelAlongY(4.75, 8.25, 0.06, 43, 79)} fill="url(#boardFace)" />
+          {[
+            [5.1, 6.4, 70],
+            [5.1, 7.5, 63],
+            [5.1, 6.0, 56],
+            [6.9, 8.0, 49],
+          ].map(([a, b, z]) => (
+            <polygon key={`wb${z}`} points={panelAlongY(a!, b!, 0.07, z! - 1.4, z!)} fill="#8d959f" />
+          ))}
+        </g>
 
         {/* ── Moquettes des zones ── */}
         {ZONES.map((z) => (
           <polygon key={z.id} points={quad(z.gx, z.gy, z.w, z.d)} fill={z.carpet} />
         ))}
+
+        {/* Traces des luminaires : c'est ce qui donne du rythme à un sol
+            qui, uniformément sombre, se lit comme un trou. */}
+        <g className="iso-lights">
+          {[
+            [2.4, 2.0], [7.0, 2.0], [11.6, 2.0],
+            [2.4, 6.0], [7.0, 6.0], [11.6, 6.0],
+            [2.4, 10.0], [7.0, 10.0], [11.6, 10.0],
+          ].map(([gx, gy]) => {
+            const p = iso(gx!, gy!);
+            return <ellipse key={`L${gx}-${gy}`} cx={p.x} cy={p.y} rx="112" ry="56" fill="url(#ceilPool)" />;
+          })}
+        </g>
 
         {/* Surfaces cliquables des zones : AU SOL, donc sous le mobilier.
             Un clic sur un collègue ou une balise touche l'objet, pas la pièce. */}
@@ -320,13 +410,11 @@ export function IsoOffice({
           ))}
         </g>
 
-        {/* ── Vitrages des salles (après le mobilier qu'ils recouvrent) ── */}
-        <g className="iso-glass">
-          <polygon points={panelAlongX(0, 4.5, 3.5, 0, 70)} />
-          <polygon points={panelAlongY(0, 3.5, 4.5, 0, 70)} />
-          <polygon points={panelAlongX(9.5, 14, 3.5, 0, 70)} />
-          <polygon points={panelAlongY(0, 3.5, 9.5, 0, 70)} />
-        </g>
+        {/* ── Cloisons vitrées (après le mobilier qu'elles recouvrent) ── */}
+        <GlassRun along="x" from={0} to={4.5} at={3.5} />
+        <GlassRun along="y" from={0} to={3.5} at={4.5} />
+        <GlassRun along="x" from={9.5} to={14} at={3.5} />
+        <GlassRun along="y" from={0} to={3.5} at={9.5} />
 
         {/* ── Open space ── */}
         {renderRow(rowA)}
@@ -417,7 +505,6 @@ export function IsoOffice({
               key={`${opp.defId}-${i}`}
               x={pt.x}
               y={pt.y}
-              icon={def.icon}
               disabled={!canAct}
               onClick={() => onSelect({ kind: 'opportunity', index: i })}
             />

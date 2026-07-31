@@ -305,7 +305,9 @@ body {
 }
 
 .iso-grid line { stroke: rgba(150, 180, 230, 0.045); stroke-width: 1; }
-.iso-glass polygon { fill: rgba(140, 190, 255, 0.055); stroke: rgba(150, 200, 255, 0.22); stroke-width: 1.2; }
+.iso-glass__pane { fill: rgba(150, 200, 255, 0.032); }
+.iso-glass__rail { fill: rgba(176, 208, 245, 0.30); }
+.iso-glass__post { fill: rgba(176, 208, 245, 0.20); }
 .iso-gone { opacity: 0.28; filter: grayscale(1); }
 
 /* Personnages : respiration et clignement, désynchronisés par un délai
@@ -684,3 +686,12 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Nappes des luminaires : additif, pour éclaircir sans laver les couleurs */
+.iso-lights { mix-blend-mode: screen; pointer-events: none; }
+
+/* Les icônes viennent du contenu sous forme d'emoji. En couleur, elles
+   se lisent comme des autocollants posés sur un décor en aplats. On les
+   ramène au monochrome : elles redeviennent des pictogrammes gravés. */
+.iso-glyph { filter: grayscale(1) brightness(1.9) contrast(1.15); }
+.iso-glyph--dark { filter: grayscale(1) brightness(0.35) contrast(1.3); }

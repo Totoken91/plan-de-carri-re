@@ -190,7 +190,9 @@ export function seatOf(index: number): DeskSlot {
  */
 export function zoneLabelPoint(id: ZoneId): IsoPoint {
   const z = zoneById(id);
-  if (z.gy < 5) return iso(z.gx + z.w / 2, z.gy + z.d, 58);
+  // Posée juste au-dessus de la traverse haute du vitrage (z = 70), là où
+  // une vraie signalétique se visse — et hors de portée des bulles.
+  if (z.gy < 5) return iso(z.gx + z.w / 2, z.gy + z.d, 76);
   const p = iso(z.gx + z.w / 2, z.gy + z.d * 0.92);
   return { x: p.x, y: p.y + 10 };
 }

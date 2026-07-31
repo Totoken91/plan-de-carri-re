@@ -21,12 +21,27 @@ import { DESK_D, DESK_W, box, iso, quad } from './iso';
 // géométrie plutôt que comme des faces éclairées de biais.
 export const SHADE = { top: 1.2, left: 0.94, right: 0.74 };
 
-export function shade(hex: string, k: number): string {
-  const n = parseInt(hex.slice(1), 16);
-  const r = Math.min(255, Math.round(((n >> 16) & 255) * k));
-  const g = Math.min(255, Math.round(((n >> 8) & 255) * k));
-  const b = Math.min(255, Math.round((n & 255) * k));
-  return `rgb(${r},${g},${b})`;
+/**
+ * Lit aussi bien `#rrggbb` que `rgb(r,g,b)`.
+ *
+ * Indispensable : `shade()` renvoie du `rgb(...)`, et plusieurs meubles
+ * lui repassent le résultat (un caisson tiré du ton du piètement, par
+ * exemple). Quand le parseur ne gérait que l'hexadécimal, ces couleurs
+ * ressortaient en NOIR PUR — d'où les masses opaques sous les bureaux.
+ */
+function parseColor(color: string): [number, number, number] {
+  if (color.startsWith('#')) {
+    const n = parseInt(color.slice(1), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  const m = /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/.exec(color);
+  return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : [128, 128, 128];
+}
+
+export function shade(color: string, k: number): string {
+  const [r, g, b] = parseColor(color);
+  const c = (v: number) => Math.max(0, Math.min(255, Math.round(v * k)));
+  return `rgb(${c(r)},${c(g)},${c(b)})`;
 }
 
 export function IsoBox({
@@ -267,11 +282,15 @@ export function Desk({
   gy,
   wood = '#8a7a5e',
   frame = '#48525f',
+  seed = 0,
 }: {
   gx: number;
   gy: number;
   wood?: string;
   frame?: string;
+  /** Fait varier le fouillis d'un poste à l'autre : huit bureaux
+   *  rigoureusement identiques trahissent le copier-coller. */
+  seed?: number;
 }) {
   const TOP = 26;
   const STAND = TOP + 12; // hauteur du pied : le panneau démarre là
@@ -298,14 +317,43 @@ export function Desk({
             fill="rgba(255,255,255,0.07)" />
         </g>
       ))}
-      {/* plateau */}
-      <IsoBox gx={gx} gy={gy} w={DESK_W} d={DESK_D} h={4} z0={TOP - 4} color={wood} />
+      {/* plateau — teinte légèrement décalée d'un poste à l'autre */}
+      <IsoBox gx={gx} gy={gy} w={DESK_W} d={DESK_D} h={4} z0={TOP - 4}
+        color={shade(wood, 0.93 + (seed % 3) * 0.055)} />
 
       {/* clavier + souris, côté occupant */}
       <polygon points={quad(gx + 0.5, gy + 0.16, 0.92, 0.26, TOP + 0.5)} fill="#20242c" />
       <polygon points={quad(gx + 0.54, gy + 0.19, 0.84, 0.2, TOP + 1.2)} fill="#2c313b" />
       <ellipse {...(() => { const p = iso(gx + 1.58, gy + 0.28, TOP); return { cx: p.x, cy: p.y }; })()}
         rx="3.4" ry="2.1" fill="#2c313b" />
+
+      {/* Fouillis personnel — chaque poste tire le sien. */}
+      {seed % 3 === 0 && (
+        <g>
+          <IsoBox gx={gx + 0.22} gy={gy + 0.6} w={0.17} d={0.17} h={5} z0={TOP} color="#d8d3c4" />
+          <ellipse {...(() => { const p = iso(gx + 0.305, gy + 0.685, TOP + 5); return { cx: p.x, cy: p.y }; })()}
+            rx="2.6" ry="1.3" fill="#4a3a2c" />
+        </g>
+      )}
+      {seed % 2 === 0 && (
+        <g>
+          <polygon points={quad(gx + 1.5, gy + 0.62, 0.42, 0.34, TOP + 0.4)} fill="#cfc8b6" />
+          <polygon points={quad(gx + 1.53, gy + 0.6, 0.42, 0.34, TOP + 1.6)} fill="#e2ddce" />
+        </g>
+      )}
+      {seed % 5 === 1 && (
+        <g>
+          <IsoBox gx={gx + 1.72} gy={gy + 0.14} w={0.2} d={0.2} h={4} z0={TOP} color="#7d5940" />
+          <ellipse {...(() => { const p = iso(gx + 1.82, gy + 0.24, TOP + 4); return { cx: p.x, cy: p.y }; })()}
+            rx="4" ry="3" fill="#3f8a55" />
+          <ellipse {...(() => { const p = iso(gx + 1.82, gy + 0.24, TOP + 7); return { cx: p.x, cy: p.y }; })()}
+            rx="2.6" ry="2" fill="#4fa367" />
+        </g>
+      )}
+      {seed % 4 === 1 && (
+        /* pense-bête abandonné sur le plateau */
+        <polygon points={quad(gx + 0.28, gy + 0.28, 0.19, 0.19, TOP + 0.4)} fill="#e8d24a" />
+      )}
 
       {/* nappe de lumière projetée sur le plateau, côté occupant */}
       <ellipse cx={spill.x} cy={spill.y} rx="30" ry="13" fill="url(#screenPool)" className="iso-screen-pool" />
