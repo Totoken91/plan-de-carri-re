@@ -13,7 +13,7 @@
 // contours tournés vers la lumière.
 // ─────────────────────────────────────────────────────────────
 import type { Colleague } from '@state/schema';
-import { DESK_D, DESK_W, box, iso, quad } from './iso';
+import { DESK_D, DESK_W, box, iso, panelAlongX, quad } from './iso';
 
 // ── Ombrage ──────────────────────────────────────────────────
 // La face à l'ombre ne descend pas sous 0,74 : en dessous, les volumes
@@ -500,6 +500,105 @@ export function WaterCooler({ gx, gy }: { gx: number; gy: number }) {
       <IsoBox gx={gx} gy={gy} w={0.52} d={0.52} h={20} color="#e8e4d9" opacity={0.9} />
       <IsoBox gx={gx + 0.04} gy={gy + 0.04} w={0.44} d={0.44} h={17} z0={20} color="#5fa3c4" opacity={0.75} />
       <IsoBox gx={gx + 0.14} gy={gy + 0.46} w={0.24} d={0.08} h={4} z0={12} color="#3a4150" />
+    </g>
+  );
+}
+
+/** Rangée de casiers : meuble la zone de circulation devant les archives. */
+export function Lockers({ gx, gy, count = 2 }: { gx: number; gy: number; count?: number }) {
+  const W = 0.54;
+  const H = 54;
+  return (
+    <g>
+      {Array.from({ length: count }, (_, i) => {
+        const x = gx + i * (W + 0.03);
+        return (
+          <g key={i}>
+            <IsoBox gx={x} gy={gy} w={W} d={0.6} h={H} color="#4f5867" />
+            {/* deux vantaux + poignées, sur la face avant */}
+            {[
+              [4, 26],
+              [28, 50],
+            ].map(([z1, z2]) => (
+              <g key={z1}>
+                <polygon
+                  points={panelAlongX(x + 0.04, x + W - 0.04, gy + 0.601, z1!, z2!)}
+                  fill="rgba(0,0,0,0.22)"
+                />
+                <polygon
+                  points={panelAlongX(x + 0.06, x + W - 0.06, gy + 0.602, z1! + 1, z2! - 1)}
+                  fill="rgba(255,255,255,0.05)"
+                />
+                <polygon
+                  points={panelAlongX(x + W - 0.16, x + W - 0.09, gy + 0.603, z2! - 8, z2! - 6)}
+                  fill="rgba(230,235,245,0.5)"
+                />
+              </g>
+            ))}
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
+/** Bacs de tri — le détail qui dit « couloir de bureau » sans rien expliquer. */
+export function Bins({ gx, gy }: { gx: number; gy: number }) {
+  const lids = ['#3d6d8a', '#6d8a3d', '#8a6d3d'];
+  return (
+    <g>
+      {lids.map((lid, i) => (
+        <g key={lid}>
+          <IsoBox gx={gx + i * 0.4} gy={gy} w={0.34} d={0.34} h={17} color="#3f4653" />
+          <IsoBox gx={gx + i * 0.4 - 0.02} gy={gy - 0.02} w={0.38} d={0.38} h={2.5} z0={17} color={lid} />
+        </g>
+      ))}
+    </g>
+  );
+}
+
+/** Paperboard sur chevalet, pour la salle de réunion. */
+export function FlipChart({ gx, gy }: { gx: number; gy: number }) {
+  return (
+    <g>
+      <IsoBox gx={gx + 0.06} gy={gy + 0.5} w={0.06} d={0.06} h={30} color="#6b5a42" />
+      <IsoBox gx={gx + 0.62} gy={gy + 0.5} w={0.06} d={0.06} h={30} color="#5c4d38" />
+      <polygon points={panelAlongX(gx, gx + 0.74, gy + 0.5, 28, 64)} fill="#3a4048" />
+      <polygon points={panelAlongX(gx + 0.03, gx + 0.71, gy + 0.505, 30, 62)} fill="#cfcabb" />
+      {[56, 50, 44].map((z, i) => (
+        <polygon
+          key={z}
+          points={panelAlongX(gx + 0.09, gx + 0.09 + (i === 1 ? 0.5 : 0.36), gy + 0.51, z - 1.6, z)}
+          fill="#8b93a0"
+        />
+      ))}
+    </g>
+  );
+}
+
+/** Écran de présentation sur pied, tourné vers la table de réunion. */
+export function WallScreen({ gx, gy }: { gx: number; gy: number }) {
+  return (
+    <g>
+      <IsoBox gx={gx} gy={gy + 0.3} w={0.7} d={0.35} h={3} color="#333a45" />
+      <IsoBox gx={gx + 0.3} gy={gy + 0.42} w={0.12} d={0.12} h={22} color="#3d4551" />
+      <IsoBox gx={gx + 0.04} gy={gy + 0.44} w={0.06} d={1.5} h={30} z0={22} color="#2b313b" />
+      <polygon points={box(gx + 0.04, gy + 0.44, 0.06, 1.5, 30, 22).right} fill="#1d222a" />
+      <polygon points={box(gx + 0.05, gy + 0.5, 0.06, 1.38, 26, 24).right} fill="#38506b" />
+    </g>
+  );
+}
+
+/** Crédence basse : socle pour une plante, comble un angle mort. */
+export function Credenza({ gx, gy, w = 1, d = 0.7 }: { gx: number; gy: number; w?: number; d?: number }) {
+  return (
+    <g>
+      <IsoBox gx={gx} gy={gy} w={w} d={d} h={19} color="#5c5140" />
+      <IsoBox gx={gx - 0.03} gy={gy - 0.03} w={w + 0.06} d={d + 0.06} h={2} z0={19} color="#6d6150" />
+      {[0.06, w / 2 + 0.02].map((o) => (
+        <polygon key={o} points={panelAlongX(gx + o, gx + o + w / 2 - 0.08, gy + d + 0.001, 3, 16)}
+          fill="rgba(0,0,0,0.2)" />
+      ))}
     </g>
   );
 }

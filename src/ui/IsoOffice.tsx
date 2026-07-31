@@ -13,9 +13,13 @@ import type { Colleague } from '@state/schema';
 import { getOpportunity } from '@data/content';
 import { useGame } from './useGame';
 import {
+  Bins,
   CoffeeMachine,
+  Credenza,
   Desk,
+  FlipChart,
   IsoBox,
+  Lockers,
   MeetingTable,
   OfficeChair,
   Person,
@@ -23,6 +27,7 @@ import {
   Printer,
   Shelf,
   Sofa,
+  WallScreen,
   WaterCooler,
 } from './sprites';
 import {
@@ -401,6 +406,9 @@ export function IsoOffice({
           <IsoBox gx={7.3} gy={1.5} w={1} d={1} h={20} color="#3f4655" />
           <Plant gx={8.8} gy={0.6} scale={0.85} />
 
+          {/* Salle de réunion : écran de présentation contre la cloison,
+              paperboard dans l'angle, et de quoi tenir deux heures. */}
+          <WallScreen gx={9.72} gy={1.1} />
           <MeetingTable gx={10.4} gy={1.1} />
           {[0, 1, 2].map((i) => (
             <OfficeChair key={`mn${i}`} gx={10.7 + i * 0.95} gy={0.3} color="#3f4a58" />
@@ -408,6 +416,12 @@ export function IsoOffice({
           {[0, 1, 2].map((i) => (
             <OfficeChair key={`ms${i}`} gx={10.7 + i * 0.95} gy={2.75} color="#3f4a58" />
           ))}
+          {[0.75, 1.9, 2.6].map((o, i) => (
+            <IsoBox key={o} gx={10.4 + o} gy={1.35 + (i % 2) * 0.55} w={0.16} d={0.16} h={5}
+              z0={26} color="#e2ddce" />
+          ))}
+          <FlipChart gx={13.0} gy={0.25} />
+          <Plant gx={13.6} gy={2.9} scale={0.8} />
         </g>
 
         {/* ── Cloisons vitrées (après le mobilier qu'elles recouvrent) ── */}
@@ -427,13 +441,21 @@ export function IsoOffice({
           <Shelf gx={1.4} gy={10} />
           <Shelf gx={2.4} gy={10} />
           <Printer gx={3.2} gy={10.1} />
-          <Plant gx={3.7} gy={11.5} />
+          {/* Couloir de circulation entre archives et poste du joueur : sans
+              rien, tout ce bas de plateau restait une dalle vide. */}
+          <Lockers gx={4.35} gy={9.75} count={2} />
+          <Bins gx={4.35} gy={11.15} />
+          <Plant gx={3.66} gy={11.6} />
 
           {isSelectedZone('player') && (
             <polygon points={quad(5.6, 9.8, 3, 2.2)} className="iso-zone-ring" filter="url(#glowSelect)" />
           )}
           <OfficeChair gx={6.85} gy={9.7} color="#3d5449" />
           <Desk gx={6.2} gy={10.6} wood="#6e6250" frame="#39504a" />
+
+          {/* angle mort entre ton poste et le coin détente */}
+          <Credenza gx={8.85} gy={10.15} w={1} d={0.7} />
+          <Plant gx={9.35} gy={10.5} scale={0.72} />
 
           <Sofa gx={10.6} gy={10.4} />
           <Plant gx={13.2} gy={10.2} />
