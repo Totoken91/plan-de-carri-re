@@ -106,17 +106,21 @@ interface PostureTuning {
   typing: number; // amplitude de frappe
   headSway: number; // amplitude du balancement de tête
   bounce: number; // rebond vertical
+  nod: number; // hochement de tête, calé sur la frappe
   armSpread: number; // écartement des mains
   rate: number; // vitesse générale du cycle
 }
 
+// Amplitudes. Premier réglage : la tête bougeait de 0,66 px à l'écran —
+// mesuré, invisible. Une échelle d'affichage de ~1,15 px par unité SVG
+// impose de viser 3 à 6 unités pour qu'un mouvement se VOIE.
 const TUNING: Record<Posture, PostureTuning> = {
-  travail: { lean: 1.5, typing: 2.6, headSway: 0.5, bounce: 0.5, armSpread: 0, rate: 1.35 },
-  penche: { lean: 4.5, typing: 0.7, headSway: 2.4, bounce: 0.25, armSpread: -1.4, rate: 0.65 },
-  bavard: { lean: -0.5, typing: 1.1, headSway: 3.2, bounce: 1.1, armSpread: 2.6, rate: 1.05 },
-  guet: { lean: 0.5, typing: 0.3, headSway: 3.6, bounce: 0.2, armSpread: -0.8, rate: 0.5 },
-  ouvert: { lean: -1.2, typing: 1.4, headSway: 1.2, bounce: 0.9, armSpread: 2.0, rate: 0.9 },
-  avachi: { lean: 2.2, typing: 0.9, headSway: 0.9, bounce: 0.35, armSpread: 0.4, rate: 0.7 },
+  travail: { lean: 1.5, typing: 2.6, headSway: 1.6, bounce: 1.4, nod: 1.0, armSpread: 0, rate: 1.35 },
+  penche: { lean: 4.5, typing: 0.7, headSway: 3.4, bounce: 0.7, nod: 0.3, armSpread: -1.4, rate: 0.65 },
+  bavard: { lean: -0.5, typing: 1.1, headSway: 4.2, bounce: 1.9, nod: 1.6, armSpread: 2.6, rate: 1.05 },
+  guet: { lean: 0.5, typing: 0.3, headSway: 5.0, bounce: 0.5, nod: 0.2, armSpread: -0.8, rate: 0.5 },
+  ouvert: { lean: -1.2, typing: 1.4, headSway: 2.4, bounce: 1.5, nod: 0.9, armSpread: 2.0, rate: 0.9 },
+  avachi: { lean: 2.2, typing: 0.9, headSway: 1.8, bounce: 0.9, nod: 0.5, armSpread: 0.4, rate: 0.7 },
 };
 
 // ── Le squelette ─────────────────────────────────────────────
@@ -179,7 +183,9 @@ export interface PosedFigure {
   chest: Vec;
   head: Vec;
   headTilt: number; // degrés
-  squash: number; // 1 = neutre
+  squash: number; // 1 = neutre ; > 1 = étiré, < 1 = écrasé
+  bodyR: number; // demi-largeur du buste, inverse de l'étirement
+  hipR: number;
   arms: Array<{ a: Vec; b: Vec; c: Vec }>; // épaule, coude, main
 }
 
@@ -220,8 +226,15 @@ export function poseFigure(
   const breath = Math.sin(w * 1.6);
   const slow = Math.sin(w * 0.41 + 1.3);
 
-  const squash = 1 + breath * 0.018 + slow * 0.008;
-  const bounce = breath * k.bounce;
+  // Squash & stretch : le corps s'écrase ET s'élargit, se tend ET
+  // s'affine. C'est l'inversion des deux qui fait lire le volume ; une
+  // simple mise à l'échelle verticale ne se remarque pas.
+  const squash = 1 + breath * 0.035 + slow * 0.012;
+  // Signe négatif volontaire : les ordonnées montent vers le haut de
+  // l'écran. Avec un bounce positif, l'étirement remontait la tête
+  // pendant que le rebond la descendait — les deux termes s'annulaient
+  // et il ne restait qu'un mouvement d'un demi-pixel.
+  const bounce = -breath * k.bounce;
 
   // Le buste vise sa cible ; le ressort lui donne son inertie.
   stepSpring(m.leanSpring, k.lean + slow * 0.6, dt, 60, 11);
@@ -233,8 +246,11 @@ export function poseFigure(
   // La tête suit le buste avec du retard : c'est ce décalage qui donne
   // l'impression de masse.
   stepSpring(m.headLag, chest.x + Math.sin(w * 0.77) * k.headSway, dt, 120, 14);
-  const head = v(m.headLag.x, rig.headY * squash + bounce * 1.15);
-  const headTilt = (m.headLag.x - chest.x) * 1.6;
+  // Le hochement suit la cadence de frappe, pas la respiration : c'est
+  // ce décalage de fréquence qui donne l'air occupé.
+  const nod = Math.sin(w * 3.1) * k.nod;
+  const head = v(m.headLag.x, rig.headY * squash + bounce * 1.25 + nod);
+  const headTilt = (m.headLag.x - chest.x) * 1.6 + nod * 0.8;
 
   // Mains : cibles oscillantes sur le plan de travail, en opposition de
   // phase. L'IK fait le reste — aucune position de coude n'est écrite.
@@ -254,7 +270,16 @@ export function poseFigure(
     return { a: shoulder, b: joint, c: end };
   });
 
-  return { hip, chest, head, headTilt, squash, arms };
+  return {
+    hip,
+    chest,
+    head,
+    headTilt,
+    squash,
+    bodyR: rig.bodyR / squash,
+    hipR: rig.hipR / squash,
+    arms,
+  };
 }
 
 /** Pose neutre, pour `prefers-reduced-motion`. */

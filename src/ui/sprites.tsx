@@ -261,6 +261,8 @@ export function Person({ c }: { c: Colleague }) {
       const p = poseFigure(t, dt, motion, posture, RIG);
       hip.setAttribute('cx', p.hip.x.toFixed(2));
       hip.setAttribute('cy', p.hip.y.toFixed(2));
+      hip.setAttribute('r', p.hipR.toFixed(2));
+      torso.setAttribute('stroke-width', (p.bodyR * 2).toFixed(2));
       torso.setAttribute('x1', p.hip.x.toFixed(2));
       torso.setAttribute('y1', p.hip.y.toFixed(2));
       torso.setAttribute('x2', p.chest.x.toFixed(2));

@@ -9,6 +9,7 @@
 // Rien n'est décidé ici : le plateau AFFICHE l'état et remonte les
 // clics. Les règles vivent dans /engine.
 // ─────────────────────────────────────────────────────────────
+import { useEffect, useRef, useState } from 'react';
 import type { Colleague } from '@state/schema';
 import { getOpportunity } from '@data/content';
 import { useGame } from './useGame';
@@ -47,6 +48,7 @@ import {
   type Selection,
   type ZoneId,
 } from './iso';
+import { attachViewport, parseViewBox } from './viewport';
 
 // ── Bulle d'intention ────────────────────────────────────────
 function IntentBubble({ c, x, y }: { c: Colleague; x: number; y: number }) {
@@ -153,6 +155,29 @@ export function IsoOffice({
   onSelect: (s: Selection) => void;
 }) {
   const { state } = useGame();
+  const svgRef = useRef<SVGSVGElement>(null);
+  const resetRef = useRef<() => void>(() => {});
+  const [framed, setFramed] = useState(true);
+
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const base = parseViewBox(VIEW_BOX);
+    const vp = attachViewport(svg, base);
+    resetRef.current = () => {
+      vp.reset();
+      setFramed(true);
+    };
+    const onChange = () => setFramed(svg.getAttribute('viewBox') === VIEW_BOX);
+    svg.addEventListener('wheel', onChange);
+    svg.addEventListener('pointerup', onChange);
+    return () => {
+      svg.removeEventListener('wheel', onChange);
+      svg.removeEventListener('pointerup', onChange);
+      vp.detach();
+    };
+  }, []);
+
   const canAct =
     state.status === 'playing' && state.actionPointsRemaining > 0 && !state.pendingEvent;
 
@@ -222,7 +247,12 @@ export function IsoOffice({
 
   return (
     <div className={`iso ${state.suspicion >= 70 ? 'iso--alert' : ''}`}>
-      <svg className="iso__svg" viewBox={VIEW_BOX} preserveAspectRatio="xMidYMid meet">
+      <svg
+        ref={svgRef}
+        className="iso__svg"
+        viewBox={VIEW_BOX}
+        preserveAspectRatio="xMidYMid meet"
+      >
         <defs>
           <radialGradient id="screenPool">
             <stop offset="0%" stopColor="rgba(126,186,255,0.42)" />
@@ -552,6 +582,20 @@ export function IsoOffice({
           );
         })}
       </svg>
+
+      <div className="iso__controls">
+        {/* L'aide ne sert qu'avant d'avoir touché au cadrage ; ensuite
+            c'est le retour au cadrage nominal qui compte. */}
+        {framed && <span className="iso__hint">molette : zoom · glisser : déplacer</span>}
+        <button
+          type="button"
+          className="iso__recenter"
+          disabled={framed}
+          onClick={() => resetRef.current()}
+        >
+          Recadrer
+        </button>
+      </div>
     </div>
   );
 }

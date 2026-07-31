@@ -130,6 +130,12 @@ gesticule, un guetteur te fixe : `postureFor()` traduit l'intention de jeu en
 attitude corporelle. L'animation devient de l'information, pas de la
 décoration.
 
+**Amplitudes.** Premier réglage : la tête bougeait de 0,66 px à l'écran —
+mesuré, donc invisible. Deux causes : des coefficients trop faibles, et
+surtout un signe. Les ordonnées montant vers le haut de l'écran, un rebond
+positif *descendait* la tête pendant que l'étirement la *remontait* : les
+deux termes s'annulaient. Après correction, ~4,7 px verticaux.
+
 Côté production :
 - les poses sont écrites **directement dans le DOM**, hors du cycle React —
   re-rendre l'arbre à 60 Hz est intenable ;
@@ -160,6 +166,19 @@ cheval, cheveux en rideau, crâne dégarni. Un collègue doit se reconnaître
 
 Le plateau est **100 % vectoriel** (SVG + CSS, aucun asset externe) : net à
 toutes les densités et animable au CSS.
+
+### Cadrage du plateau
+
+Molette pour zoomer (centré sur le curseur, jusqu'à 4×), glisser pour se
+déplacer, double-clic ou bouton « Recadrer » pour revenir à la vue
+d'ensemble. Le cadrage est **borné** : impossible de dézoomer au-delà du
+plateau ni de le faire sortir de l'écran — un joueur perdu dans du vide
+noir n'a aucun moyen de comprendre comment revenir.
+
+Le `viewBox` est écrit directement sur le SVG, hors de l'état React :
+repasser par un rendu à chaque cran de molette reconstruirait tout
+l'open space. Un glissement avale le clic qui le suit, sinon relâcher la
+souris au-dessus d'un collègue le sélectionnerait par accident.
 
 ## Ajouter du contenu
 

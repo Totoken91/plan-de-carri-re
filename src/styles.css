@@ -712,3 +712,26 @@ body {
   stroke-dasharray: 3 4;
   animation: schemeFlow 3s linear infinite;
 }
+
+/* ── Déplacement / zoom du plateau ───────────────────────── */
+.iso__svg { cursor: grab; touch-action: none; }
+.iso__svg.is-panning { cursor: grabbing; }
+
+.iso__controls {
+  position: absolute; right: 10px; bottom: 8px; z-index: 4;
+  display: flex; align-items: center; gap: 10px;
+  pointer-events: none;
+}
+.iso__hint {
+  font-family: var(--font-form); font-size: 9px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: rgba(206, 198, 178, 0.45);
+}
+.iso__recenter {
+  pointer-events: auto;
+  font-family: var(--font-form); font-size: 9px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: rgba(215, 208, 190, 0.85);
+  background: rgba(20, 24, 30, 0.75); border: 1px solid rgba(206, 198, 178, 0.35);
+  padding: 4px 9px; cursor: pointer; transition: background 0.12s, opacity 0.12s;
+}
+.iso__recenter:hover:not(:disabled) { background: rgba(40, 46, 56, 0.95); }
+.iso__recenter:disabled { opacity: 0; pointer-events: none; }
