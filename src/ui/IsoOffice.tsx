@@ -12,6 +12,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Colleague } from '@state/schema';
 import { getOpportunity } from '@data/content';
+import { theme as T } from '@data/board';
 import { useGame } from './useGame';
 import {
   Bins,
@@ -140,8 +141,9 @@ function Beacon({
           autocollant sur un décor en aplats. Il vit dans l'agenda et
           l'inspecteur, à taille d'interface, où il est lisible. */}
       <g className="iso-beacon__float">
-        <polygon points="0,-50 9,-37 0,-24 -9,-37" fill="url(#oppGrad)" filter="url(#glowGold)" />
-        <polygon points="0,-44 4,-37 0,-30 -4,-37" fill="rgba(60,32,8,0.55)" />
+        <polygon points="0,-50 9,-37 0,-24 -9,-37" fill="url(#oppGrad)" filter="url(#glowGold)"
+          stroke={T.signal.orSombre} strokeWidth="1.2" />
+        <polygon points="0,-44 4,-37 0,-30 -4,-37" fill={T.signal.orSombre} opacity="0.55" />
       </g>
       <circle r="26" fill="transparent" className="iso-hit" />
     </g>
@@ -261,48 +263,48 @@ export function IsoOffice({
       >
         <defs>
           <radialGradient id="screenPool">
-            <stop offset="0%" stopColor="rgba(126,186,255,0.42)" />
-            <stop offset="100%" stopColor="rgba(126,186,255,0)" />
+            <stop offset="0%" stopColor={T.degrades.ecranNappe[0]} />
+            <stop offset="100%" stopColor={T.degrades.ecranNappe[1]} />
           </radialGradient>
           <linearGradient id="screenEdge" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="rgba(190,224,255,0.85)" />
-            <stop offset="100%" stopColor="rgba(120,170,240,0.15)" />
+            <stop offset="0%" stopColor={T.degrades.ecranArete[0]} />
+            <stop offset="100%" stopColor={T.degrades.ecranArete[1]} />
           </linearGradient>
           <radialGradient id="oppPool">
-            <stop offset="0%" stopColor="rgba(255,190,90,0.55)" />
-            <stop offset="100%" stopColor="rgba(255,190,90,0)" />
+            <stop offset="0%" stopColor={T.degrades.baliseNappe[0]} />
+            <stop offset="100%" stopColor={T.degrades.baliseNappe[1]} />
           </radialGradient>
           <linearGradient id="oppGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#fff3c4" />
-            <stop offset="55%" stopColor="#f5a623" />
-            <stop offset="100%" stopColor="#c2621a" />
+            <stop offset="0%" stopColor={T.degrades.balise[0]} />
+            <stop offset="55%" stopColor={T.degrades.balise[1]} />
+            <stop offset="100%" stopColor={T.degrades.balise[2]} />
           </linearGradient>
           <linearGradient id="windowGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#54718f" />
-            <stop offset="55%" stopColor="#33465e" />
-            <stop offset="100%" stopColor="#1f2b3c" />
+            <stop offset="0%" stopColor={T.degrades.baie[0]} />
+            <stop offset="55%" stopColor={T.degrades.baie[1]} />
+            <stop offset="100%" stopColor={T.degrades.baie[2]} />
           </linearGradient>
           <radialGradient id="ambient">
-            <stop offset="0%" stopColor="rgba(150,180,225,0.13)" />
-            <stop offset="100%" stopColor="rgba(150,180,225,0)" />
+            <stop offset="0%" stopColor={T.degrades.nappeBaie[0]} />
+            <stop offset="100%" stopColor={T.degrades.nappeBaie[1]} />
           </radialGradient>
           {/* Nappe d'un luminaire de plafond. Les néons eux-mêmes ne sont
               pas dessinés : sans plafond, ils flotteraient. On ne garde
               que leur trace au sol, qui suffit à rythmer la pièce. */}
           <radialGradient id="ceilPool">
-            <stop offset="0%" stopColor="rgba(228,232,240,0.115)" />
-            <stop offset="55%" stopColor="rgba(228,232,240,0.045)" />
-            <stop offset="100%" stopColor="rgba(228,232,240,0)" />
+            <stop offset="0%" stopColor={T.degrades.nappePlafond[0]} />
+            <stop offset="55%" stopColor={T.degrades.nappePlafond[1]} />
+            <stop offset="100%" stopColor={T.degrades.nappePlafond[2]} />
           </radialGradient>
           <linearGradient id="cityGlow" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="rgba(255,190,120,0)" />
-            <stop offset="100%" stopColor="rgba(255,178,96,0.38)" />
+            <stop offset="0%" stopColor={T.degrades.baieLueur[0]} />
+            <stop offset="100%" stopColor={T.degrades.baieLueur[1]} />
           </linearGradient>
-          {/* Un tableau blanc dans une pièce éteinte n'est pas blanc :
-              il rend un gris bleuté. Peint clair, il crevait l'image. */}
+          {/* Le tableau blanc suit l'éclairage de la pièce : blanc en
+              plein jour, gris bleuté dans un plateau éteint. */}
           <linearGradient id="boardFace" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#6d757f" />
-            <stop offset="100%" stopColor="#525a64" />
+            <stop offset="0%" stopColor={T.degrades.tableauBlanc[0]} />
+            <stop offset="100%" stopColor={T.degrades.tableauBlanc[1]} />
           </linearGradient>
 
           {/* Glow doré : hot core → corps ambre → halo décalé rouge */}
@@ -350,7 +352,7 @@ export function IsoOffice({
         </defs>
 
         {/* ── Sol ── */}
-        <polygon points={quad(0, 0, GRID_W, GRID_D)} fill="#1b2029" />
+        <polygon points={quad(0, 0, GRID_W, GRID_D)} fill={T.sol.dalle} />
         <g className="iso-grid">
           {Array.from({ length: GRID_W + 1 }, (_, i) => {
             const a = iso(i, 0);
@@ -365,11 +367,11 @@ export function IsoOffice({
         </g>
 
         {/* ── Murs du fond ── */}
-        <polygon points={panelAlongX(0, GRID_W, 0, 0, 96)} fill="#232936" />
-        <polygon points={panelAlongY(0, GRID_D, 0, 0, 96)} fill="#1d222d" />
+        <polygon points={panelAlongX(0, GRID_W, 0, 0, 96)} fill={T.mur.fond} />
+        <polygon points={panelAlongY(0, GRID_D, 0, 0, 96)} fill={T.mur.gauche} />
         {/* plinthes */}
-        <polygon points={panelAlongX(0, GRID_W, 0, 0, 5)} fill="#2e3543" />
-        <polygon points={panelAlongY(0, GRID_D, 0, 0, 5)} fill="#262c38" />
+        <polygon points={panelAlongX(0, GRID_W, 0, 0, 5)} fill={T.mur.socle} />
+        <polygon points={panelAlongY(0, GRID_D, 0, 0, 5)} fill={T.mur.socleGauche} />
         {/* baies vitrées, avec meneaux */}
         {[
           [0.6, 3.9],
@@ -379,9 +381,9 @@ export function IsoOffice({
           <g key={`win${a}`}>
             <polygon points={panelAlongX(a!, b!, 0, 26, 84)} fill="url(#windowGrad)" />
             <polygon points={panelAlongX(a! + (b! - a!) / 2 - 0.04, a! + (b! - a!) / 2 + 0.04, 0, 26, 84)}
-              fill="#2b3342" />
+              fill={T.mur.baieMontant} />
             <polygon points={panelAlongX(a!, b!, 0, 26, 84)} fill="none"
-              stroke="rgba(160,196,255,0.3)" strokeWidth="1.6" />
+              stroke={T.mur.baieRebord} strokeWidth="1.6" />
           </g>
         ))}
         {/* lueur de la ville en bas des baies */}
@@ -397,7 +399,7 @@ export function IsoOffice({
 
         {/* tableau blanc sur le mur du fond-gauche, qui sonnait creux */}
         <g>
-          <polygon points={panelAlongY(4.6, 8.4, 0.05, 40, 82)} fill="#2f3742" />
+          <polygon points={panelAlongY(4.6, 8.4, 0.05, 40, 82)} fill={T.structure.ecranArete} />
           <polygon points={panelAlongY(4.75, 8.25, 0.06, 43, 79)} fill="url(#boardFace)" />
           {[
             [5.1, 6.4, 70],
@@ -405,13 +407,13 @@ export function IsoOffice({
             [5.1, 6.0, 56],
             [6.9, 8.0, 49],
           ].map(([a, b, z]) => (
-            <polygon key={`wb${z}`} points={panelAlongY(a!, b!, 0.07, z! - 1.4, z!)} fill="#8d959f" />
+            <polygon key={`wb${z}`} points={panelAlongY(a!, b!, 0.07, z! - 1.4, z!)} fill={T.structure.ecranArete} />
           ))}
         </g>
 
         {/* ── Moquettes des zones ── */}
         {ZONES.map((z) => (
-          <polygon key={z.id} points={quad(z.gx, z.gy, z.w, z.d)} fill={z.carpet} />
+          <polygon key={z.id} points={quad(z.gx, z.gy, z.w, z.d)} fill={T.sol.moquettes[z.id] ?? T.sol.dalle} />
         ))}
 
         {/* Traces des luminaires : c'est ce qui donne du rythme à un sol
@@ -441,12 +443,12 @@ export function IsoOffice({
 
         {/* ── Mobilier des salles du fond ── */}
         <g>
-          <OfficeChair gx={1.9} gy={0.35} color="#4a3f56" />
-          <Desk gx={1} gy={1.2} wood="#6b5540" />
+          <OfficeChair gx={1.9} gy={0.35} color={T.structure.tissuFonce} />
+          <Desk gx={1} gy={1.2} wood={T.structure.boisFonce} />
           <Plant gx={3.95} gy={2.9} />
 
           <CoffeeMachine gx={5.4} gy={0.7} />
-          <IsoBox gx={7.3} gy={1.5} w={1} d={1} h={20} color="#3f4655" />
+          <IsoBox gx={7.3} gy={1.5} w={1} d={1} h={20} color={T.structure.metalFonce} />
           <Plant gx={8.8} gy={0.6} scale={0.85} />
 
           {/* Salle de réunion : écran de présentation contre la cloison,
@@ -454,14 +456,14 @@ export function IsoOffice({
           <WallScreen gx={9.72} gy={1.1} />
           <MeetingTable gx={10.4} gy={1.1} />
           {[0, 1, 2].map((i) => (
-            <OfficeChair key={`mn${i}`} gx={10.7 + i * 0.95} gy={0.3} color="#3f4a58" />
+            <OfficeChair key={`mn${i}`} gx={10.7 + i * 0.95} gy={0.3} color={T.structure.tissu} />
           ))}
           {[0, 1, 2].map((i) => (
-            <OfficeChair key={`ms${i}`} gx={10.7 + i * 0.95} gy={2.75} color="#3f4a58" />
+            <OfficeChair key={`ms${i}`} gx={10.7 + i * 0.95} gy={2.75} color={T.structure.tissu} />
           ))}
           {[0.75, 1.9, 2.6].map((o, i) => (
             <IsoBox key={o} gx={10.4 + o} gy={1.35 + (i % 2) * 0.55} w={0.16} d={0.16} h={5}
-              z0={26} color="#e2ddce" />
+              z0={26} color={T.habillage.papier} />
           ))}
           <FlipChart gx={13.0} gy={0.25} />
           <Plant gx={13.6} gy={2.9} scale={0.8} />
@@ -496,11 +498,11 @@ export function IsoOffice({
           {/* Toi, à ton poste. Même convention que les rangées de
               l'open space (chaise → occupant → clavier → écran), sinon
               le seul personnage qui compte serait le seul mal assis. */}
-          <OfficeChair gx={6.94} gy={9.28} color="#3d5449" />
+          <OfficeChair gx={6.94} gy={9.28} color={T.structure.tissu} />
           <g transform={`translate(${me.x},${me.y})`}>
             <Figure id="player" look={playerLook} />
           </g>
-          <Desk gx={6.2} gy={10.6} wood="#6e6250" frame="#39504a" />
+          <Desk gx={6.2} gy={10.6} wood={T.structure.bois} frame={T.structure.metalFonce} />
           {/* Un chevron : dans un étage plein de gens qui se ressemblent,
               il faut pouvoir se retrouver soi-même d'un coup d'œil.
               Le placement et l'animation vivent sur DEUX groupes : une

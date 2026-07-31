@@ -71,6 +71,47 @@ src/
     ...                événement, résolution hebdo, game over
 ```
 
+### Identité visuelle du plateau : « Plein jour »
+
+L'open space est **diurne**. Ce n'est pas un goût, c'est une conséquence :
+le plateau nocturne d'origine se lisait comme une bouillie, et la mesure le
+disait — luminance moyenne **0,33**, **73 %** des surfaces dans le tiers
+sombre, **10 %** seulement au-dessus de 0,6. Sans lumière à l'écran, rien
+ne peut ressortir. En plein jour, la moyenne passe à **0,62** et les 10 %
+sombres qui restent sont **les personnages** — exactement ce qu'on veut
+voir en premier.
+
+Toute la palette vit dans `src/data/board.json`, rangée par **rôle** et non
+par objet : ce n'est pas « la couleur du caisson », c'est « du métal de
+structure ». Changer d'identité visuelle coûte un fichier JSON. Deux thèmes
+y cohabitent — `plein_jour` (actif) et `nuit` (l'original, conservé pour
+comparaison) — et `?theme=nuit` dans l'URL bascule sans rebuild.
+
+**Les deux règles qui font tout le travail**, et qui ne sont pas
+déclaratives : `npm run audit:palette` les vérifie, et le build échoue si
+elles sont violées.
+
+1. **Budget de valeurs.** Le décor tient dans une bande étroite
+   (`bandeDecor`, 0,60–0,93) ; les acteurs vivent en dehors
+   (`bandeActeurs`, 0,22–0,58). C'est ça qui règle le « trop chargé » :
+   le problème n'était jamais le nombre d'objets — 1 240 formes peintes
+   avant comme après — mais le fait que la plante verte, le caisson à
+   tiroirs et le visage d'un collègue aient le même contraste. Quand tout
+   crie au même volume, rien n'est lisible.
+2. **Budget de saturation.** Le décor reste sous `satMaxDecor` (0,18).
+   Seuls les personnages et les signaux de jeu ont le droit d'être
+   saturés.
+
+Les exceptions sont **déclarées et justifiées** (`horsBande`) — le terreau
+d'une plante, le café dans une tasse, un post-it de 3 px. Une couleur hors
+bande non déclarée est un bug, pas une question de goût.
+
+Corollaire pour les personnages : c'est la bande du décor qui dicte celle
+des acteurs, donc leur apparence vit dans le thème elle aussi. Le
+Carriériste ne porte plus la chemise blanche qui le faisait disparaître sur
+un sol clair, mais la veste sombre de celui qui s'habille pour le poste
+d'après — ce qui le dit mieux de toute façon.
+
 ### Direction artistique
 
 Le jeu se joue dans des dossiers RH : **l'interface est la paperasse.** Des

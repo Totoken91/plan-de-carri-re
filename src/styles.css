@@ -278,11 +278,16 @@ body {
 .board { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 
 /* ══════════════════════════════════════════════════════════
-   Le plateau — la seule zone qui reste dans le noir
+   Le plateau
+   ──────────────────────────────────────────────────────────
+   Aucune couleur ici : le plateau pose ses variables depuis
+   src/data/board.json (voir themeVars). Recopier la palette dans la
+   feuille de style, c'était la garantie qu'elle diverge au premier
+   changement d'identité visuelle.
    ══════════════════════════════════════════════════════════ */
 .iso {
   position: relative; isolation: isolate; overflow: hidden;
-  background: linear-gradient(180deg, #12151c, #0c0f14);
+  background: linear-gradient(180deg, var(--iso-page-haut), var(--iso-page-bas));
   border: 1px solid var(--rule);
   /* le carton du dossier dépasse derrière la vitre */
   box-shadow: 0 0 0 7px var(--paper), 0 0 0 8px var(--rule), 0 12px 30px rgba(0, 0, 0, 0.55);
@@ -291,23 +296,23 @@ body {
 .iso__svg { display: block; width: 100%; height: auto; }
 .iso::before {
   content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 2;
-  background: linear-gradient(180deg, rgba(255, 200, 150, 0.05) 0%, transparent 45%, rgba(90, 140, 210, 0.09) 100%);
+  background: var(--iso-voile);
   mix-blend-mode: overlay;
 }
 .iso::after {
   content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 3;
-  background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.42) 100%);
-  mix-blend-mode: multiply;
+  background: var(--iso-vignette);
+  mix-blend-mode: var(--iso-vignette-melange);
 }
 .iso--alert {
   box-shadow: 0 0 0 7px var(--paper), 0 0 0 8px var(--stamp),
     inset 0 0 40px rgba(158, 52, 40, 0.35), 0 12px 30px rgba(0, 0, 0, 0.55);
 }
 
-.iso-grid line { stroke: rgba(150, 180, 230, 0.045); stroke-width: 1; }
-.iso-glass__pane { fill: rgba(150, 200, 255, 0.032); }
-.iso-glass__rail { fill: rgba(176, 208, 245, 0.30); }
-.iso-glass__post { fill: rgba(176, 208, 245, 0.20); }
+.iso-grid line { stroke: var(--iso-joint); stroke-width: 1; }
+.iso-glass__pane { fill: var(--iso-vitre); }
+.iso-glass__rail { fill: var(--iso-vitre-rail); }
+.iso-glass__post { fill: var(--iso-vitre-montant); }
 .iso-gone { opacity: 0.28; filter: grayscale(1); }
 
 /* Personnages : respiration et clignement, désynchronisés par un délai
@@ -332,18 +337,18 @@ body {
 
 .iso-zone { cursor: pointer; }
 .iso-zone__hit { fill: transparent; transition: fill 0.18s; }
-.iso-zone:hover .iso-zone__hit { fill: rgba(215, 208, 190, 0.09); }
-.iso-zone.is-actionable .iso-zone__hit { fill: rgba(215, 208, 190, 0.045); }
-.iso-zone.is-actionable:hover .iso-zone__hit { fill: rgba(215, 208, 190, 0.14); }
+.iso-zone:hover .iso-zone__hit { fill: var(--iso-encre); fill-opacity: 0.07; }
+.iso-zone.is-actionable .iso-zone__hit { fill: var(--iso-encre); fill-opacity: 0.035; }
+.iso-zone.is-actionable:hover .iso-zone__hit { fill: var(--iso-encre); fill-opacity: 0.11; }
 .iso-zone__label {
-  fill: rgba(206, 198, 178, 0.62); font-family: var(--font-form); font-size: 8.5px;
+  fill: var(--iso-encre-douce); font-family: var(--font-form); font-size: 8.5px;
   font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; pointer-events: none;
-  paint-order: stroke; stroke: rgba(0, 0, 0, 0.7); stroke-width: 3px;
+  paint-order: stroke; stroke: var(--iso-papier); stroke-width: 3px;
 }
 
 .iso-hit { cursor: pointer; }
-.iso-select-ring { fill: none; stroke: var(--paper); stroke-width: 2; animation: ringPulse 2.2s ease-in-out infinite; }
-.iso-zone-ring { fill: rgba(215, 208, 190, 0.08); stroke: var(--paper); stroke-width: 1.5; }
+.iso-select-ring { fill: none; stroke: var(--iso-encre); stroke-width: 2; animation: ringPulse 2.2s ease-in-out infinite; }
+.iso-zone-ring { fill: var(--iso-encre); fill-opacity: 0.06; stroke: var(--iso-encre); stroke-width: 1.5; }
 @keyframes ringPulse {
   0%, 100% { opacity: 0.6; transform: scale(1); }
   50% { opacity: 1; transform: scale(1.05); }
@@ -687,8 +692,13 @@ body {
   }
 }
 
-/* Nappes des luminaires : additif, pour éclaircir sans laver les couleurs */
-.iso-lights { mix-blend-mode: screen; pointer-events: none; }
+/* Nappes des luminaires. Le mélange et l'opacité viennent du thème :
+   en plein jour, une nappe additive à pleine force lave tout. */
+.iso-lights {
+  mix-blend-mode: var(--iso-lumieres-melange);
+  opacity: var(--iso-lumieres-opacite);
+  pointer-events: none;
+}
 
 /* Les icônes viennent du contenu sous forme d'emoji. En couleur, elles
    se lisent comme des autocollants posés sur un décor en aplats. On les
@@ -734,16 +744,18 @@ body {
 }
 .iso__hint {
   font-family: var(--font-form); font-size: 9px; letter-spacing: 0.1em;
-  text-transform: uppercase; color: rgba(206, 198, 178, 0.45);
+  text-transform: uppercase; color: var(--iso-encre-douce);
 }
+/* Les commandes du plateau suivent son encre : sur un plateau clair,
+   une pastille sombre à texte clair était le seul reste de la nuit. */
 .iso__recenter {
   pointer-events: auto;
   font-family: var(--font-form); font-size: 9px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: rgba(215, 208, 190, 0.85);
-  background: rgba(20, 24, 30, 0.75); border: 1px solid rgba(206, 198, 178, 0.35);
-  padding: 4px 9px; cursor: pointer; transition: background 0.12s, opacity 0.12s;
+  text-transform: uppercase; color: var(--iso-encre);
+  background: var(--iso-papier); border: 1px solid var(--iso-encre-douce);
+  padding: 4px 9px; cursor: pointer; transition: opacity 0.12s, filter 0.12s;
 }
-.iso__recenter:hover:not(:disabled) { background: rgba(40, 46, 56, 0.95); }
+.iso__recenter:hover:not(:disabled) { filter: brightness(0.94); }
 .iso__recenter:disabled { opacity: 0; pointer-events: none; }
 
 /* ══════════════════════════════════════════════════════════
@@ -862,7 +874,7 @@ body {
 
 /* Le chevron « c'est toi ». Discret : un joueur ne se cherche qu'une
    fois, ensuite il sait où il est assis. */
-.iso-me path { fill: #e8cd8a; stroke: rgba(24,20,14,0.5); stroke-width: 0.8; }
+.iso-me path { fill: var(--iso-or); stroke: var(--iso-encre); stroke-opacity: 0.55; stroke-width: 0.8; }
 .iso-me { animation: mePulse 2.8s ease-in-out infinite; }
 @keyframes mePulse {
   0%, 100% { opacity: 0.7; transform: translateY(0); }
@@ -952,7 +964,7 @@ body {
 .hire__preview { position: relative; align-self: start; }
 .hire__portrait {
   display: block; width: 100%; aspect-ratio: 44 / 31; margin-top: 6px;
-  background: radial-gradient(120% 100% at 42% 62%, #1d2427, #101315);
+  background: var(--iso-page-haut, #1d2427);
   border: 1px solid var(--rule);
 }
 .hire__ident {

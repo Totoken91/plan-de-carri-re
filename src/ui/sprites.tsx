@@ -14,6 +14,7 @@
 // ─────────────────────────────────────────────────────────────
 import { useEffect, useRef } from 'react';
 import type { Appearance, Colleague, HairStyle } from '@state/schema';
+import { theme as T } from '@data/board';
 import { DESK_D, DESK_W, box, iso, panelAlongX, quad } from './iso';
 import {
   DEFAULT_RIG as RIG,
@@ -109,22 +110,17 @@ export interface Look extends Appearance {
   mug?: boolean;
 }
 
-/** Apparence des collègues, déduite de leur archétype. */
-const LOOKS: Record<string, Omit<Look, 'skin'>> = {
-  // Chemise claire, cravate : le seul qui s'habille pour le poste d'après.
-  carrieriste: { shirt: '#dfe3ea', hair: '#332a20', hairStyle: 'plaque', tie: '#b4453b', glasses: false },
-  // Queue de cheval, lunettes, et un café qu'il porte à quelqu'un d'autre.
-  fayot: { shirt: '#cf9a3c', hair: '#5a3f2c', hairStyle: 'queue', glasses: true, mug: true },
-  // La capuche : reconnaissable même en ombre chinoise.
-  glandeur: { shirt: '#4e9b68', hair: '#241f1c', hairStyle: 'capuche', glasses: false },
-  // Cheveux en rideau, lunettes : on ne voit jamais tout à fait son visage.
-  parano: { shirt: '#7d68b8', hair: '#4b3728', hairStyle: 'rideau', glasses: true },
-  // Quinze ans de maison, et le crâne qui va avec.
-  veteran: { shirt: '#4a90ab', hair: '#b9bec4', hairStyle: 'degarni', glasses: false },
-  nouveau: { shirt: '#8b93a6', hair: '#8a6440', hairStyle: 'carre', glasses: false },
-};
+/**
+ * Apparence des collègues, déduite de leur archétype — et lue dans le
+ * thème du plateau. Ce n'est pas un caprice de rangement : c'est la
+ * bande de valeurs du décor qui dicte celle des acteurs. Sur un plateau
+ * clair, la chemise blanche du Carriériste devenait un trou blanc ; il
+ * porte maintenant la veste sombre de celui qui s'habille pour le poste
+ * d'après, ce qui le dit mieux de toute façon.
+ */
+const LOOKS = T.personnages.archetypes;
 
-const SKINS = ['#e9b78f', '#c98c62', '#8d5a3b', '#f0cba6', '#a9714a', '#6d4530'];
+const SKINS = T.personnages.peaux;
 
 function hashOf(id: string): number {
   let h = 0;
@@ -334,7 +330,7 @@ export function Figure({
 
   return (
     <g ref={ref} className="iso-person">
-      <ellipse rx="14" ry="5.5" fill="rgba(0,0,0,0.32)" />
+      <ellipse rx="14" ry="5.5" fill={T.ombre.contact} />
 
       {/* Copie décalée en ton sombre : elle dépasse à droite et rend
           l'arête d'ombre franche du reste du décor. */}
@@ -352,9 +348,9 @@ export function Figure({
       {look.mug && (
         /* Tenue par la main gauche, dont la position vient de l'IK. */
         <g data-r="hand">
-          <rect x="-3" y="-3" width="5.4" height="5.8" fill="#e8e4d9" />
-          <rect x="2.4" y="-1.6" width="1.9" height="2.6" fill="#e8e4d9" />
-          <ellipse cy="-3" rx="2.7" ry="1" fill="#4a3a2c" />
+          <rect x="-3" y="-3" width="5.4" height="5.8" fill={T.personnages.tasse} />
+          <rect x="2.4" y="-1.6" width="1.9" height="2.6" fill={T.personnages.tasse} />
+          <ellipse cy="-3" rx="2.7" ry="1" fill={T.personnages.tasseCafe} />
         </g>
       )}
 
@@ -364,17 +360,17 @@ export function Figure({
         <circle r={HEAD_R} fill={skin} />
         {discShadow(HEAD_R, skinDark)}
         <Hair style={look.hairStyle} color={look.hair} layer="front" />
-        <circle className="iso-person__eye" cx="-4" cy="1" r="1.7" fill="#2b2620" />
-        <circle className="iso-person__eye" cx="4" cy="1" r="1.7" fill="#2b2620" />
+        <circle className="iso-person__eye" cx="-4" cy="1" r="1.7" fill={T.personnages.oeil} />
+        <circle className="iso-person__eye" cx="4" cy="1" r="1.7" fill={T.personnages.oeil} />
         {look.glasses && (
           /* Deux verres cerclés. La « barre pleine » que j'avais mise ici
              pour gagner en lisibilité se lisait comme un bandeau. */
           <g>
-            <circle cx="-4.2" cy="1" r="3.4" fill="rgba(198,222,240,0.30)"
-              stroke="#2b2620" strokeWidth="1.1" />
-            <circle cx="4.2" cy="1" r="3.4" fill="rgba(198,222,240,0.30)"
-              stroke="#2b2620" strokeWidth="1.1" />
-            <path d="M -0.8 1 L 0.8 1" stroke="#2b2620" strokeWidth="1.1" />
+            <circle cx="-4.2" cy="1" r="3.4" fill={T.personnages.verre}
+              stroke={T.personnages.oeil} strokeWidth="1.1" />
+            <circle cx="4.2" cy="1" r="3.4" fill={T.personnages.verre}
+              stroke={T.personnages.oeil} strokeWidth="1.1" />
+            <path d="M -0.8 1 L 0.8 1" stroke={T.personnages.oeil} strokeWidth="1.1" />
           </g>
         )}
       </g>
@@ -398,8 +394,8 @@ export function Person({ c }: { c: Colleague }) {
 export function Desk({
   gx,
   gy,
-  wood = '#8a7a5e',
-  frame = '#48525f',
+  wood = T.structure.bois,
+  frame = T.structure.metal,
   seed = 0,
 }: {
   gx: number;
@@ -430,9 +426,9 @@ export function Desk({
       {[6, 13].map((z) => (
         <g key={z}>
           <polygon points={box(gx + DESK_W - 0.74, gy + 0.1, 0.6, 0.8, 0.8, z).left}
-            fill="rgba(0,0,0,0.3)" />
+            fill={T.ombre.creux} />
           <polygon points={box(gx + DESK_W - 0.74, gy + 0.1, 0.6, 0.8, 0.8, z + 1).left}
-            fill="rgba(255,255,255,0.07)" />
+            fill={T.ombre.lisere} />
         </g>
       ))}
       {/* plateau — teinte légèrement décalée d'un poste à l'autre */}
@@ -440,60 +436,60 @@ export function Desk({
         color={shade(wood, 0.93 + (seed % 3) * 0.055)} />
 
       {/* clavier + souris, côté occupant */}
-      <polygon points={quad(gx + 0.5, gy + 0.16, 0.92, 0.26, TOP + 0.5)} fill="#20242c" />
-      <polygon points={quad(gx + 0.54, gy + 0.19, 0.84, 0.2, TOP + 1.2)} fill="#2c313b" />
+      <polygon points={quad(gx + 0.5, gy + 0.16, 0.92, 0.26, TOP + 0.5)} fill={T.structure.ecranArete} />
+      <polygon points={quad(gx + 0.54, gy + 0.19, 0.84, 0.2, TOP + 1.2)} fill={T.structure.metal} />
       <ellipse {...(() => { const p = iso(gx + 1.58, gy + 0.28, TOP); return { cx: p.x, cy: p.y }; })()}
-        rx="3.4" ry="2.1" fill="#2c313b" />
+        rx="3.4" ry="2.1" fill={T.structure.metal} />
 
       {/* Fouillis personnel — chaque poste tire le sien. */}
       {seed % 3 === 0 && (
         <g>
-          <IsoBox gx={gx + 0.22} gy={gy + 0.6} w={0.17} d={0.17} h={5} z0={TOP} color="#d8d3c4" />
+          <IsoBox gx={gx + 0.22} gy={gy + 0.6} w={0.17} d={0.17} h={5} z0={TOP} color={T.personnages.tasse} />
           <ellipse {...(() => { const p = iso(gx + 0.305, gy + 0.685, TOP + 5); return { cx: p.x, cy: p.y }; })()}
-            rx="2.6" ry="1.3" fill="#4a3a2c" />
+            rx="2.6" ry="1.3" fill={T.personnages.tasseCafe} />
         </g>
       )}
       {seed % 2 === 0 && (
         <g>
-          <polygon points={quad(gx + 1.5, gy + 0.62, 0.42, 0.34, TOP + 0.4)} fill="#cfc8b6" />
-          <polygon points={quad(gx + 1.53, gy + 0.6, 0.42, 0.34, TOP + 1.6)} fill="#e2ddce" />
+          <polygon points={quad(gx + 1.5, gy + 0.62, 0.42, 0.34, TOP + 0.4)} fill={T.habillage.papierOmbre} />
+          <polygon points={quad(gx + 1.53, gy + 0.6, 0.42, 0.34, TOP + 1.6)} fill={T.habillage.papier} />
         </g>
       )}
       {seed % 5 === 1 && (
         <g>
-          <IsoBox gx={gx + 1.72} gy={gy + 0.14} w={0.2} d={0.2} h={4} z0={TOP} color="#7d5940" />
+          <IsoBox gx={gx + 1.72} gy={gy + 0.14} w={0.2} d={0.2} h={4} z0={TOP} color={T.habillage.terre} />
           <ellipse {...(() => { const p = iso(gx + 1.82, gy + 0.24, TOP + 4); return { cx: p.x, cy: p.y }; })()}
-            rx="4" ry="3" fill="#3f8a55" />
+            rx="4" ry="3" fill={T.habillage.vegetal} />
           <ellipse {...(() => { const p = iso(gx + 1.82, gy + 0.24, TOP + 7); return { cx: p.x, cy: p.y }; })()}
-            rx="2.6" ry="2" fill="#4fa367" />
+            rx="2.6" ry="2" fill={T.habillage.vegetalClair} />
         </g>
       )}
       {seed % 4 === 1 && (
         /* pense-bête abandonné sur le plateau */
-        <polygon points={quad(gx + 0.28, gy + 0.28, 0.19, 0.19, TOP + 0.4)} fill="#e8d24a" />
+        <polygon points={quad(gx + 0.28, gy + 0.28, 0.19, 0.19, TOP + 0.4)} fill={T.habillage.postIt} />
       )}
 
       {/* nappe de lumière projetée sur le plateau, côté occupant */}
       <ellipse cx={spill.x} cy={spill.y} rx="30" ry="13" fill="url(#screenPool)" className="iso-screen-pool" />
 
       {/* pied : socle + colonne */}
-      <IsoBox gx={gx + 0.88} gy={gy + 0.7} w={0.34} d={0.22} h={2.5} z0={TOP} color="#39414d" />
-      <IsoBox gx={gx + 1.0} gy={gy + 0.75} w={0.1} d={0.11} h={11} z0={TOP + 2} color="#434c59" />
+      <IsoBox gx={gx + 0.88} gy={gy + 0.7} w={0.34} d={0.22} h={2.5} z0={TOP} color={T.structure.ecranPied} />
+      <IsoBox gx={gx + 1.0} gy={gy + 0.75} w={0.1} d={0.11} h={11} z0={TOP + 2} color={T.structure.ecranPied} />
 
       {/* panneau, dos tourné à la caméra */}
-      <polygon points={mon.left} fill="#39414e" />
-      <polygon points={mon.right} fill="#272d37" />
-      <polygon points={mon.top} fill="#4a5361" />
+      <polygon points={mon.left} fill={T.structure.ecranDos} />
+      <polygon points={mon.right} fill={T.structure.ecranArete} />
+      <polygon points={mon.top} fill={T.structure.metalClair} />
       {/* grille d'aération + pastille de marque sur le dos */}
       {[0, 1, 2, 3].map((i) => (
         <polygon key={i}
           points={box(gx + 0.74 + i * 0.16, gy + 0.68, 0.1, 0.02, 1.6, STAND + 12 - i * 0).left}
-          fill="rgba(0,0,0,0.28)" />
+          fill={T.ombre.creux} />
       ))}
       <ellipse {...(() => { const p = iso(gx + 1.05, gy + 0.68, STAND + 6); return { cx: p.x, cy: p.y }; })()}
-        rx="2" ry="1.4" fill="rgba(255,255,255,0.13)" />
+        rx="2" ry="1.4" fill={T.ombre.lisere} />
       {/* liseré clair du châssis, côté lumière */}
-      <polygon points={mon.left} fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth="0.9" />
+      <polygon points={mon.left} fill="none" stroke={T.ombre.lisere} strokeWidth="0.9" />
 
       {/* la lumière de la dalle déborde par le haut du châssis */}
       <polygon points={mon.top} fill="url(#screenEdge)" className="iso-screen" />
@@ -504,11 +500,11 @@ export function Desk({
 }
 
 /** Fauteuil de bureau : assise, dossier, vérin, étoile à roulettes. */
-export function OfficeChair({ gx, gy, color = '#3d4654' }: { gx: number; gy: number; color?: string }) {
+export function OfficeChair({ gx, gy, color = T.structure.tissu }: { gx: number; gy: number; color?: string }) {
   const base = iso(gx + 0.35, gy + 0.35);
   return (
     <g>
-      <ellipse cx={base.x} cy={base.y} rx="13" ry="5.5" fill="rgba(0,0,0,0.32)" />
+      <ellipse cx={base.x} cy={base.y} rx="13" ry="5.5" fill={T.ombre.contact} />
       {[0, 72, 144, 216, 288].map((a) => {
         const r = (a * Math.PI) / 180;
         return (
@@ -529,15 +525,15 @@ export function Plant({ gx, gy, scale = 1 }: { gx: number; gy: number; scale?: n
   const p = iso(gx, gy);
   return (
     <g transform={`translate(${p.x},${p.y}) scale(${scale})`}>
-      <ellipse rx="11" ry="4.8" fill="rgba(0,0,0,0.38)" />
-      <path d="M -6.4 0 L -5 -13.5 L 5 -13.5 L 6.4 0 Z" fill="#6d4a33" />
-      <path d="M -6.6 -13 L 6.6 -13 L 6 -10.4 L -6 -10.4 Z" fill="#835a3f" />
-      <ellipse cy="-13" rx="5.6" ry="1.8" fill="#2f2318" />
-      <path d="M 0 -13 C -16 -17, -14 -35, -1.5 -30 C -5 -23, -2 -17, 0 -13 Z" fill="#2f6b43" />
-      <path d="M 0 -13 C 16 -18, 13 -36, 1.5 -30 C 5 -23, 2 -17, 0 -13 Z" fill="#3f8a55" />
-      <path d="M 0 -15 C -6 -31, 1 -45, 4 -33 C 2.5 -25, 1 -19, 0 -15 Z" fill="#4fa367" />
-      <path d="M 0 -14 C 8 -24, 12 -28, 9 -20 C 6 -17, 2 -15, 0 -14 Z" fill="#3a7d4d" />
-      <path d="M -1 -29 C -1 -24, -0.5 -19, 0 -15" fill="none" stroke="rgba(255,255,255,0.16)" strokeWidth="0.8" />
+      <ellipse rx="11" ry="4.8" fill={T.ombre.contactForte} />
+      <path d="M -6.4 0 L -5 -13.5 L 5 -13.5 L 6.4 0 Z" fill={T.habillage.terre} />
+      <path d="M -6.6 -13 L 6.6 -13 L 6 -10.4 L -6 -10.4 Z" fill={shade(T.habillage.terre, 1.16)} />
+      <ellipse cy="-13" rx="5.6" ry="1.8" fill={shade(T.habillage.terre, 0.52)} />
+      <path d="M 0 -13 C -16 -17, -14 -35, -1.5 -30 C -5 -23, -2 -17, 0 -13 Z" fill={T.habillage.vegetalFonce} />
+      <path d="M 0 -13 C 16 -18, 13 -36, 1.5 -30 C 5 -23, 2 -17, 0 -13 Z" fill={T.habillage.vegetal} />
+      <path d="M 0 -15 C -6 -31, 1 -45, 4 -33 C 2.5 -25, 1 -19, 0 -15 Z" fill={T.habillage.vegetalClair} />
+      <path d="M 0 -14 C 8 -24, 12 -28, 9 -20 C 6 -17, 2 -15, 0 -14 Z" fill={shade(T.habillage.vegetal, 0.9)} />
+      <path d="M -1 -29 C -1 -24, -0.5 -19, 0 -15" fill="none" stroke={T.ombre.lisere} strokeWidth="0.8" />
     </g>
   );
 }
@@ -545,13 +541,13 @@ export function Plant({ gx, gy, scale = 1 }: { gx: number; gy: number; scale?: n
 export function Shelf({ gx, gy }: { gx: number; gy: number }) {
   return (
     <g>
-      <IsoBox gx={gx} gy={gy} w={0.56} d={1.9} h={64} color="#5a4f3c" />
+      <IsoBox gx={gx} gy={gy} w={0.56} d={1.9} h={64} color={T.structure.boisFonce} />
       {[14, 28, 42, 56].map((z) => (
         <g key={z}>
-          <polygon points={quad(gx + 0.04, gy + 0.05, 0.48, 1.8, z)} fill="#2a251d" />
+          <polygon points={quad(gx + 0.04, gy + 0.05, 0.48, 1.8, z)} fill={shade(T.structure.boisFonce, 0.72)} />
           {[0.1, 0.6, 1.05].map((o, i) => (
             <IsoBox key={o} gx={gx + 0.1} gy={gy + 0.12 + o} w={0.34} d={0.42 - i * 0.06} h={11}
-              z0={z} color={['#7e6a4a', '#6a5f7a', '#5d7a6a'][(i + z) % 3]!} />
+              z0={z} color={T.habillage.casiers[(i + z) % T.habillage.casiers.length]!} />
           ))}
         </g>
       ))}
@@ -562,13 +558,13 @@ export function Shelf({ gx, gy }: { gx: number; gy: number }) {
 export function Sofa({ gx, gy }: { gx: number; gy: number }) {
   return (
     <g>
-      <IsoBox gx={gx} gy={gy} w={2.4} d={1} h={11} color={'#3f4859'} />
-      <IsoBox gx={gx + 0.16} gy={gy + 0.18} w={1} d={0.72} h={5} z0={11} color="#4c576c" />
-      <IsoBox gx={gx + 1.24} gy={gy + 0.18} w={1} d={0.72} h={5} z0={11} color="#4c576c" />
-      <IsoBox gx={gx} gy={gy} w={2.4} d={0.2} h={28} color="#47536a" />
-      <IsoBox gx={gx} gy={gy + 0.18} w={0.24} d={0.84} h={19} color="#4c576c" />
-      <IsoBox gx={gx + 2.16} gy={gy + 0.18} w={0.24} d={0.84} h={19} color="#3f4859" />
-      <IsoBox gx={gx + 0.7} gy={gy + 0.16} w={0.42} d={0.12} h={11} z0={16} color="#7a5f62" />
+      <IsoBox gx={gx} gy={gy} w={2.4} d={1} h={11} color={T.structure.tissu} />
+      <IsoBox gx={gx + 0.16} gy={gy + 0.18} w={1} d={0.72} h={5} z0={11} color={T.structure.metalClair} />
+      <IsoBox gx={gx + 1.24} gy={gy + 0.18} w={1} d={0.72} h={5} z0={11} color={T.structure.metalClair} />
+      <IsoBox gx={gx} gy={gy} w={2.4} d={0.2} h={28} color={T.structure.tissuFonce} />
+      <IsoBox gx={gx} gy={gy + 0.18} w={0.24} d={0.84} h={19} color={T.structure.metalClair} />
+      <IsoBox gx={gx + 2.16} gy={gy + 0.18} w={0.24} d={0.84} h={19} color={T.structure.tissu} />
+      <IsoBox gx={gx + 0.7} gy={gy + 0.16} w={0.42} d={0.12} h={11} z0={16} color={T.habillage.cartonFonce} />
     </g>
   );
 }
@@ -577,13 +573,13 @@ export function CoffeeMachine({ gx, gy }: { gx: number; gy: number }) {
   const led = iso(gx + 0.5, gy + 0.55, 54);
   return (
     <g>
-      <IsoBox gx={gx - 0.1} gy={gy - 0.1} w={1.2} d={1.1} h={30} color="#4a4f5e" />
-      <IsoBox gx={gx} gy={gy} w={0.92} d={0.9} h={26} z0={30} color="#343a46" />
-      <IsoBox gx={gx + 0.1} gy={gy + 0.62} w={0.7} d={0.24} h={13} z0={32} color="#1d2129" />
-      <circle cx={led.x} cy={led.y} r="2.6" fill="#ffb54a" className="iso-blink" />
+      <IsoBox gx={gx - 0.1} gy={gy - 0.1} w={1.2} d={1.1} h={30} color={T.structure.metalFonce} />
+      <IsoBox gx={gx} gy={gy} w={0.92} d={0.9} h={26} z0={30} color={T.structure.ecranArete} />
+      <IsoBox gx={gx + 0.1} gy={gy + 0.62} w={0.7} d={0.24} h={13} z0={32} color={shade(T.structure.ecranArete, 0.8)} />
+      <circle cx={led.x} cy={led.y} r="2.6" fill={T.signal.orClair} className="iso-blink" />
       {[0, 1].map((i) => (
         <IsoBox key={i} gx={gx + 0.2 + i * 0.34} gy={gy + 0.7} w={0.16} d={0.16} h={5} z0={32}
-          color="#e8e4d9" />
+          color={T.personnages.tasse} />
       ))}
     </g>
   );
@@ -592,11 +588,11 @@ export function CoffeeMachine({ gx, gy }: { gx: number; gy: number }) {
 export function MeetingTable({ gx, gy }: { gx: number; gy: number }) {
   return (
     <g>
-      <IsoBox gx={gx + 0.3} gy={gy + 0.3} w={2.4} d={0.9} h={22} color="#3a4150" />
-      <IsoBox gx={gx} gy={gy} w={3} d={1.5} h={4} z0={22} color="#7a6a52" />
-      <polygon points={quad(gx + 1.2, gy + 0.5, 0.5, 0.5, 26)} fill="#2a2f39" />
-      <polygon points={quad(gx + 0.3, gy + 0.4, 0.34, 0.4, 26)} fill="#d8d3c4" />
-      <polygon points={quad(gx + 2.2, gy + 0.7, 0.34, 0.4, 26)} fill="#d8d3c4" />
+      <IsoBox gx={gx + 0.3} gy={gy + 0.3} w={2.4} d={0.9} h={22} color={T.structure.metalFonce} />
+      <IsoBox gx={gx} gy={gy} w={3} d={1.5} h={4} z0={22} color={T.structure.bois} />
+      <polygon points={quad(gx + 1.2, gy + 0.5, 0.5, 0.5, 26)} fill={T.structure.ecranArete} />
+      <polygon points={quad(gx + 0.3, gy + 0.4, 0.34, 0.4, 26)} fill={T.habillage.papier} />
+      <polygon points={quad(gx + 2.2, gy + 0.7, 0.34, 0.4, 26)} fill={T.habillage.papier} />
     </g>
   );
 }
@@ -604,10 +600,10 @@ export function MeetingTable({ gx, gy }: { gx: number; gy: number }) {
 export function Printer({ gx, gy }: { gx: number; gy: number }) {
   return (
     <g>
-      <IsoBox gx={gx} gy={gy} w={0.8} d={0.9} h={22} color="#3a4150" />
-      <IsoBox gx={gx + 0.04} gy={gy + 0.04} w={0.72} d={0.82} h={9} z0={22} color="#2b313c" />
-      <polygon points={quad(gx + 0.1, gy + 0.5, 0.6, 0.34, 31.5)} fill="#e8e4d9" />
-      <IsoBox gx={gx + 0.1} gy={gy + 0.06} w={0.6} d={0.14} h={2} z0={31} color="#20242c" />
+      <IsoBox gx={gx} gy={gy} w={0.8} d={0.9} h={22} color={T.structure.metalFonce} />
+      <IsoBox gx={gx + 0.04} gy={gy + 0.04} w={0.72} d={0.82} h={9} z0={22} color={T.structure.ecranArete} />
+      <polygon points={quad(gx + 0.1, gy + 0.5, 0.6, 0.34, 31.5)} fill={T.habillage.papier} />
+      <IsoBox gx={gx + 0.1} gy={gy + 0.06} w={0.6} d={0.14} h={2} z0={31} color={shade(T.structure.ecranArete, 0.82)} />
     </g>
   );
 }
@@ -615,9 +611,9 @@ export function Printer({ gx, gy }: { gx: number; gy: number }) {
 export function WaterCooler({ gx, gy }: { gx: number; gy: number }) {
   return (
     <g>
-      <IsoBox gx={gx} gy={gy} w={0.52} d={0.52} h={20} color="#e8e4d9" opacity={0.9} />
-      <IsoBox gx={gx + 0.04} gy={gy + 0.04} w={0.44} d={0.44} h={17} z0={20} color="#5fa3c4" opacity={0.75} />
-      <IsoBox gx={gx + 0.14} gy={gy + 0.46} w={0.24} d={0.08} h={4} z0={12} color="#3a4150" />
+      <IsoBox gx={gx} gy={gy} w={0.52} d={0.52} h={20} color={T.structure.metalClair} opacity={0.9} />
+      <IsoBox gx={gx + 0.04} gy={gy + 0.04} w={0.44} d={0.44} h={17} z0={20} color={T.signal.ecranLueur} opacity={0.75} />
+      <IsoBox gx={gx + 0.14} gy={gy + 0.46} w={0.24} d={0.08} h={4} z0={12} color={T.structure.metalFonce} />
     </g>
   );
 }
@@ -632,7 +628,7 @@ export function Lockers({ gx, gy, count = 2 }: { gx: number; gy: number; count?:
         const x = gx + i * (W + 0.03);
         return (
           <g key={i}>
-            <IsoBox gx={x} gy={gy} w={W} d={0.6} h={H} color="#4f5867" />
+            <IsoBox gx={x} gy={gy} w={W} d={0.6} h={H} color={T.structure.metal} />
             {/* deux vantaux + poignées, sur la face avant */}
             {[
               [4, 26],
@@ -641,15 +637,15 @@ export function Lockers({ gx, gy, count = 2 }: { gx: number; gy: number; count?:
               <g key={z1}>
                 <polygon
                   points={panelAlongX(x + 0.04, x + W - 0.04, gy + 0.601, z1!, z2!)}
-                  fill="rgba(0,0,0,0.22)"
+                  fill={T.ombre.creux}
                 />
                 <polygon
                   points={panelAlongX(x + 0.06, x + W - 0.06, gy + 0.602, z1! + 1, z2! - 1)}
-                  fill="rgba(255,255,255,0.05)"
+                  fill={T.ombre.lisere}
                 />
                 <polygon
                   points={panelAlongX(x + W - 0.16, x + W - 0.09, gy + 0.603, z2! - 8, z2! - 6)}
-                  fill="rgba(230,235,245,0.5)"
+                  fill={T.structure.metalClair}
                 />
               </g>
             ))}
@@ -662,12 +658,12 @@ export function Lockers({ gx, gy, count = 2 }: { gx: number; gy: number; count?:
 
 /** Bacs de tri — le détail qui dit « couloir de bureau » sans rien expliquer. */
 export function Bins({ gx, gy }: { gx: number; gy: number }) {
-  const lids = ['#3d6d8a', '#6d8a3d', '#8a6d3d'];
+  const lids = T.habillage.poubelles;
   return (
     <g>
       {lids.map((lid, i) => (
         <g key={lid}>
-          <IsoBox gx={gx + i * 0.4} gy={gy} w={0.34} d={0.34} h={17} color="#3f4653" />
+          <IsoBox gx={gx + i * 0.4} gy={gy} w={0.34} d={0.34} h={17} color={T.structure.metalFonce} />
           <IsoBox gx={gx + i * 0.4 - 0.02} gy={gy - 0.02} w={0.38} d={0.38} h={2.5} z0={17} color={lid} />
         </g>
       ))}
@@ -679,15 +675,15 @@ export function Bins({ gx, gy }: { gx: number; gy: number }) {
 export function FlipChart({ gx, gy }: { gx: number; gy: number }) {
   return (
     <g>
-      <IsoBox gx={gx + 0.06} gy={gy + 0.5} w={0.06} d={0.06} h={30} color="#6b5a42" />
-      <IsoBox gx={gx + 0.62} gy={gy + 0.5} w={0.06} d={0.06} h={30} color="#5c4d38" />
-      <polygon points={panelAlongX(gx, gx + 0.74, gy + 0.5, 28, 64)} fill="#3a4048" />
-      <polygon points={panelAlongX(gx + 0.03, gx + 0.71, gy + 0.505, 30, 62)} fill="#cfcabb" />
+      <IsoBox gx={gx + 0.06} gy={gy + 0.5} w={0.06} d={0.06} h={30} color={T.structure.bois} />
+      <IsoBox gx={gx + 0.62} gy={gy + 0.5} w={0.06} d={0.06} h={30} color={T.structure.boisFonce} />
+      <polygon points={panelAlongX(gx, gx + 0.74, gy + 0.5, 28, 64)} fill={T.structure.metalFonce} />
+      <polygon points={panelAlongX(gx + 0.03, gx + 0.71, gy + 0.505, 30, 62)} fill={T.habillage.papier} />
       {[56, 50, 44].map((z, i) => (
         <polygon
           key={z}
           points={panelAlongX(gx + 0.09, gx + 0.09 + (i === 1 ? 0.5 : 0.36), gy + 0.51, z - 1.6, z)}
-          fill="#8b93a0"
+          fill={T.structure.ecranArete}
         />
       ))}
     </g>
@@ -698,11 +694,11 @@ export function FlipChart({ gx, gy }: { gx: number; gy: number }) {
 export function WallScreen({ gx, gy }: { gx: number; gy: number }) {
   return (
     <g>
-      <IsoBox gx={gx} gy={gy + 0.3} w={0.7} d={0.35} h={3} color="#333a45" />
-      <IsoBox gx={gx + 0.3} gy={gy + 0.42} w={0.12} d={0.12} h={22} color="#3d4551" />
-      <IsoBox gx={gx + 0.04} gy={gy + 0.44} w={0.06} d={1.5} h={30} z0={22} color="#2b313b" />
-      <polygon points={box(gx + 0.04, gy + 0.44, 0.06, 1.5, 30, 22).right} fill="#1d222a" />
-      <polygon points={box(gx + 0.05, gy + 0.5, 0.06, 1.38, 26, 24).right} fill="#38506b" />
+      <IsoBox gx={gx} gy={gy + 0.3} w={0.7} d={0.35} h={3} color={T.structure.metalFonce} />
+      <IsoBox gx={gx + 0.3} gy={gy + 0.42} w={0.12} d={0.12} h={22} color={T.structure.ecranPied} />
+      <IsoBox gx={gx + 0.04} gy={gy + 0.44} w={0.06} d={1.5} h={30} z0={22} color={T.structure.ecranDos} />
+      <polygon points={box(gx + 0.04, gy + 0.44, 0.06, 1.5, 30, 22).right} fill={T.structure.ecranArete} />
+      <polygon points={box(gx + 0.05, gy + 0.5, 0.06, 1.38, 26, 24).right} fill={T.signal.ecranLueur} />
     </g>
   );
 }
@@ -711,11 +707,11 @@ export function WallScreen({ gx, gy }: { gx: number; gy: number }) {
 export function Credenza({ gx, gy, w = 1, d = 0.7 }: { gx: number; gy: number; w?: number; d?: number }) {
   return (
     <g>
-      <IsoBox gx={gx} gy={gy} w={w} d={d} h={19} color="#5c5140" />
-      <IsoBox gx={gx - 0.03} gy={gy - 0.03} w={w + 0.06} d={d + 0.06} h={2} z0={19} color="#6d6150" />
+      <IsoBox gx={gx} gy={gy} w={w} d={d} h={19} color={T.structure.boisFonce} />
+      <IsoBox gx={gx - 0.03} gy={gy - 0.03} w={w + 0.06} d={d + 0.06} h={2} z0={19} color={T.structure.bois} />
       {[0.06, w / 2 + 0.02].map((o) => (
         <polygon key={o} points={panelAlongX(gx + o, gx + o + w / 2 - 0.08, gy + d + 0.001, 3, 16)}
-          fill="rgba(0,0,0,0.2)" />
+          fill={T.ombre.creux} />
       ))}
     </g>
   );

@@ -18,6 +18,7 @@ import { balance } from '@data/balance';
 import { topRank } from '@data/content';
 import { STAT_KEYS } from '@engine/util';
 import { STAT_LABELS } from './Bits';
+import { theme as T } from '@data/board';
 import { iso } from './iso';
 import { Desk, Figure, GooFilter, OfficeChair } from './sprites';
 
@@ -217,12 +218,12 @@ export function CharacterCreation({
               <defs>
                 <GooFilter />
                 <radialGradient id="hireScreen">
-                  <stop offset="0%" stopColor="rgba(126,186,255,0.40)" />
-                  <stop offset="100%" stopColor="rgba(126,186,255,0)" />
+                  <stop offset="0%" stopColor={T.degrades.ecranNappe[0]} />
+                  <stop offset="100%" stopColor={T.degrades.ecranNappe[1]} />
                 </radialGradient>
                 <radialGradient id="hireFloor">
-                  <stop offset="0%" stopColor="#243a33" />
-                  <stop offset="100%" stopColor="rgba(36,58,51,0)" />
+                  <stop offset="0%" stopColor={T.sol.moquettes.player} />
+                  <stop offset="100%" stopColor={T.sol.dalle} />
                 </radialGradient>
               </defs>
               <g>
@@ -232,11 +233,11 @@ export function CharacterCreation({
                     noir — exactement comme sur le plateau. */}
                 <ellipse cx={SEAT.x - 26} cy={SEAT.y + 22} rx="96" ry="44" fill="url(#hireFloor)" />
                 <ellipse cx={SEAT.x} cy={SEAT.y + 6} rx="46" ry="19" fill="url(#hireScreen)" />
-                <OfficeChair gx={6.94} gy={9.28} color="#3d5449" />
+                <OfficeChair gx={6.94} gy={9.28} color={T.structure.tissu} />
                 <g transform={`translate(${SEAT.x},${SEAT.y})`}>
                   <Figure id={previewId} look={look} />
                 </g>
-                <Desk gx={6.2} gy={10.6} wood="#6e6250" frame="#39504a" />
+                <Desk gx={6.2} gy={10.6} wood={T.structure.bois} frame={T.structure.metalFonce} />
               </g>
             </svg>
             <div className="hire__ident">

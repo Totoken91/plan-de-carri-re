@@ -6,9 +6,10 @@
   "description": "Jeu d'intrigue narratif au tour par tour dans un open space. Comédie noire corporate.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && node scripts/audit-palette.mjs && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "audit:palette": "node scripts/audit-palette.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

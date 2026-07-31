@@ -24,26 +24,44 @@
     "#3f7a63"
   ],
   "hairStyles": [
-    { "id": "plaque", "label": "Plaqués" },
-    { "id": "carre", "label": "Carré" },
-    { "id": "queue", "label": "Queue de cheval" },
-    { "id": "rideau", "label": "Rideau" },
-    { "id": "capuche", "label": "Capuche" },
-    { "id": "degarni", "label": "Dégarni" }
+    {
+      "id": "plaque",
+      "label": "Plaqués"
+    },
+    {
+      "id": "carre",
+      "label": "Carré"
+    },
+    {
+      "id": "queue",
+      "label": "Queue de cheval"
+    },
+    {
+      "id": "rideau",
+      "label": "Rideau"
+    },
+    {
+      "id": "capuche",
+      "label": "Capuche"
+    },
+    {
+      "id": "degarni",
+      "label": "Dégarni"
+    }
   ],
   "shirts": [
-    "#dfe3ea",
-    "#8b93a6",
-    "#4a90ab",
-    "#3f5f8c",
-    "#4e9b68",
-    "#2f6d5c",
-    "#7d68b8",
-    "#cf9a3c",
-    "#b4633b",
-    "#9e3f4a",
-    "#3b3f46",
-    "#d7d0be"
+    "#3f4a5c",
+    "#5c6577",
+    "#2f6b86",
+    "#345383",
+    "#2f7048",
+    "#1f5a4a",
+    "#5a4790",
+    "#b87a1e",
+    "#a5522c",
+    "#8e2f3c",
+    "#3a3f47",
+    "#7a6a52"
   ],
   "ties": [
     "#b4453b",

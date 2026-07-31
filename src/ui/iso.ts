@@ -107,15 +107,14 @@ export interface IsoZone {
   gy: number;
   w: number;
   d: number;
-  carpet: string;
   action?: 'bosser' | 'glander';
 }
 
 export const ZONES: IsoZone[] = [
-  { id: 'manager', label: 'Bureau du manager', gx: 0, gy: 0, w: 4.5, d: 3.5, carpet: '#2b2436' },
-  { id: 'cafe', label: 'Machine à café', gx: 4.8, gy: 0, w: 4.4, d: 3.5, carpet: '#2a2a1f' },
-  { id: 'meeting', label: 'Salle de réunion', gx: 9.5, gy: 0, w: 4.5, d: 3.5, carpet: '#1f2b33' },
-  { id: 'archive', label: 'Archives', gx: 0, gy: 9.6, w: 4, d: 2.4, carpet: '#2b2820' },
+  { id: 'manager', label: 'Bureau du manager', gx: 0, gy: 0, w: 4.5, d: 3.5 },
+  { id: 'cafe', label: 'Machine à café', gx: 4.8, gy: 0, w: 4.4, d: 3.5 },
+  { id: 'meeting', label: 'Salle de réunion', gx: 9.5, gy: 0, w: 4.5, d: 3.5 },
+  { id: 'archive', label: 'Archives', gx: 0, gy: 9.6, w: 4, d: 2.4 },
   {
     id: 'player',
     label: 'Ton bureau',
@@ -123,7 +122,6 @@ export const ZONES: IsoZone[] = [
     gy: 9.8,
     w: 3,
     d: 2.2,
-    carpet: '#1e3029',
     action: 'bosser',
   },
   {
@@ -133,7 +131,6 @@ export const ZONES: IsoZone[] = [
     gy: 9.6,
     w: 4,
     d: 2.4,
-    carpet: '#26302a',
     action: 'glander',
   },
 ];

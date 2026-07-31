@@ -1,0 +1,410 @@
+{
+  "actif": "plein_jour",
+  "themes": [
+    {
+      "id": "plein_jour",
+      "nom": "Plein jour",
+      "note": "Open space diurne. Le décor tient dans une bande de valeurs claires ; les personnages sont les objets les plus sombres et les plus saturés de l'écran, donc les plus lisibles.",
+      "bandeDecor": [
+        0.6,
+        0.93
+      ],
+      "bandeActeurs": [
+        0.22,
+        0.58
+      ],
+      "fond": {
+        "hautPage": "#eceef0",
+        "basPage": "#d8dbdf",
+        "voile": "linear-gradient(180deg, rgba(255,246,225,0.30) 0%, transparent 55%, rgba(120,150,190,0.10) 100%)",
+        "vignette": "radial-gradient(ellipse at center, transparent 62%, rgba(90,84,66,0.14) 100%)",
+        "melangeVignette": "multiply",
+        "melangeLumieres": "screen",
+        "opaciteLumieres": 0.5
+      },
+      "sol": {
+        "dalle": "#dedad1",
+        "joint": "rgba(84,78,60,0.10)",
+        "moquettes": {
+          "manager": "#d5cdda",
+          "cafe": "#d4d0c2",
+          "meeting": "#c7d2d6",
+          "archive": "#d4d0c4",
+          "player": "#c3d4ca",
+          "detente": "#c9d4c3"
+        }
+      },
+      "mur": {
+        "fond": "#edece6",
+        "gauche": "#cecbbb",
+        "socle": "#beb8a6",
+        "socleGauche": "#b1a892",
+        "baieVitre": "#e4e9ec",
+        "baieMontant": "#b4bec6",
+        "baieRebord": "rgba(70,90,110,0.22)"
+      },
+      "cloison": {
+        "vitre": "rgba(120,170,200,0.10)",
+        "rail": "rgba(96,110,122,0.42)",
+        "montant": "rgba(96,110,122,0.28)"
+      },
+      "structure": {
+        "bois": "#b5a898",
+        "boisFonce": "#ac9d8b",
+        "metal": "#b4bcc4",
+        "metalFonce": "#9aa3ac",
+        "metalClair": "#c8ced4",
+        "ecranDos": "#c0c7ce",
+        "ecranPied": "#a6aeb6",
+        "ecranArete": "#9ea7b0",
+        "tissu": "#9fa8b4",
+        "tissuFonce": "#9da7b4"
+      },
+      "habillage": {
+        "papier": "#efede9",
+        "papierOmbre": "#dbd7cc",
+        "carton": "#d7d2c8",
+        "cartonFonce": "#c4bdae",
+        "vegetal": "#a6bca2",
+        "vegetalFonce": "#82a37f",
+        "vegetalClair": "#beccb9",
+        "terre": "#b98f6a",
+        "cafe": "#8a6a4c",
+        "casiers": [
+          "#b8ac9c",
+          "#b2a9bd",
+          "#a8bdb0"
+        ],
+        "poubelles": [
+          "#96a8b4",
+          "#adb89d",
+          "#b6aa99"
+        ],
+        "postIt": "#e6d24a"
+      },
+      "signal": {
+        "or": "#c98f2a",
+        "orClair": "#f0c65e",
+        "orSombre": "#96631a",
+        "menace": "#9e3428",
+        "encre": "#1e1c17",
+        "encreDouce": "rgba(30,28,23,0.55)",
+        "papier": "#f4f1e6",
+        "ecranLueur": "rgba(96,150,220,0.34)",
+        "lampe": "rgba(255,226,170,0.30)"
+      },
+      "ombre": {
+        "contact": "rgba(72,64,46,0.30)",
+        "contactForte": "rgba(72,64,46,0.38)",
+        "creux": "rgba(58,52,38,0.20)",
+        "lisere": "rgba(255,252,244,0.55)"
+      },
+      "personnages": {
+        "peaux": [
+          "#e9b78f",
+          "#c98c62",
+          "#8d5a3b",
+          "#f0cba6",
+          "#a9714a",
+          "#6d4530"
+        ],
+        "oeil": "#2b2620",
+        "verre": "rgba(150,190,225,0.35)",
+        "tasse": "#f0ece0",
+        "tasseCafe": "#4a3a2c",
+        "archetypes": {
+          "carrieriste": {
+            "shirt": "#3f4a5c",
+            "hair": "#332a20",
+            "hairStyle": "plaque",
+            "tie": "#9e3428",
+            "glasses": false
+          },
+          "fayot": {
+            "shirt": "#b87a1e",
+            "hair": "#5a3f2c",
+            "hairStyle": "queue",
+            "glasses": true,
+            "mug": true
+          },
+          "glandeur": {
+            "shirt": "#2f7048",
+            "hair": "#241f1c",
+            "hairStyle": "capuche",
+            "glasses": false
+          },
+          "parano": {
+            "shirt": "#5a4790",
+            "hair": "#4b3728",
+            "hairStyle": "rideau",
+            "glasses": true
+          },
+          "veteran": {
+            "shirt": "#2f6b86",
+            "hair": "#8d939a",
+            "hairStyle": "degarni",
+            "glasses": false
+          },
+          "nouveau": {
+            "shirt": "#5c6577",
+            "hair": "#8a6440",
+            "hairStyle": "carre",
+            "glasses": false
+          }
+        }
+      },
+      "horsBande": [
+        {
+          "chemin": "habillage.terre",
+          "raison": "terreau d'une plante : deux ellipses de 4 px, doit rester de la terre"
+        },
+        {
+          "chemin": "habillage.cafe",
+          "raison": "surface du café dans la tasse : 3 px, doit rester du café"
+        },
+        {
+          "chemin": "habillage.postIt",
+          "raison": "post-it : 3 px de côté, doit rester jaune — trop petit pour crier"
+        }
+      ],
+      "degrades": {
+        "ecranNappe": [
+          "rgba(96,150,220,0.30)",
+          "rgba(96,150,220,0)"
+        ],
+        "ecranArete": [
+          "rgba(150,195,240,0.75)",
+          "rgba(120,170,240,0.10)"
+        ],
+        "baliseNappe": [
+          "rgba(225,165,55,0.42)",
+          "rgba(225,165,55,0)"
+        ],
+        "balise": [
+          "#f7dc95",
+          "#c98f2a",
+          "#96631a"
+        ],
+        "baie": [
+          "#f4f8fb",
+          "#e2edf4",
+          "#cfe0ea"
+        ],
+        "baieLueur": [
+          "rgba(255,244,214,0)",
+          "rgba(255,246,222,0.34)"
+        ],
+        "nappeBaie": [
+          "rgba(255,250,225,0.34)",
+          "rgba(255,250,225,0)"
+        ],
+        "nappePlafond": [
+          "rgba(255,250,236,0.30)",
+          "rgba(255,250,236,0.12)",
+          "rgba(255,250,236,0)"
+        ],
+        "tableauBlanc": [
+          "#f7f6f0",
+          "#e7e5db"
+        ]
+      },
+      "satMaxDecor": 0.18
+    },
+    {
+      "id": "nuit",
+      "nom": "Nuit (version d'origine)",
+      "note": "Le plateau tel qu'il était : open space nocturne, camaïeu bleu-gris. Conservé pour comparaison.",
+      "bandeDecor": [
+        0.08,
+        0.45
+      ],
+      "bandeActeurs": [
+        0.3,
+        0.7
+      ],
+      "fond": {
+        "hautPage": "#12151c",
+        "basPage": "#0c0f14",
+        "voile": "linear-gradient(180deg, rgba(255,200,150,0.05) 0%, transparent 45%, rgba(90,140,210,0.09) 100%)",
+        "vignette": "radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.42) 100%)",
+        "melangeVignette": "multiply",
+        "melangeLumieres": "screen",
+        "opaciteLumieres": 1
+      },
+      "sol": {
+        "dalle": "#1b2029",
+        "joint": "rgba(150,180,230,0.045)",
+        "moquettes": {
+          "manager": "#2b2436",
+          "cafe": "#2a2a1f",
+          "meeting": "#1f2b33",
+          "archive": "#2b2820",
+          "player": "#1e3029",
+          "detente": "#26302a"
+        }
+      },
+      "mur": {
+        "fond": "#232936",
+        "gauche": "#1d222d",
+        "socle": "#2e3543",
+        "socleGauche": "#262c38",
+        "baieVitre": "#2b3342",
+        "baieMontant": "#8d959f",
+        "baieRebord": "rgba(160,196,255,0.3)"
+      },
+      "cloison": {
+        "vitre": "rgba(150,200,255,0.032)",
+        "rail": "rgba(176,208,245,0.30)",
+        "montant": "rgba(176,208,245,0.20)"
+      },
+      "structure": {
+        "bois": "#8a7a5e",
+        "boisFonce": "#6b5540",
+        "metal": "#48525f",
+        "metalFonce": "#39414d",
+        "metalClair": "#4a5361",
+        "ecranDos": "#39414e",
+        "ecranPied": "#434c59",
+        "ecranArete": "#272d37",
+        "tissu": "#3d4654",
+        "tissuFonce": "#333a45"
+      },
+      "habillage": {
+        "papier": "#e8e4d9",
+        "papierOmbre": "#cfc8b6",
+        "carton": "#d8d3c4",
+        "cartonFonce": "#5c5140",
+        "vegetal": "#3f8a55",
+        "vegetalFonce": "#2f6b43",
+        "vegetalClair": "#4fa367",
+        "terre": "#6d4a33",
+        "cafe": "#4a3a2c",
+        "casiers": [
+          "#7e6a4a",
+          "#6a5f7a",
+          "#5d7a6a"
+        ],
+        "poubelles": [
+          "#3d6d8a",
+          "#6d8a3d",
+          "#8a6d3d"
+        ],
+        "postIt": "#e8d24a"
+      },
+      "signal": {
+        "or": "#f5a623",
+        "orClair": "#fff3c4",
+        "orSombre": "#c2621a",
+        "menace": "#9e3428",
+        "encre": "#d7d0be",
+        "encreDouce": "rgba(206,198,178,0.62)",
+        "papier": "#e6e1d2",
+        "ecranLueur": "rgba(126,186,255,0.42)",
+        "lampe": "rgba(255,190,90,0.55)"
+      },
+      "ombre": {
+        "contact": "rgba(0,0,0,0.32)",
+        "contactForte": "rgba(0,0,0,0.38)",
+        "creux": "rgba(0,0,0,0.3)",
+        "lisere": "rgba(255,255,255,0.13)"
+      },
+      "personnages": {
+        "peaux": [
+          "#e9b78f",
+          "#c98c62",
+          "#8d5a3b",
+          "#f0cba6",
+          "#a9714a",
+          "#6d4530"
+        ],
+        "oeil": "#2b2620",
+        "verre": "rgba(198,222,240,0.30)",
+        "tasse": "#e8e4d9",
+        "tasseCafe": "#4a3a2c",
+        "archetypes": {
+          "carrieriste": {
+            "shirt": "#dfe3ea",
+            "hair": "#332a20",
+            "hairStyle": "plaque",
+            "tie": "#b4453b",
+            "glasses": false
+          },
+          "fayot": {
+            "shirt": "#cf9a3c",
+            "hair": "#5a3f2c",
+            "hairStyle": "queue",
+            "glasses": true,
+            "mug": true
+          },
+          "glandeur": {
+            "shirt": "#4e9b68",
+            "hair": "#241f1c",
+            "hairStyle": "capuche",
+            "glasses": false
+          },
+          "parano": {
+            "shirt": "#7d68b8",
+            "hair": "#4b3728",
+            "hairStyle": "rideau",
+            "glasses": true
+          },
+          "veteran": {
+            "shirt": "#4a90ab",
+            "hair": "#b9bec4",
+            "hairStyle": "degarni",
+            "glasses": false
+          },
+          "nouveau": {
+            "shirt": "#8b93a6",
+            "hair": "#8a6440",
+            "hairStyle": "carre",
+            "glasses": false
+          }
+        }
+      },
+      "horsBande": [],
+      "conforme": false,
+      "degrades": {
+        "ecranNappe": [
+          "rgba(126,186,255,0.42)",
+          "rgba(126,186,255,0)"
+        ],
+        "ecranArete": [
+          "rgba(190,224,255,0.85)",
+          "rgba(120,170,240,0.15)"
+        ],
+        "baliseNappe": [
+          "rgba(255,190,90,0.55)",
+          "rgba(255,190,90,0)"
+        ],
+        "balise": [
+          "#fff3c4",
+          "#f5a623",
+          "#c2621a"
+        ],
+        "baie": [
+          "#54718f",
+          "#33465e",
+          "#1f2b3c"
+        ],
+        "baieLueur": [
+          "rgba(255,190,120,0)",
+          "rgba(255,178,96,0.38)"
+        ],
+        "nappeBaie": [
+          "rgba(150,180,225,0.13)",
+          "rgba(150,180,225,0)"
+        ],
+        "nappePlafond": [
+          "rgba(228,232,240,0.115)",
+          "rgba(228,232,240,0.045)",
+          "rgba(228,232,240,0)"
+        ],
+        "tableauBlanc": [
+          "#6d757f",
+          "#525a64"
+        ]
+      }
+    }
+  ]
+}
