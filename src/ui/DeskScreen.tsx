@@ -7,6 +7,9 @@ import { useGame } from './useGame';
 import { StatBar, SuspicionGauge } from './Bits';
 import { IsoOffice } from './IsoOffice';
 import { Inspector } from './Inspector';
+import { Tutorial } from './Tutorial';
+import { Manual } from './Manual';
+import { tutorialSeen } from './tutorial';
 import type { Selection } from './iso';
 
 type Toast = { text: string; tone: 'good' | 'bad' | 'neutral' } | null;
@@ -22,6 +25,9 @@ export function DeskScreen({ onEndWeek }: { onEndWeek: () => void }) {
   const { state } = useGame();
   const [selection, setSelection] = useState<Selection>(null);
   const [toast, setToast] = useState<Toast>(null);
+  // Le tuto s'ouvre tout seul à la toute première visite, jamais ensuite.
+  const [tuto, setTuto] = useState(() => !tutorialSeen());
+  const [manual, setManual] = useState(false);
 
   useEffect(() => {
     if (!toast) return;
@@ -85,6 +91,15 @@ export function DeskScreen({ onEndWeek }: { onEndWeek: () => void }) {
             <em> {state.actionPointsRemaining} PA</em>
           </span>
         </div>
+
+        <button
+          className="btn btn--help"
+          onClick={() => setManual(true)}
+          title="Règlement intérieur et tutoriel"
+          aria-label="Aide"
+        >
+          ?
+        </button>
 
         <button
           className="btn btn--primary btn--endweek"
@@ -196,6 +211,20 @@ export function DeskScreen({ onEndWeek }: { onEndWeek: () => void }) {
       </div>
 
       {toast && <div className={`toast toast--${toast.tone}`}>{toast.text}</div>}
+
+      {tuto && (
+        <Tutorial selection={selection} onSelect={setSelection} onClose={() => setTuto(false)} />
+      )}
+
+      {manual && (
+        <Manual
+          onClose={() => setManual(false)}
+          onReplay={() => {
+            setManual(false);
+            setTuto(true);
+          }}
+        />
+      )}
     </div>
   );
 }

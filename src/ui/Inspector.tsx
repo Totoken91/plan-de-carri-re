@@ -68,10 +68,12 @@ function ActionButton({
 }
 
 // ── Vues par type de sélection ───────────────────────────────
+// Rien de sélectionné : trois rappels, pas un cours. Le reste est dans
+// le règlement intérieur, sous le bouton « ? ».
 function EmptyView() {
   return (
     <div className="inspector__empty">
-      <h3 className="section-title">Comment on joue</h3>
+      <h3 className="section-title">Rien de sélectionné</h3>
       <ol className="howto">
         <li>
           <b>Clique sur un collègue</b> pour voir ce qu’il prépare et ce que tu peux lui faire.
@@ -84,11 +86,10 @@ function EmptyView() {
           <b>Les balises dorées</b> sont les opportunités de la semaine. Elles disparaissent
           vendredi.
         </li>
-        <li>
-          Tu as <b>5 points d’action</b> par semaine. Chaque bouton annonce son effet exact avant
-          que tu cliques.
-        </li>
       </ol>
+      <p className="inspector__helpnote">
+        Règles complètes et tutoriel : bouton <b>?</b>, en haut à droite.
+      </p>
     </div>
   );
 }

@@ -123,7 +123,7 @@ body {
 /* ── En-tête de dossier ──────────────────────────────────── */
 .topbar {
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  grid-template-columns: auto 1fr auto auto auto;
   gap: 26px;
   align-items: center;
   padding: 14px 20px;
@@ -566,7 +566,7 @@ body {
 /* ── Modales : notes de service ──────────────────────────── */
 .modal-backdrop {
   position: fixed; inset: 0; background: rgba(10, 10, 12, 0.8);
-  display: flex; align-items: center; justify-content: center; padding: 22px; z-index: 50;
+  display: flex; align-items: center; justify-content: center; padding: 22px; z-index: 80;
   animation: fadeIn 0.22s ease-out;
 }
 /* La gouttière vit sur la feuille elle-même ; seul le bandeau d'en-tête
@@ -655,7 +655,7 @@ body {
   max-width: 580px; background: var(--paper-hi); color: var(--ink);
   border: 1px solid var(--ink-2); border-left: 4px solid var(--ink-2);
   padding: 12px 18px; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
-  z-index: 60; font-size: 14px;
+  z-index: 90; font-size: 14px;
   animation: toastIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .toast--good { border-left-color: var(--seal); }
@@ -745,3 +745,117 @@ body {
 }
 .iso__recenter:hover:not(:disabled) { background: rgba(40, 46, 56, 0.95); }
 .iso__recenter:disabled { opacity: 0; pointer-events: none; }
+
+/* ══════════════════════════════════════════════════════════
+   Accueil — note de service épinglée sur l'écran
+   ──────────────────────────────────────────────────────────
+   Le voile est un seul <path> à trous (fill-rule evenodd) : il
+   assombrit et bloque en une passe, et les trous laissent passer les
+   clics parce que le test de survol suit le remplissage. Aucun
+   z-index des composants existants n'est touché.
+   ══════════════════════════════════════════════════════════ */
+.btn--help {
+  width: 30px; height: 30px; padding: 0; justify-content: center;
+  font-size: 13px; letter-spacing: 0; border-color: var(--rule);
+  color: var(--ink-2);
+}
+
+.tuto { position: fixed; inset: 0; z-index: 70; pointer-events: none; }
+.tuto__scrim { position: fixed; inset: 0; pointer-events: none; }
+.tuto__veil { fill: rgba(9, 9, 11, 0.72); pointer-events: auto; }
+.tuto__ring {
+  fill: none; stroke: var(--note); stroke-width: 1.5;
+  stroke-dasharray: 5 4; pointer-events: none;
+  animation: tutoRing 1.6s linear infinite;
+}
+@keyframes tutoRing { to { stroke-dashoffset: -18; } }
+
+.tuto__card {
+  position: fixed; pointer-events: auto;
+  background-color: var(--paper);
+  background-image:
+    repeating-linear-gradient(0deg, rgba(90, 78, 52, 0.035) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(90, 78, 52, 0.022) 0 1px, transparent 1px 4px);
+  border: 1px solid var(--rule);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.62);
+  padding: 0 22px 18px;
+  max-height: calc(100vh - 24px); overflow-y: auto;
+  animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* le bandeau franchit la gouttière, comme sur les modales */
+.tuto__tag {
+  display: block; margin: 0 -22px 16px; padding: 8px 22px;
+  background: var(--ink); color: var(--paper-hi);
+  font-family: var(--font-form); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.2em;
+}
+.tuto__title {
+  margin: 0 0 10px; font-family: var(--font-title);
+  font-size: 21px; line-height: 1.2;
+}
+.tuto__p { margin: 0 0 9px; font-size: 13.5px; color: var(--ink-2); }
+.tuto__task {
+  margin: 14px 0 0; padding: 9px 12px;
+  background: rgba(138, 100, 16, 0.1);
+  border-left: 3px solid var(--note);
+  font-size: 13.5px; color: var(--ink);
+}
+.tuto__taskmark {
+  font-family: var(--font-form); font-size: 9px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--note); margin-right: 8px;
+}
+.tuto__foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-top: 16px; padding-top: 11px; border-top: 1px solid var(--rule);
+}
+.tuto__count { font-family: var(--font-form); font-size: 10px; color: var(--ink-soft); }
+.tuto__btns { display: flex; gap: 8px; }
+.btn--ghostline { border-color: var(--rule); color: var(--ink-soft); }
+.tuto__quit {
+  display: block; margin: 9px auto 0; padding: 0;
+  background: none; border: 0; cursor: pointer;
+  font-family: var(--font-form); font-size: 9px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-soft);
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.tuto__quit:hover { color: var(--stamp); }
+
+/* ── Règlement intérieur ─────────────────────────────────── */
+.manual { max-width: 700px; }
+.manual__head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+}
+.manual__title { margin: 18px 0 6px; font-family: var(--font-title); font-size: 26px; }
+.manual__body section { margin-top: 22px; }
+.manual__body p { margin: 0 0 8px; font-size: 13.5px; color: var(--ink-2); }
+.manual__list { margin: 0; padding-left: 18px; font-size: 13.5px; color: var(--ink-2); }
+.manual__list li { margin-bottom: 5px; }
+.manual__ranks { list-style: none; margin: 10px 0 0; padding: 0; }
+.manual__ranks li {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 3px 0; border-bottom: 1px dotted var(--rule-soft);
+  font-size: 13px;
+}
+.manual__ranks em {
+  font-family: var(--font-form); font-size: 11px; font-style: normal; color: var(--ink-soft);
+}
+.manual__dl { margin: 0; }
+.manual__dl dt {
+  font-family: var(--font-form); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink); margin-top: 10px;
+}
+.manual__dl dd { margin: 2px 0 0; font-size: 13.5px; color: var(--ink-2); }
+.manual__foot {
+  display: flex; justify-content: space-between; gap: 12px;
+  margin-top: 26px; padding-top: 14px; border-top: 1px solid var(--rule);
+}
+
+@media (max-width: 880px) {
+  .btn--help { grid-column: 2; }
+}
+
+.inspector__helpnote {
+  margin: 16px 0 0; padding-top: 10px; border-top: 1px solid var(--rule);
+  font-family: var(--font-form); font-size: 10px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink-soft);
+}

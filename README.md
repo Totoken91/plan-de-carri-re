@@ -188,6 +188,43 @@ repasser par un rendu à chaque cran de molette reconstruirait tout
 l'open space. Un glissement avale le clic qui le suit, sinon relâcher la
 souris au-dessus d'un collègue le sélectionnerait par accident.
 
+### Apprendre le jeu
+
+Deux dispositifs, deux usages :
+
+**L'accueil guidé** (`ui/tutorial.ts` pour le script, `ui/Tutorial.tsx`
+pour l'affichage) s'ouvre tout seul à la première partie et se rejoue
+depuis le bouton « ? ». Treize étapes ; cinq d'entre elles ne passent à la
+suivante que lorsque le joueur a **réellement** fait le geste — cliquer sur
+un collègue, prendre un café, fouiner, terminer la semaine. Un joueur qui
+ne comprend pas le jeu ne comprendra pas davantage un texte qui l'explique :
+il faut qu'il ait fait le geste.
+
+Le script ne connaît rien du moteur. Chaque consigne est un prédicat qui
+compare l'état courant à l'état figé à l'entrée dans l'étape
+(`done(now, start)`), ce qui permet de relancer le tuto à n'importe quel
+moment d'une partie en cours sans qu'il se croie déjà terminé. C'est aussi
+la raison pour laquelle `weeklyActionCounts` enregistre désormais **toutes**
+les actions de la semaine et non plus seulement les deux au rendement
+décroissant : l'état porte « ce que le joueur a fait cette semaine », dont
+se servent l'anti-spam comme l'accueil. Le comptage a migré des fonctions
+d'action vers le store, à effet mécanique identique.
+
+Le voile est un **unique `<path>` à règle de remplissage `evenodd`** : le
+rectangle de l'écran, puis un rectangle par élément à éclairer. Les trous
+ne sont pas peints, et comme le test de survol suit le remplissage, ils
+laissent aussi passer les clics. Un seul objet assombrit et verrouille,
+sans découper l'écran en panneaux ni toucher aux `z-index` des composants
+existants. La carte cherche une bande libre autour de l'élément éclairé
+(dessous, dessus, à droite, à gauche), se rétrécit plutôt que de venir se
+poser sur les personnages, et reste en toutes circonstances entièrement
+visible.
+
+**Le règlement intérieur** (`ui/Manual.tsx`), sous le bouton « ? », répond
+aux questions qu'on se pose trois semaines plus tard. Tout ce qui y est
+chiffré est lu dans `data/` : un équilibrage qui change met le manuel à
+jour tout seul.
+
 ## Ajouter du contenu
 
 ### Un événement

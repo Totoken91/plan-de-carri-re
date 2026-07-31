@@ -38,12 +38,11 @@ export function diminishingFactor(state: GameState, key: string): number {
   return Math.pow(0.6, state.weeklyActionCounts[key] ?? 0);
 }
 
-/** Idem, mais consomme un usage (à n'appeler qu'au moment d'agir). */
-function diminishing(state: GameState, key: string): number {
-  const f = diminishingFactor(state, key);
-  state.weeklyActionCounts[key] = (state.weeklyActionCounts[key] ?? 0) + 1;
-  return f;
-}
+// Le comptage lui-même n'est plus fait ici : le store enregistre TOUTES
+// les actions de la semaine, pas seulement les deux qui s'émoussent.
+// L'état porte donc « ce que le joueur a fait cette semaine », ce dont
+// se servent aussi bien l'anti-spam que l'accueil guidé.
+const diminishing = diminishingFactor;
 
 /** Bosser un projet : +Rendement, +réputation légitime, −Nerfs (rendement décroissant). */
 export function actBosser(state: GameState): ActionResult {

@@ -159,6 +159,16 @@ export class GameStore {
     saveState(this.state);
   }
 
+  /**
+   * Enregistre qu'une action a été jouée cette semaine. Sert à deux
+   * choses : le rendement décroissant (répéter la même action rapporte
+   * moins) et l'accueil guidé, qui doit savoir si la consigne a été
+   * exécutée sans avoir à deviner à partir du journal.
+   */
+  private tally(draft: GameState, key: string): void {
+    draft.weeklyActionCounts[key] = (draft.weeklyActionCounts[key] ?? 0) + 1;
+  }
+
   /** Applique une mutation sur un clone, persiste et notifie. */
   private commit(mutator: (draft: GameState) => void): void {
     const draft = structuredClone(this.state);
@@ -202,6 +212,7 @@ export class GameStore {
       }
       if (result.ok) {
         draft.actionPointsRemaining -= 1;
+        this.tally(draft, kind);
         draft.log.push({ week: draft.week, text: result.text, tone: result.tone });
       }
     });
@@ -217,6 +228,7 @@ export class GameStore {
     let result: OppResolution = { ok: false, text: '', tone: 'neutral' };
     this.commit((draft) => {
       result = resolveOpportunity(draft, index, this.rng);
+      if (result.ok) this.tally(draft, 'opportunity');
       if (result.ok) draft.log.push({ week: draft.week, text: result.text, tone: result.tone });
     });
     return result;
@@ -232,6 +244,7 @@ export class GameStore {
       result = useHook(draft, colleagueId, secretId, mode);
       if (result.ok) {
         draft.actionPointsRemaining -= 1;
+        this.tally(draft, 'hook');
         draft.log.push({ week: draft.week, text: result.text, tone: result.tone });
       }
     });
@@ -288,6 +301,7 @@ export class GameStore {
       result = defuseIntent(draft, colleagueId, this.rng);
       if (result.ok) {
         draft.actionPointsRemaining -= 1;
+        this.tally(draft, 'defuse');
         draft.log.push({ week: draft.week, text: result.text, tone: result.tone });
       }
     });
@@ -304,6 +318,7 @@ export class GameStore {
       result = prepareScapegoat(draft, colleagueId, this.rng);
       if (result.ok) {
         draft.actionPointsRemaining -= 1;
+        this.tally(draft, 'scapegoat');
         draft.log.push({ week: draft.week, text: result.text, tone: result.tone });
       }
     });
@@ -313,6 +328,7 @@ export class GameStore {
   /** Intervient dans le coup qu'un collègue monte contre un autre. Coûte 1 PA. */
   private performOnScheme(
     schemerId: string,
+    key: string,
     fn: (draft: GameState, id: string) => ActionResult,
   ): ActionResult {
     if (!this.canAct()) {
@@ -323,6 +339,7 @@ export class GameStore {
       result = fn(draft, schemerId);
       if (result.ok) {
         draft.actionPointsRemaining -= 1;
+        this.tally(draft, key);
         draft.log.push({ week: draft.week, text: result.text, tone: result.tone });
       }
     });
@@ -349,9 +366,9 @@ export class GameStore {
       case 'scapegoat':
         return this.performScapegoat(id.targetId);
       case 'warn':
-        return this.performOnScheme(id.targetId, warnVictim);
+        return this.performOnScheme(id.targetId, 'warn', warnVictim);
       case 'abet':
-        return this.performOnScheme(id.targetId, abetScheme);
+        return this.performOnScheme(id.targetId, 'abet', abetScheme);
       case 'hook':
         return this.performHook(id.targetId, id.secretId, id.mode);
     }
