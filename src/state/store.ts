@@ -5,8 +5,9 @@
 // le moteur (fonctions pures/mutatives sur le clone), persiste le curseur
 // RNG, sauvegarde et notifie les abonnés (React).
 // ─────────────────────────────────────────────────────────────
-import type { GameEvent, GameState, Player } from './schema';
+import type { Appearance, GameEvent, GameState, Player } from './schema';
 import { startingColleagues } from '@data/content';
+import { DEFAULT_APPEARANCE, randomName } from '@data/appearance';
 import { balance } from '@data/balance';
 import { Rng, randomSeed } from '@engine/rng';
 import { getEvent } from '@data/content';
@@ -27,16 +28,21 @@ import { abetScheme, assignIntents, defuseIntent, warnVictim } from '@engine/int
 import { prepareScapegoat } from '@engine/scapegoat';
 import type { ActionId } from '@engine/preview';
 
-const SAVE_KEY = 'plan-de-carriere/save/v3';
-export const SAVE_VERSION = 3;
+const SAVE_KEY = 'plan-de-carriere/save/v4';
+export const SAVE_VERSION = 4;
 
 // ── Création d'une partie ────────────────────────────────────
-export function createInitialState(seed = randomSeed(), playerName = 'Toi'): GameState {
+export function createInitialState(
+  seed = randomSeed(),
+  playerName?: string,
+  appearance: Appearance = DEFAULT_APPEARANCE,
+): GameState {
   const player: Player = {
-    name: playerName,
+    name: playerName?.trim() || randomName(),
     stats: { ...balance.startStats },
     rank: 'stagiaire',
     reputation: 0,
+    appearance,
   };
   return {
     version: SAVE_VERSION,
@@ -88,12 +94,14 @@ export function clearSave(): void {
   }
 }
 
+/**
+ * Vrai s'il existe une partie REPRENABLE. On relit vraiment la
+ * sauvegarde : une version obsolète ou un JSON abîmé donnent une partie
+ * neuve, et une partie neuve doit repasser par l'embauche plutôt que
+ * d'hériter d'un nom tiré au sort.
+ */
 export function hasSave(): boolean {
-  try {
-    return localStorage.getItem(SAVE_KEY) !== null;
-  } catch {
-    return false;
-  }
+  return loadState() !== undefined;
 }
 
 // ── Store réactif ────────────────────────────────────────────
@@ -130,8 +138,8 @@ export class GameStore {
     }
   }
 
-  static newGame(seed?: number, name?: string): GameStore {
-    const store = new GameStore(createInitialState(seed, name));
+  static newGame(seed?: number, name?: string, appearance?: Appearance): GameStore {
+    const store = new GameStore(createInitialState(seed, name, appearance));
     store.persist();
     return store;
   }
@@ -375,8 +383,8 @@ export class GameStore {
   }
 
   /** Redémarre une nouvelle partie (même store). */
-  reset(seed?: number, name?: string): void {
-    this.state = createInitialState(seed, name);
+  reset(seed?: number, name?: string, appearance?: Appearance): void {
+    this.state = createInitialState(seed, name, appearance);
     this.rng = new Rng(this.state.seed, 0);
     generateOpportunities(this.state, this.rng);
     assignIntents(this.state, this.rng);

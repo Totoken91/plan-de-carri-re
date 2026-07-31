@@ -1,6 +1,6 @@
 import type { StatKey } from '@state/schema';
 
-const STAT_LABELS: Record<StatKey, string> = {
+export const STAT_LABELS: Record<StatKey, string> = {
   aura: 'Aura',
   rendement: 'Rendement',
   combine: 'Combine',

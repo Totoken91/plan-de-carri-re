@@ -18,7 +18,9 @@ import {
   CoffeeMachine,
   Credenza,
   Desk,
+  Figure,
   FlipChart,
+  GooFilter,
   IsoBox,
   Lockers,
   MeetingTable,
@@ -198,6 +200,10 @@ export function IsoOffice({
   const rowA = posts.filter((p) => p.slot.gy < 6);
   const rowB = posts.filter((p) => p.slot.gy >= 6);
 
+  // Ton poste : même recul que les autres sièges (voir seatOf).
+  const me = iso(6.2 + DESK_W / 2, 10.6 - 0.95);
+  const playerLook = { ...state.player.appearance };
+
   const renderRow = (row: typeof posts) => (
     <>
       {row.map(({ c, i, slot }) => {
@@ -331,19 +337,7 @@ export function IsoOffice({
             </feMerge>
           </filter>
 
-          {/* Fusion metaball des primitives d'un personnage.
-              C'est un smooth-min : on floute l'alpha, puis on la seuille
-              durement. Le rayon du flou EST le k du smin — plus il est
-              large, plus les membres se soudent mollement au tronc.
-              Le seuil (18 / −8) règle la netteté du contour obtenu. */}
-          <filter id="goo" x="-22%" y="-18%" width="144%" height="136%" colorInterpolationFilters="sRGB">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="1.3" result="blur" />
-            <feColorMatrix
-              in="blur"
-              type="matrix"
-              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -11"
-            />
-          </filter>
+          <GooFilter />
 
           <filter id="glowSelect" x="-150%" y="-150%" width="400%" height="400%">
             <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="b" />
@@ -499,8 +493,33 @@ export function IsoOffice({
           {isSelectedZone('player') && (
             <polygon points={quad(5.6, 9.8, 3, 2.2)} className="iso-zone-ring" filter="url(#glowSelect)" />
           )}
-          <OfficeChair gx={6.85} gy={9.7} color="#3d5449" />
+          {/* Toi, à ton poste. Même convention que les rangées de
+              l'open space (chaise → occupant → clavier → écran), sinon
+              le seul personnage qui compte serait le seul mal assis. */}
+          <OfficeChair gx={6.94} gy={9.28} color="#3d5449" />
+          <g transform={`translate(${me.x},${me.y})`}>
+            <Figure id="player" look={playerLook} />
+          </g>
           <Desk gx={6.2} gy={10.6} wood="#6e6250" frame="#39504a" />
+          {/* Un chevron : dans un étage plein de gens qui se ressemblent,
+              il faut pouvoir se retrouver soi-même d'un coup d'œil.
+              Le placement et l'animation vivent sur DEUX groupes : une
+              transformation CSS l'emporte sur l'attribut `transform`, et
+              le chevron repartait se coller à l'origine du plateau. */}
+          <g transform={`translate(${me.x},${me.y - 64})`}>
+            <g className="iso-me" filter="url(#glowGold)">
+              <path d="M -7 -7 L 7 -7 L 0 5 Z" />
+            </g>
+          </g>
+          <rect
+            x={me.x - 24}
+            y={me.y - 68}
+            width="48"
+            height="76"
+            fill="transparent"
+            className="iso-hit"
+            onClick={() => onSelect({ kind: 'zone', id: 'player' })}
+          />
 
           {/* angle mort entre ton poste et le coin détente */}
           <Credenza gx={8.85} gy={10.15} w={1} d={0.7} />

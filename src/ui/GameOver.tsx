@@ -16,8 +16,8 @@ const ENDINGS: Record<Exclude<GameState['status'], 'playing'>, { title: string; 
   },
 };
 
-export function GameOver() {
-  const { state, store } = useGame();
+export function GameOver({ onRehire }: { onRehire: () => void }) {
+  const { state } = useGame();
   if (state.status === 'playing') return null;
   const end = ENDINGS[state.status];
 
@@ -32,8 +32,8 @@ export function GameOver() {
           <div><dt>Rang final</dt><dd>{state.player.rank}</dd></div>
           <div><dt>Suspicion finale</dt><dd>{Math.round(state.suspicion)}</dd></div>
         </dl>
-        <button className="btn btn--primary" onClick={() => store.reset()}>
-          Repostuler (nouvelle partie)
+        <button className="btn btn--primary" onClick={onRehire}>
+          Repostuler (nouveau dossier)
         </button>
       </div>
     </div>

@@ -201,12 +201,28 @@ export interface Rank {
   backstabMultiplier: number; // plus tu montes, plus on te cible
 }
 
+// ── Apparence ────────────────────────────────────────────────
+// Purement descriptive : le moteur ne la lit jamais, seul le rendu s'en
+// sert. Elle vit malgré tout dans l'état parce qu'elle est sauvegardée
+// avec la partie — c'est le personnage du joueur, pas un réglage.
+export type HairStyle = 'plaque' | 'queue' | 'capuche' | 'rideau' | 'degarni' | 'carre';
+
+export interface Appearance {
+  skin: string;
+  hair: string;
+  hairStyle: HairStyle;
+  shirt: string;
+  tie?: string; // absent = pas de cravate
+  glasses: boolean;
+}
+
 // ── État global du jeu (sérialisé en localStorage) ───────────
 export interface Player {
   name: string;
   stats: Stats;
   rank: RankId;
   reputation: number; // progression légitime vers la promotion
+  appearance: Appearance;
 }
 
 export type GameStatus = 'playing' | 'won' | 'fired' | 'burnout';

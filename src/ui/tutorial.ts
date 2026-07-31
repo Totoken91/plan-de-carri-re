@@ -13,6 +13,7 @@
 // à n'importe quel moment de la partie sans qu'il se croie déjà fini.
 // ─────────────────────────────────────────────────────────────
 import type { GameState } from '@state/schema';
+import { startingColleagues } from '@data/content';
 import type { Selection } from './iso';
 
 export interface TutoCtx {
@@ -47,6 +48,9 @@ export interface TutorialStep {
 
 const count = (s: GameState, key: string) => s.weeklyActionCounts[key] ?? 0;
 
+/** Lu dans le roster : un chiffre écrit en dur mentirait au premier ajout. */
+const HEADCOUNT = startingColleagues.filter((c) => c.alive).length;
+
 export const TUTORIAL: TutorialStep[] = [
   {
     id: 'intro',
@@ -54,7 +58,7 @@ export const TUTORIAL: TutorialStep[] = [
     title: 'Bienvenue au troisième étage',
     body: [
       'Tu es stagiaire. Tu veux le bureau du fond, celui avec la porte.',
-      'Sept personnes sont devant toi et aucune n’a l’intention de bouger. Elles ne t’attendent pas non plus : elles complotent entre elles, pendant que tu lis ceci.',
+      `Ils sont ${HEADCOUNT} devant toi et aucun n’a l’intention de bouger. Ils ne t’attendent pas non plus : ils complotent entre eux, pendant que tu lis ceci.`,
       'Une partie, c’est une suite de semaines. Cinq actions par semaine, puis vendredi soir tout se résout d’un coup — le tien comme celui des autres.',
     ],
   },
@@ -107,7 +111,8 @@ export const TUTORIAL: TutorialStep[] = [
     tag: 'Note de service 05',
     title: 'L’étage',
     body: [
-      'Voilà l’open space, vu d’en haut. Chaque personnage est un collègue, avec ses stats, ses secrets et son avis sur toi.',
+      'Voilà l’open space, vu d’en haut. Le personnage marqué du chevron doré, au premier plan, c’est toi à ton poste.',
+      'Les autres sont tes collègues : chacun a ses stats, ses secrets et son avis sur toi.',
       'Molette pour zoomer, glisser pour déplacer, double-clic pour recadrer.',
     ],
     anchor: ['.iso'],

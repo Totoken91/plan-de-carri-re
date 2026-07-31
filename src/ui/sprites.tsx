@@ -13,7 +13,7 @@
 // contours tournés vers la lumière.
 // ─────────────────────────────────────────────────────────────
 import { useEffect, useRef } from 'react';
-import type { Colleague } from '@state/schema';
+import type { Appearance, Colleague, HairStyle } from '@state/schema';
 import { DESK_D, DESK_W, box, iso, panelAlongX, quad } from './iso';
 import {
   DEFAULT_RIG as RIG,
@@ -100,29 +100,28 @@ export function IsoBox({
 // Les positions viennent de figure.ts et sont réécrites directement
 // dans le DOM à chaque image, hors du cycle de rendu React.
 
-type HairStyle = 'plaque' | 'queue' | 'capuche' | 'rideau' | 'degarni' | 'carre';
-
-interface Look {
-  shirt: string;
-  hair: string;
-  style: HairStyle;
-  glasses?: boolean;
-  tie?: string;
+/**
+ * Ce qu'il faut pour dessiner quelqu'un : son apparence, plus les rares
+ * accessoires qui tiennent au rôle et non au personnage (la tasse que le
+ * Fayot porte à quelqu'un d'autre).
+ */
+export interface Look extends Appearance {
   mug?: boolean;
 }
 
-const LOOKS: Record<string, Look> = {
+/** Apparence des collègues, déduite de leur archétype. */
+const LOOKS: Record<string, Omit<Look, 'skin'>> = {
   // Chemise claire, cravate : le seul qui s'habille pour le poste d'après.
-  carrieriste: { shirt: '#dfe3ea', hair: '#332a20', style: 'plaque', tie: '#b4453b' },
+  carrieriste: { shirt: '#dfe3ea', hair: '#332a20', hairStyle: 'plaque', tie: '#b4453b', glasses: false },
   // Queue de cheval, lunettes, et un café qu'il porte à quelqu'un d'autre.
-  fayot: { shirt: '#cf9a3c', hair: '#5a3f2c', style: 'queue', glasses: true, mug: true },
+  fayot: { shirt: '#cf9a3c', hair: '#5a3f2c', hairStyle: 'queue', glasses: true, mug: true },
   // La capuche : reconnaissable même en ombre chinoise.
-  glandeur: { shirt: '#4e9b68', hair: '#241f1c', style: 'capuche' },
+  glandeur: { shirt: '#4e9b68', hair: '#241f1c', hairStyle: 'capuche', glasses: false },
   // Cheveux en rideau, lunettes : on ne voit jamais tout à fait son visage.
-  parano: { shirt: '#7d68b8', hair: '#4b3728', style: 'rideau', glasses: true },
+  parano: { shirt: '#7d68b8', hair: '#4b3728', hairStyle: 'rideau', glasses: true },
   // Quinze ans de maison, et le crâne qui va avec.
-  veteran: { shirt: '#4a90ab', hair: '#b9bec4', style: 'degarni' },
-  nouveau: { shirt: '#8b93a6', hair: '#8a6440', style: 'carre' },
+  veteran: { shirt: '#4a90ab', hair: '#b9bec4', hairStyle: 'degarni', glasses: false },
+  nouveau: { shirt: '#8b93a6', hair: '#8a6440', hairStyle: 'carre', glasses: false },
 };
 
 const SKINS = ['#e9b78f', '#c98c62', '#8d5a3b', '#f0cba6', '#a9714a', '#6d4530'];
@@ -227,22 +226,57 @@ function Hair({
 }
 
 /**
- * Un collègue à son poste.
+ * Fusion metaball des primitives d'un personnage.
+ *
+ * C'est un smooth-min : on floute l'alpha, puis on la seuille durement.
+ * Le rayon du flou EST le k du smin — plus il est large, plus les
+ * membres se soudent mollement au tronc. Le seuil règle la netteté du
+ * contour obtenu.
+ *
+ * À déclarer dans les `defs` de TOUT SVG qui dessine un `Figure` : sans
+ * lui, le filtre est introuvable et le corps disparaît purement et
+ * simplement dans Chrome.
+ */
+export function GooFilter() {
+  return (
+    <filter id="goo" x="-22%" y="-18%" width="144%" height="136%" colorInterpolationFilters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1.3" result="blur" />
+      <feColorMatrix
+        in="blur"
+        type="matrix"
+        values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -11"
+      />
+    </filter>
+  );
+}
+
+/**
+ * Quelqu'un, debout ou assis, animé.
  *
  * Le corps est décrit une fois en primitives ; chaque image ne fait que
  * réécrire leurs coordonnées. La posture, elle, est dictée par ce que le
  * personnage manigance — un comploteur se penche, un bavard gesticule,
  * un guetteur te fixe. L'animation devient de l'information.
+ *
+ * Le même composant sert au collègue à son poste, au joueur au sien, et
+ * à l'aperçu du formulaire d'embauche : trois endroits, un seul dessin,
+ * donc aucune chance qu'on se choisisse une tête qu'on n'aura pas.
  */
-export function Person({ c }: { c: Colleague }) {
+export function Figure({
+  id,
+  look,
+  posture = postureFor(undefined),
+}: {
+  /** Identité de dessin : sert aux `id` SVG et au déphasage de l'animation. */
+  id: string;
+  look: Look;
+  posture?: ReturnType<typeof postureFor>;
+}) {
   const ref = useRef<SVGGElement>(null);
-  const h = hashOf(c.id);
-  const look = LOOKS[c.archetype] ?? LOOKS.nouveau!;
-  const skin = SKINS[h % SKINS.length]!;
+  const skin = look.skin;
   const skinDark = shade(skin, 0.76);
   const shirtDark = shade(look.shirt, 0.72);
-  const bodyId = `body-${c.id}`;
-  const posture = postureFor(c.intent?.kind);
+  const bodyId = `body-${id}`;
 
   useEffect(() => {
     const root = ref.current;
@@ -255,7 +289,7 @@ export function Person({ c }: { c: Colleague }) {
     const hand = pick('hand');
     if (!hip || !torso || !head || !kit) return;
 
-    const motion = makeMotion(phaseOf(c.id));
+    const motion = makeMotion(phaseOf(id));
 
     return registerPainter((t, dt) => {
       const p = poseFigure(t, dt, motion, posture, RIG);
@@ -281,7 +315,7 @@ export function Person({ c }: { c: Colleague }) {
         `translate(${p.chest.x.toFixed(2)},${p.chest.y.toFixed(2)})`,
       );
     });
-  }, [c.id, posture]);
+  }, [id, posture]);
 
   // Le corps : quelques primitives, une seule couleur. `currentColor`
   // permet d'en tirer la copie d'ombre par <use>, sans dupliquer ni les
@@ -326,10 +360,10 @@ export function Person({ c }: { c: Colleague }) {
 
       {/* Tête : repère local, centre en (0,0). */}
       <g data-r="head">
-        <Hair style={look.style} color={look.hair} layer="back" />
+        <Hair style={look.hairStyle} color={look.hair} layer="back" />
         <circle r={HEAD_R} fill={skin} />
         {discShadow(HEAD_R, skinDark)}
-        <Hair style={look.style} color={look.hair} layer="front" />
+        <Hair style={look.hairStyle} color={look.hair} layer="front" />
         <circle className="iso-person__eye" cx="-4" cy="1" r="1.7" fill="#2b2620" />
         <circle className="iso-person__eye" cx="4" cy="1" r="1.7" fill="#2b2620" />
         {look.glasses && (
@@ -346,6 +380,13 @@ export function Person({ c }: { c: Colleague }) {
       </g>
     </g>
   );
+}
+
+/** Un collègue à son poste : son apparence découle de son archétype. */
+export function Person({ c }: { c: Colleague }) {
+  const base = LOOKS[c.archetype] ?? LOOKS.nouveau!;
+  const look: Look = { ...base, skin: SKINS[hashOf(c.id) % SKINS.length]! };
+  return <Figure id={c.id} look={look} posture={postureFor(c.intent?.kind)} />;
 }
 
 // ── Poste de travail ─────────────────────────────────────────

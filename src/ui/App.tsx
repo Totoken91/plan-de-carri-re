@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { GameEvent } from '@state/schema';
 import type { WeekSummary } from '@engine/week';
-import { useGame } from './useGame';
+import { bootedWithoutSave, useGame } from './useGame';
+import { CharacterCreation } from './CharacterCreation';
 import { DeskScreen } from './DeskScreen';
 import { EventModal, SummaryLines } from './EventModal';
 import { GameOver } from './GameOver';
@@ -14,6 +15,9 @@ export function App() {
   const { state, store } = useGame();
   const [activeEvent, setActiveEvent] = useState<GameEvent | null>(null);
   const [weekSummary, setWeekSummary] = useState<WeekSummary | null>(null);
+  // Pas de sauvegarde au démarrage = première visite : on passe par
+  // l'embauche avant de montrer l'étage.
+  const [hiring, setHiring] = useState(bootedWithoutSave);
 
   const handleEndWeek = () => {
     const outcome = store.endWeek();
@@ -23,6 +27,19 @@ export function App() {
       setWeekSummary(outcome.summary);
     }
   };
+
+  if (hiring) {
+    return (
+      <div className="app">
+        <CharacterCreation
+          onHire={(name, appearance) => {
+            store.reset(undefined, name, appearance);
+            setHiring(false);
+          }}
+        />
+      </div>
+    );
+  }
 
   const gameOverVisible = state.status !== 'playing' && !activeEvent && !weekSummary;
 
@@ -44,7 +61,9 @@ export function App() {
         </div>
       )}
 
-      {gameOverVisible && <GameOver />}
+      {/* Repostuler, c'est repasser par les RH : nouveau dossier, donc
+          nouveau personnage. */}
+      {gameOverVisible && <GameOver onRehire={() => setHiring(true)} />}
     </div>
   );
 }

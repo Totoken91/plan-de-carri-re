@@ -188,6 +188,33 @@ repasser par un rendu à chaque cran de molette reconstruirait tout
 l'open space. Un glissement avale le clic qui le suit, sinon relâcher la
 souris au-dessus d'un collègue le sélectionnerait par accident.
 
+### Création de personnage
+
+Une partie commence par un **formulaire d'embauche** (`ui/CharacterCreation.tsx`) :
+nom, carnation, coiffure, couleur de cheveux, tenue, cravate, lunettes.
+Les palettes sont du contenu (`data/appearance.json`) — ajouter une teinte
+ou un prénom ne touche ni le formulaire ni le rendu.
+
+L'aperçu **n'est pas une illustration** : c'est le composant `Figure` qui
+dessinera le personnage à son bureau, aux coordonnées exactes du plateau,
+avec sa chaise, son bureau et le halo de son écran. Ce qu'on choisit est
+ce qu'on aura — aucun intermédiaire ne peut mentir. Le cadrage vient d'une
+mesure de la boîte englobante réelle de la scène, pas d'une estimation :
+le visage doit être assez grand pour qu'on distingue une paire de lunettes
+d'une absence de lunettes.
+
+`Person` (le collègue, dont l'apparence découle de son archétype) et le
+joueur passent par le même `Figure`. L'apparence vit dans `GameState` —
+elle est sauvegardée avec la partie, ce n'est pas un réglage.
+
+Le joueur est **assis à son poste** au premier plan, marqué d'un chevron
+doré : dans un étage plein de gens qui se ressemblent, il faut pouvoir se
+retrouver d'un coup d'œil. Cliquer dessus sélectionne la zone « Ton
+bureau ». Attention au piège du chevron : une transformation **CSS**
+l'emporte sur l'attribut `transform` d'un élément SVG, donc placement et
+animation vivent sur deux groupes distincts — sinon l'animation renvoie
+l'élément à l'origine du plateau.
+
 ### Apprendre le jeu
 
 Deux dispositifs, deux usages :
