@@ -2,7 +2,7 @@
 import type { GameEvent, GameState, PlanDef } from '@state/schema';
 import { catalog, getArchetype } from '@data/content';
 import { rankOrder } from '@data/content';
-import { canStartPlan, successChance } from '@engine/plans';
+import { canStartPlan, planLockReason, successChance } from '@engine/plans';
 import { isChoiceAvailable } from '@engine/events';
 
 /** Plans dont le rang minimum est atteint (affichables). */
@@ -17,6 +17,7 @@ export interface PlanView {
   preparation: number;
   chance: number; // taux de réussite estimé contre la cible
   canStart: boolean;
+  lockReason?: string; // pourquoi c'est grisé, en clair
 }
 
 /** Vue des plans pour une cible donnée (bureau → fiche collègue). */
@@ -30,6 +31,7 @@ export function planViews(state: GameState, targetId: string): PlanView[] {
       preparation: active?.preparation ?? 0,
       chance: successChance(state, probe),
       canStart: !active && canStartPlan(state, def, targetId),
+      lockReason: active ? undefined : planLockReason(state, def, targetId),
     };
   });
 }

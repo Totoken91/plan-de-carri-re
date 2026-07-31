@@ -191,13 +191,18 @@ export function IsoOffice({
                 filter="url(#glowSelect)"
               />
             )}
-            {c && (
+            {/* Une personne partie ne reste pas grisée à son poste : le
+                bureau vide dit la même chose, en mieux. */}
+            {c?.alive && (
               <g transform={`translate(${p.x},${p.y})`}>
+                {c.flags.includes('bouc_emissaire') && (
+                  <ellipse cx="0" cy="0" rx="21" ry="9.5" className="iso-scapegoat-ring" />
+                )}
                 <Person c={c} />
               </g>
             )}
             <Desk gx={slot.gx} gy={slot.gy} seed={i + 1} />
-            {c && (
+            {c?.alive && (
               /* zone cliquable généreuse (tap target ≥ 44px) */
               <rect
                 x={p.x - 24}

@@ -71,4 +71,15 @@ export function applyEffect(state: GameState, effect: Effect, targetId?: string)
   if (effect.startPlan) {
     startPlan(state, effect.startPlan, targetId);
   }
+
+  // « Départ non planifié » : la cible quitte l'entreprise. On se contente
+  // de la retirer ; c'est week.ts qui repère les absences et les raconte,
+  // pour qu'un départ soit signalé quelle qu'en soit la source.
+  if (effect.removeTarget && targetId) {
+    const c = state.colleagues.find((x) => x.id === targetId);
+    if (c) {
+      c.alive = false;
+      c.intent = undefined;
+    }
+  }
 }

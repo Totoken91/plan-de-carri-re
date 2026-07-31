@@ -9,7 +9,7 @@ import type { ActiveOpportunity, GameState, Opportunity, OppPlace } from '@state
 import { catalog, getOpportunity } from '@data/content';
 import { checkCondition } from './conditions';
 import { applyEffect } from './effects';
-import { aliveColleagues, findRival } from './util';
+import { aliveColleagues, fillNames, findRival } from './util';
 import type { Rng } from './rng';
 
 const OPPS_PER_WEEK = 3;
@@ -86,6 +86,6 @@ export function resolveOpportunity(state: GameState, index: number, rng: Rng): O
   state.actionPointsRemaining -= cost;
   state.opportunities.splice(index, 1); // consommée
 
-  const text = success ? def.outcomeText : (def.failureText ?? def.outcomeText);
-  return { ok: true, text, tone: success ? 'good' : 'bad' };
+  const raw = success ? def.outcomeText : (def.failureText ?? def.outcomeText);
+  return { ok: true, text: fillNames(raw, state, active.targetId), tone: success ? 'good' : 'bad' };
 }

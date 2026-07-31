@@ -12,6 +12,19 @@
     "comploter": { "preparationGain": 25, "suspicionPerPrep": 3 },
     "glander": { "nerfs": 20, "fayotSuspicion": 5 }
   },
+  "scapegoat": {
+    "combineRequired": 25,
+    "baseChance": 40,
+    "combineWeight": 0.7,
+    "opinionWeight": 0.12,
+    "vigilanceWeight": 0.4,
+    "suspicionOnPrepare": 6,
+    "suspicionOnFail": 10,
+    "opinionOnFail": -14,
+    "staleWeeks": 4,
+    "auditSuspicionRelief": 45,
+    "auditWitnessOpinion": -8
+  },
   "plan": {
     "combineWeight": 0.8,
     "vigilanceWeight": 0.7,

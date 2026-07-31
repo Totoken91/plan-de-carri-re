@@ -24,6 +24,7 @@ import { beginWeekend, finalizeWeek, type WeekSummary } from '@engine/week';
 import { generateOpportunities, resolveOpportunity, type OppResolution } from '@engine/opportunities';
 import { useHook, type HookMode } from '@engine/hooks';
 import { abetScheme, assignIntents, defuseIntent, warnVictim } from '@engine/intents';
+import { prepareScapegoat } from '@engine/scapegoat';
 import type { ActionId } from '@engine/preview';
 
 const SAVE_KEY = 'plan-de-carriere/save/v3';
@@ -293,6 +294,22 @@ export class GameStore {
     return result;
   }
 
+  /** Monte un dossier sur un innocent, en vue du prochain audit. Coûte 1 PA. */
+  performScapegoat(colleagueId: string): ActionResult {
+    if (!this.canAct()) {
+      return { ok: false, text: 'Aucune action possible pour le moment.', tone: 'neutral' };
+    }
+    let result: ActionResult = { ok: false, text: '', tone: 'neutral' };
+    this.commit((draft) => {
+      result = prepareScapegoat(draft, colleagueId, this.rng);
+      if (result.ok) {
+        draft.actionPointsRemaining -= 1;
+        draft.log.push({ week: draft.week, text: result.text, tone: result.tone });
+      }
+    });
+    return result;
+  }
+
   /** Intervient dans le coup qu'un collègue monte contre un autre. Coûte 1 PA. */
   private performOnScheme(
     schemerId: string,
@@ -329,6 +346,8 @@ export class GameStore {
         return this.performAction('fouiner', { targetId: id.targetId });
       case 'defuse':
         return this.performDefuse(id.targetId);
+      case 'scapegoat':
+        return this.performScapegoat(id.targetId);
       case 'warn':
         return this.performOnScheme(id.targetId, warnVictim);
       case 'abet':

@@ -41,6 +41,8 @@ src/
     promotion.ts   Progression de rang via réputation
     intents.ts     Intentions hebdo des PNJ : complots contre toi (désamorçage)
                    et guerres entre collègues (prévenir / alimenter)
+    scapegoat.ts   Montage d'un bouc émissaire, péremption, consommation
+                   à l'audit
     preview.ts     Chiffre l'impact d'une action AVANT le clic (lecture seule)
     week.ts        Orchestration de la résolution du vendredi
   state/
@@ -168,6 +170,30 @@ sa tête : complot contre toi (compte à rebours de 2 semaines), surveillance,
 ragot, ascension, rapprochement. C'est le cœur de la tension : on voit les coups
 arriver et on choisit lesquels payer pour désamorcer.
 
+### Le bouc émissaire et le départ non planifié
+
+C'est le cœur du GDD (§6, §7). Avant un coup lourd, tu **montes un dossier**
+sur un innocent : indices fabriqués, isolement. Quand l'audit tombe, la
+Suspicion se reporte sur lui.
+
+Trois garde-fous, sans lesquels la mécanique casserait le jeu :
+
+1. la préparation est un **jet**, pas un achat (Combine, opinion de la
+   cible, vigilance de son archétype) ;
+2. elle **périme** au bout de 4 semaines — un dossier monté il y a deux
+   mois ne tient plus devant un auditeur ;
+3. elle se **consomme** à l'audit, et le prix est lourd : un innocent
+   quitte l'entreprise à ta place, et tout l'étage perd de l'estime pour
+   toi (`auditWitnessOpinion`).
+
+Le **« départ non planifié »** (plan de rang 6) exige un bouc émissaire
+déjà prêt, un secret sur la cible, Combine 55 et le rang Senior. Sans
+coupable de rechange, l'audit qui suit remonte jusqu'à toi. Le panneau
+affiche toujours la raison exacte du verrou, jamais un simple grisé.
+
+Un poste vidé le reste : le collègue disparaît du plateau, son bureau
+demeure. Le bandeau d'état indique en permanence si tu es couvert.
+
 ### L'open space vit sans toi
 
 Un comploteur qui ne t'a pas dans le viseur s'occupe d'un **autre collègue**
@@ -190,7 +216,12 @@ ni bouc émissaire → licenciement. **Nerfs** à zéro trop longtemps → placa
 
 ## Périmètre
 
-MVP jouable de bout en bout (§11 du GDD) : 6 rangs (Stagiaire → Team Lead), 6 archétypes,
-4 plans (crédit volé → dossier RH), 5 collègues, 15 événements, save/load.
-La V2 (suspicion par-collègue, bouc émissaire complet, « départ non planifié »,
-IA de complot des Carriéristes) est prévue par le schéma sans casser les sauvegardes.
+MVP jouable de bout en bout (§11 du GDD) : 6 rangs (Stagiaire → Team Lead),
+6 archétypes, 5 collègues, 15 événements, save/load.
+
+**V2 livrée :** IA de complot des PNJ (ils se ciblent entre eux, avec
+vendettas et retour en grâce), bouc émissaire complet, « départ non
+planifié », 6 plans.
+
+**V2 restante :** suspicion par-collègue (qui a vu quoi), romances de
+bureau, échelle hiérarchique jusqu'à DG. Le schéma les prévoit.

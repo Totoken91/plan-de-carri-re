@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { STAT_KEYS } from '@engine/util';
 import { getRank, nextRank, getOpportunity } from '@data/content';
 import { suspicionTier } from '@engine/suspicion';
+import { scapegoatOf, scapegoatWeeksLeft } from '@engine/scapegoat';
 import { useGame } from './useGame';
 import { StatBar, SuspicionGauge } from './Bits';
 import { IsoOffice } from './IsoOffice';
@@ -39,6 +40,7 @@ export function DeskScreen({ onEndWeek }: { onEndWeek: () => void }) {
   const progress = to > from ? ((state.player.reputation - from) / (to - from)) * 100 : 100;
   const tier = suspicionTier(state.suspicion);
 
+  const scapegoat = scapegoatOf(state);
   const threats = state.colleagues.filter((c) => c.alive && c.intent?.tone === 'threat');
   const landingFriday = threats.filter((c) => (c.intent?.weeksLeft ?? 2) <= 1);
   const lastLog = state.log.slice(-7).reverse();
@@ -108,6 +110,12 @@ export function DeskScreen({ onEndWeek }: { onEndWeek: () => void }) {
         <div className="hud__susp">
           <SuspicionGauge value={state.suspicion} tier={tier} />
           <p className="hud__meaning">{TIER_MEANING[tier]}</p>
+          {/* Savoir si on est couvert change toute la lecture du risque. */}
+          <p className={`hud__cover ${scapegoat ? 'is-ready' : ''}`}>
+            {scapegoat
+              ? `Couverture : dossier monté sur ${scapegoat.name} · ${scapegoatWeeksLeft(state, scapegoat)} sem.`
+              : 'Aucune couverture. Un audit remonterait jusqu’à toi.'}
+          </p>
         </div>
       </div>
 

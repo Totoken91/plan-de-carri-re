@@ -79,5 +79,49 @@
       "targetOpinion": -30,
       "reputation": -10
     }
+  },
+  {
+    "id": "retournement_allie",
+    "name": "Retourner un allié du rival",
+    "description": "Convaincre un proche de ton rival que son avenir se joue de ton côté. Purement social : ça se gagne à l'Aura.",
+    "tier": 5,
+    "durationWeeks": 2,
+    "baseSuccess": 50,
+    "suspicionOnSuccess": 6,
+    "suspicionOnFailure": 14,
+    "minRank": "confirme",
+    "requires": { "stats": { "aura": 40 } },
+    "successEffects": {
+      "targetOpinion": 35,
+      "rivalOpinion": -20,
+      "reputation": 6
+    },
+    "failureEffects": {
+      "targetOpinion": -18,
+      "rivalOpinion": -8
+    }
+  },
+  {
+    "id": "depart_non_planifie",
+    "name": "Le départ non planifié",
+    "description": "L'entreprise se sépare définitivement d'un collaborateur. Exige un dossier monté sur quelqu'un d'autre : sans coupable de rechange, l'audit remonte jusqu'à toi.",
+    "tier": 6,
+    "durationWeeks": 3,
+    "baseSuccess": 30,
+    "suspicionOnSuccess": 28,
+    "suspicionOnFailure": 55,
+    "minRank": "senior",
+    "requiresScapegoat": true,
+    "requires": { "requiresSecretDiscovered": true, "stats": { "combine": 55 } },
+    "successEffects": {
+      "removeTarget": true,
+      "reputation": 20,
+      "globalOpinion": -12
+    },
+    "failureEffects": {
+      "targetOpinion": -50,
+      "globalOpinion": -18,
+      "reputation": -25
+    }
   }
 ]

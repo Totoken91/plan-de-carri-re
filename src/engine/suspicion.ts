@@ -3,6 +3,7 @@
 // ─────────────────────────────────────────────────────────────
 import type { GameState } from '@state/schema';
 import { balance } from '@data/balance';
+import { burnScapegoat, scapegoatOf } from './scapegoat';
 
 export interface AuditResult {
   triggered: boolean;
@@ -20,19 +21,24 @@ export function runAudit(state: GameState): AuditResult {
     return { triggered: false, survived: true };
   }
 
-  const hasAlibi = state.flags.includes('alibi_pret');
-  const hasScapegoat = state.colleagues.some((c) => c.alive && c.flags.includes('bouc_emissaire'));
-
-  if (hasAlibi || hasScapegoat) {
-    // On s'en sort, mais l'alibi est consommé et la suspicion retombe.
+  // L'alibi passe avant : il ne coûte personne. Le bouc émissaire est le
+  // recours suivant, et il se paie — un innocent quitte l'entreprise.
+  if (state.flags.includes('alibi_pret')) {
     state.flags = state.flags.filter((f) => f !== 'alibi_pret');
     state.suspicion = Math.max(0, state.suspicion - 40);
     return {
       triggered: true,
       survived: true,
-      reason: hasAlibi
-        ? "L'audit n'a rien trouvé : ton alibi tenait la route."
-        : 'Le dossier a désigné un autre coupable. Pas toi.',
+      reason: "L'audit n'a rien trouvé : ton alibi tenait la route.",
+    };
+  }
+
+  if (scapegoatOf(state)) {
+    const name = burnScapegoat(state);
+    return {
+      triggered: true,
+      survived: true,
+      reason: `Le dossier a désigné ${name}. Accompagnement de sortie le soir même. Toi, tu es blanchi — et tout l'étage a compris.`,
     };
   }
 

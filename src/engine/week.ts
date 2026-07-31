@@ -17,6 +17,7 @@ import { clamp } from './util';
 import { pickWeeklyEvent, resolveEventTarget } from './events';
 import { resolveDuePlans } from './plans';
 import { assignIntents, resolveIntents, tickRecovery } from './intents';
+import { tickScapegoat } from './scapegoat';
 import { runAudit, checkBurnout } from './suspicion';
 import { checkPromotion, isAtTop } from './promotion';
 import { generateOpportunities } from './opportunities';
@@ -75,6 +76,10 @@ export function finalizeWeek(state: GameState, rng: Rng): WeekSummary {
     log(state, text, tone);
   };
 
+  // Qui était encore là avant la résolution : on compare après, pour
+  // qu'un départ soit toujours raconté, quelle qu'en soit la cause.
+  const presentBefore = new Set(state.colleagues.filter((c) => c.alive).map((c) => c.id));
+
   // 1) Plans arrivés à terme.
   for (const r of resolveDuePlans(state, rng)) {
     record(
@@ -93,6 +98,18 @@ export function finalizeWeek(state: GameState, rng: Rng): WeekSummary {
   // 2 bis) Fin de disgrâce pour ceux qui ont purgé leur affaire.
   for (const outcome of tickRecovery(state)) {
     record(outcome.text, outcome.tone);
+  }
+
+  // 2 ter) Un dossier de bouc émissaire trop vieux ne tient plus.
+  for (const note of tickScapegoat(state)) {
+    record(note.text, note.tone);
+  }
+
+  // 2 quater) Départs. Le ton reste administratif — c'est la règle du jeu.
+  for (const c of state.colleagues) {
+    if (!c.alive && presentBefore.has(c.id)) {
+      record(`${c.name} ne fait plus partie des effectifs. Son poste sera republié.`, 'neutral');
+    }
   }
 
   // 3) Dérive d'opinion (silencieuse : lente et diffuse).

@@ -16,6 +16,20 @@ export interface Balance {
     comploter: { preparationGain: number; suspicionPerPrep: number };
     glander: { nerfs: number; fayotSuspicion: number };
   };
+  scapegoat: {
+    combineRequired: number;
+    baseChance: number;
+    combineWeight: number;
+    opinionWeight: number;
+    vigilanceWeight: number;
+    suspicionOnPrepare: number;
+    suspicionOnFail: number;
+    opinionOnFail: number;
+    /** Semaines avant qu'un montage ne se périme. */
+    staleWeeks: number;
+    auditSuspicionRelief: number;
+    auditWitnessOpinion: number;
+  };
   plan: {
     combineWeight: number;
     vigilanceWeight: number;

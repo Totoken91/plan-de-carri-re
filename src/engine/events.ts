@@ -5,7 +5,7 @@ import type { EventChoice, GameEvent, GameState } from '@state/schema';
 import { catalog } from '@data/content';
 import { checkCondition } from './conditions';
 import { applyEffect } from './effects';
-import { findRival, aliveColleagues } from './util';
+import { findRival, aliveColleagues, fillNames } from './util';
 import type { Rng } from './rng';
 
 /** Résout la cible concrète d'un événement selon son mode. */
@@ -91,6 +91,6 @@ export function resolveChoice(
 
   state.eventHistory.push({ id: event.id, week: state.week });
 
-  const text = success ? choice.outcomeText : (choice.failureText ?? choice.outcomeText);
-  return { outcomeText: text, success };
+  const raw = success ? choice.outcomeText : (choice.failureText ?? choice.outcomeText);
+  return { outcomeText: fillNames(raw, state, targetId), success };
 }

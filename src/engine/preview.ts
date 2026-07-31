@@ -11,6 +11,7 @@ import { balance } from '@data/balance';
 import { getPlanDef } from '@data/content';
 import { diminishingFactor } from './actions';
 import { activeScheme, canDefuse, defuseChance, schemeChance } from './intents';
+import { SCAPEGOAT_FLAG, prepareChance, scapegoatOf, scapegoatWeeksLeft } from './scapegoat';
 import { availableHooks } from './hooks';
 import { STAT_KEYS } from './util';
 
@@ -25,6 +26,7 @@ export type ActionId =
   | { kind: 'cafe'; targetId: string }
   | { kind: 'fouiner'; targetId: string }
   | { kind: 'defuse'; targetId: string }
+  | { kind: 'scapegoat'; targetId: string }
   | { kind: 'warn'; targetId: string } // targetId = le comploteur
   | { kind: 'abet'; targetId: string } // targetId = le comploteur
   | { kind: 'hook'; targetId: string; secretId: string; mode: 'coerce' | 'expose' };
@@ -167,6 +169,53 @@ export function previewDefuse(state: GameState, c: Colleague): ActionOption {
   };
 }
 
+/**
+ * Monter un dossier sur un innocent. C'est l'assurance-vie du jeu : sans
+ * elle, les coups lourds sont injouables ; avec elle, quelqu'un paiera.
+ */
+export function previewScapegoat(state: GameState, c: Colleague): ActionOption | null {
+  const cfg = balance.scapegoat;
+  const already = c.flags.includes(SCAPEGOAT_FLAG);
+  const other = scapegoatOf(state);
+
+  // On ne propose l'action que si elle a du sens sur cette personne.
+  if (already) {
+    return {
+      key: `sg:${c.id}`,
+      id: { kind: 'scapegoat', targetId: c.id },
+      label: 'Bouc émissaire prêt',
+      icon: '🗃️',
+      cost: 0,
+      available: false,
+      reason: `Le dossier tient encore ${scapegoatWeeksLeft(state, c)} semaine(s). En cas d'audit, ${c.name} partira à ta place.`,
+      summary: '',
+      lines: [],
+    };
+  }
+  if (other) return null; // un seul montage à la fois
+  if (!c.alive) return null;
+
+  const enough = state.player.stats.combine >= cfg.combineRequired;
+  return {
+    key: `sg:${c.id}`,
+    id: { kind: 'scapegoat', targetId: c.id },
+    label: 'Monter un dossier',
+    icon: '🗃️',
+    cost: 1,
+    available: enough,
+    reason: enough ? undefined : `Exige Combine ${cfg.combineRequired}.`,
+    summary: `Fabriquer des indices contre ${c.name}, pour l'audit qui viendra.`,
+    chance: enough ? prepareChance(state, c) : undefined,
+    danger: true,
+    lines: [
+      good(`Réussi : couvre un audit pendant ${cfg.staleWeeks} semaines`),
+      bad(`Réussi : ${sign(cfg.suspicionOnPrepare)} Suspicion`),
+      bad(`Raté : ${sign(cfg.suspicionOnFail)} Suspicion, ${sign(cfg.opinionOnFail)} opinion`),
+      flat('À l’audit, cette personne quitte l’entreprise à ta place'),
+    ],
+  };
+}
+
 /** Interventions dans le coup qu'un collègue monte contre un autre. */
 export function previewScheme(state: GameState, c: Colleague): ActionOption[] {
   const found = activeScheme(state, c);
@@ -291,11 +340,13 @@ export function describeEffect(effect: Effect, targetName = 'la cible'): Preview
 
 /** Toutes les actions proposées au clic sur un collègue, dans l'ordre utile. */
 export function colleagueActions(state: GameState, c: Colleague): ActionOption[] {
+  const scapegoat = previewScapegoat(state, c);
   return [
     previewDefuse(state, c),
     ...previewScheme(state, c),
     previewCafe(state, c),
     previewFouiner(state, c),
+    ...(scapegoat ? [scapegoat] : []),
     ...previewHooks(state, c),
   ].filter((a) => a.available || a.id.kind !== 'defuse'); // « Désamorcer » ne s'affiche que s'il y a de quoi
 }

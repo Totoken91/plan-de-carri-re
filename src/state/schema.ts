@@ -46,6 +46,7 @@ export interface Effect {
   clearFlags?: string[];
   startPlan?: PlanDefId; // démarre un plan (cible = cible de l'événement)
   actionPoints?: number; // +/- PA exceptionnels (bonus ou coût)
+  removeTarget?: boolean; // la cible quitte l'entreprise (« départ non planifié »)
 }
 
 // ── Collègues (état) & Archétypes (données) ──────────────────

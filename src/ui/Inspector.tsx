@@ -225,6 +225,8 @@ export function Inspector({
                     <span className="plan__prep">
                       Préparation {pv.preparation}/100 · {pv.def.durationWeeks} sem.
                     </span>
+                  ) : pv.lockReason ? (
+                    <span className="plan__prep plan__prep--locked">{pv.lockReason}</span>
                   ) : (
                     <span className="plan__prep muted">
                       Suspicion +{pv.def.suspicionOnSuccess} si réussi / +
@@ -237,11 +239,7 @@ export function Inspector({
                     onClick={() =>
                       run(store.performAction('comploter', { planId: pv.def.id, targetId: c.id }))
                     }
-                    title={
-                      !pv.canStart && !pv.inProgress
-                        ? 'Conditions non remplies (rang, secret, Combine…)'
-                        : ''
-                    }
+                    title={pv.lockReason ?? ''}
                   >
                     {pv.inProgress ? 'Avancer' : 'Lancer'} <span className="cost">1 PA</span>
                   </button>

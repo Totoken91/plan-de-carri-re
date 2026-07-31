@@ -695,3 +695,20 @@ body {
    ramène au monochrome : elles redeviennent des pictogrammes gravés. */
 .iso-glyph { filter: grayscale(1) brightness(1.9) contrast(1.15); }
 .iso-glyph--dark { filter: grayscale(1) brightness(0.35) contrast(1.3); }
+
+/* Verrou de plan : la raison en clair, pas un simple grisé muet */
+.plan__prep--locked { color: var(--stamp); font-style: italic; }
+
+/* Couverture d'audit : l'info qui décide si on ose ou non */
+.hud__cover {
+  font-family: var(--font-form); font-size: 10px; letter-spacing: 0.06em;
+  margin: 6px 0 0; color: var(--ink-soft);
+}
+.hud__cover.is-ready { color: var(--stamp); }
+
+/* Le bouc émissaire porte une marque au sol, discrète mais permanente */
+.iso-scapegoat-ring {
+  fill: none; stroke: rgba(190, 80, 60, 0.75); stroke-width: 1.6;
+  stroke-dasharray: 3 4;
+  animation: schemeFlow 3s linear infinite;
+}
