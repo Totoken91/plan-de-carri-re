@@ -307,11 +307,11 @@ export function IsoOffice({
               large, plus les membres se soudent mollement au tronc.
               Le seuil (18 / −8) règle la netteté du contour obtenu. */}
           <filter id="goo" x="-22%" y="-18%" width="144%" height="136%" colorInterpolationFilters="sRGB">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="2.0" result="blur" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="1.3" result="blur" />
             <feColorMatrix
               in="blur"
               type="matrix"
-              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -11"
             />
           </filter>
 

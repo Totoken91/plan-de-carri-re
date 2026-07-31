@@ -148,13 +148,31 @@ export const DEFAULT_RIG: FigureRig = {
   hipY: -8.5,
   chestY: -22,
   headY: -37,
-  bodyR: 9.5,
+  bodyR: 8, // demi-largeur du tronc : c'est LA référence pour les bras
   hipR: 8.5,
   shoulder: 6.5,
-  upperArm: 8,
-  foreArm: 8,
-  armR: 3.8,
+  // Segments COURTS : avec des bras longs et une cible proche, l'IK plie
+  // à fond et le coude dessine une boucle sur la poitrine. En gardant la
+  // cible à peu près à portée maximale, la chaîne reste tendue et le bras
+  // longe le flanc — ce que fait un bras au repos sur un clavier.
+  upperArm: 6,
+  foreArm: 6,
+  armR: 3.2,
 };
+
+/**
+ * Les bras ne participent PAS à la fusion.
+ *
+ * Deux essais l'ont montré à l'image : fusionnés près de l'axe, ils sont
+ * absorbés et ne produisent qu'une bosse dans le ventre ; fusionnés
+ * écartés, ils étalent la silhouette en flaque. Un corps en dôme à ~50 px
+ * ne supporte ni l'un ni l'autre.
+ *
+ * Ils sont donc peints PAR-DESSUS le tronc, en teinte plus sombre — la
+ * convention de l'illustration à plat pour un membre au premier plan.
+ * La fusion garde son rôle là où elle est juste : souder le bassin au
+ * buste sans arête.
+ */
 
 export interface PosedFigure {
   hip: Vec;
@@ -226,9 +244,11 @@ export function poseFigure(
   const arms = ([-1, 1] as const).map((side) => {
     const shoulder = v(chest.x + side * rig.shoulder, chest.y + 3);
     const beat = Math.sin(w * 3.1 + (side > 0 ? Math.PI : 0));
+    // Mains devant le ventre, à hauteur de clavier. Le coude, lui, part
+    // vers l'extérieur : c'est ce triangle qui fait lire le bras.
     const target = v(
-      chest.x + side * (11.5 + k.armSpread) + beat * 0.7,
-      rig.hipY - 1.5 + beat * k.typing,
+      chest.x + side * (9.5 + k.armSpread * 0.5) + beat * 0.5,
+      rig.hipY - 3 + beat * k.typing,
     );
     const { joint, end } = solveIK2(shoulder, target, rig.upperArm, rig.foreArm, side as 1 | -1);
     return { a: shoulder, b: joint, c: end };
@@ -254,10 +274,15 @@ let last = 0;
 let acc = 0;
 
 /**
- * Cadence de repose. Chaque personnage porte un filtre SVG que le
- * navigateur réévalue dès qu'une de ses primitives bouge : peindre à
- * 60 Hz faisait décrocher le 95e centile. Le mouvement d'attente étant
- * lent, 32 images/s ne se voient pas et divisent le coût par deux.
+ * Cadence de repose : on ne recalcule pas un mouvement d'attente à 60 Hz.
+ *
+ * NB — j'ai d'abord cru que cette limitation corrigeait un décrochage dû
+ * aux filtres SVG. Un A/B dans une même page (avec filtre / sans filtre /
+ * sans la copie d'ombre) donne exactement les mêmes temps d'image : le
+ * filtre ne coûte rien de mesurable, et l'écart que j'avais observé
+ * n'était que du bruit entre deux lancements. La limitation reste parce
+ * qu'elle évite du travail inutile, pas parce qu'elle répare quoi que ce
+ * soit.
  */
 const STEP = 1 / 32;
 

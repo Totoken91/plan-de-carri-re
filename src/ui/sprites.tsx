@@ -22,7 +22,6 @@ import {
   poseFigure,
   postureFor,
   registerPainter,
-  type Vec,
 } from './figure';
 
 // ── Ombrage ──────────────────────────────────────────────────
@@ -147,24 +146,66 @@ function discShadow(r: number, fill: string) {
   return <path d={`M ${EDGE} ${-dy} A ${r} ${r} 0 0 1 ${EDGE} ${dy} Z`} fill={fill} />;
 }
 
-function Hair({ style, color }: { style: HairStyle; color: string }) {
+/**
+ * Coiffure, en DEUX couches. Une capuche, une frange ou un carré passent
+ * DERRIÈRE le crâne ; seule la calotte passe devant. Tout peindre après
+ * la tête revenait à masquer le visage — c'est ce qui rendait le
+ * capuchonné entièrement noir.
+ */
+function Hair({
+  style,
+  color,
+  layer,
+}: {
+  style: HairStyle;
+  color: string;
+  layer: 'back' | 'front';
+}) {
   const dark = shade(color, 0.74);
   const cap = (
     <path d={`M ${-HEAD_R} ${-2.5} A ${HEAD_R} ${HEAD_R} 0 0 1 ${HEAD_R} ${-2.5} Z`} fill={color} />
   );
 
-  switch (style) {
-    case 'capuche':
-      return (
-        <g>
+  if (layer === 'back') {
+    switch (style) {
+      case 'capuche':
+        // La capuche encadre : une coque large derrière, rien devant.
+        return (
           <path
-            d={`M ${-HEAD_R - 3} 6 A ${HEAD_R + 3} ${HEAD_R + 3} 0 0 1 ${HEAD_R + 3} 6
-                L ${HEAD_R + 1} 9 L ${-HEAD_R - 1} 9 Z`}
+            d={`M ${-HEAD_R - 3.5} 7 A ${HEAD_R + 3.5} ${HEAD_R + 3.5} 0 0 1 ${HEAD_R + 3.5} 7
+                L ${HEAD_R + 2} 11 L ${-HEAD_R - 2} 11 Z`}
             fill={color}
           />
-          <path d={`M ${EDGE} -11 A ${HEAD_R + 3} ${HEAD_R + 3} 0 0 1 ${HEAD_R + 1} 9 L ${EDGE} 9 Z`}
+        );
+      case 'rideau':
+        return (
+          <g fill={dark}>
+            <path d={`M ${-HEAD_R - 1} -3 L ${-HEAD_R - 1} 12 L ${-HEAD_R + 4} 12 L ${-HEAD_R + 4} -3 Z`} />
+            <path d={`M ${HEAD_R + 1} -3 L ${HEAD_R + 1} 12 L ${HEAD_R - 4} 12 L ${HEAD_R - 4} -3 Z`} />
+          </g>
+        );
+      case 'carre':
+        return (
+          <path d={`M ${-HEAD_R - 1.5} -2 L ${-HEAD_R - 1.5} 8 L ${HEAD_R + 1.5} 8 L ${HEAD_R + 1.5} -2 Z`}
             fill={dark} />
-        </g>
+        );
+      case 'queue':
+        return (
+          <path d={`M ${HEAD_R - 2} -4 L ${HEAD_R + 5} 1 L ${HEAD_R + 3} 9 L ${HEAD_R - 3} 2 Z`}
+            fill={dark} />
+        );
+      default:
+        return null;
+    }
+  }
+
+  switch (style) {
+    case 'capuche':
+      // Devant : juste le bord du capuchon sur le front.
+      return (
+        <path d={`M ${-HEAD_R - 0.5} -4 A ${HEAD_R + 0.5} ${HEAD_R + 0.5} 0 0 1 ${HEAD_R + 0.5} -4
+                  L ${HEAD_R - 1} -6 A ${HEAD_R} ${HEAD_R} 0 0 0 ${-HEAD_R + 1} -6 Z`}
+          fill={shade(color, 1.35)} />
       );
     case 'degarni':
       return (
@@ -173,35 +214,15 @@ function Hair({ style, color }: { style: HairStyle; color: string }) {
           <path d={`M ${HEAD_R} -1 A ${HEAD_R} ${HEAD_R} 0 0 0 ${HEAD_R - 4} -8.5 L ${HEAD_R - 4} -1 Z`} />
         </g>
       );
-    case 'queue':
-      return (
-        <g>
-          {cap}
-          <path d={`M ${HEAD_R - 2} -4 L ${HEAD_R + 5} 1 L ${HEAD_R + 3} 9 L ${HEAD_R - 3} 2 Z`} fill={dark} />
-        </g>
-      );
-    case 'rideau':
-      return (
-        <g>
-          <path d={`M ${-HEAD_R} -2 L ${-HEAD_R} 12 L ${-HEAD_R + 4.5} 12 L ${-HEAD_R + 4.5} -2 Z`} fill={dark} />
-          <path d={`M ${HEAD_R} -2 L ${HEAD_R} 12 L ${HEAD_R - 4.5} 12 L ${HEAD_R - 4.5} -2 Z`} fill={dark} />
-          {cap}
-        </g>
-      );
-    case 'carre':
-      return (
-        <g>
-          <path d={`M ${-HEAD_R - 1} -2 L ${-HEAD_R - 1} 7 L ${HEAD_R + 1} 7 L ${HEAD_R + 1} -2 Z`} fill={dark} />
-          {cap}
-        </g>
-      );
-    default:
+    case 'plaque':
       return (
         <g>
           {cap}
           <path d={`M ${-HEAD_R + 1} -6 L ${-HEAD_R - 2.5} -1 L ${-HEAD_R + 2} -1.5 Z`} fill={color} />
         </g>
       );
+    default:
+      return cap;
   }
 }
 
@@ -229,15 +250,12 @@ export function Person({ c }: { c: Colleague }) {
     const pick = (role: string) => root.querySelector<SVGElement>(`[data-r="${role}"]`);
     const hip = pick('hip');
     const torso = pick('torso');
-    const armL = pick('armL');
-    const armR = pick('armR');
     const head = pick('head');
     const kit = pick('kit');
-    if (!hip || !torso || !armL || !armR || !head || !kit) return;
+    const hand = pick('hand');
+    if (!hip || !torso || !head || !kit) return;
 
     const motion = makeMotion(phaseOf(c.id));
-    const pts = (a: Vec, b: Vec, d: Vec) =>
-      `${a.x.toFixed(2)},${a.y.toFixed(2)} ${b.x.toFixed(2)},${b.y.toFixed(2)} ${d.x.toFixed(2)},${d.y.toFixed(2)}`;
 
     return registerPainter((t, dt) => {
       const p = poseFigure(t, dt, motion, posture, RIG);
@@ -247,8 +265,11 @@ export function Person({ c }: { c: Colleague }) {
       torso.setAttribute('y1', p.hip.y.toFixed(2));
       torso.setAttribute('x2', p.chest.x.toFixed(2));
       torso.setAttribute('y2', p.chest.y.toFixed(2));
-      armL.setAttribute('points', pts(p.arms[0]!.a, p.arms[0]!.b, p.arms[0]!.c));
-      armR.setAttribute('points', pts(p.arms[1]!.a, p.arms[1]!.b, p.arms[1]!.c));
+      // L'IK ne dessine plus de membre : elle place ce que la main tient.
+      if (hand) {
+        const m = p.arms[0]!.c;
+        hand.setAttribute('transform', `translate(${m.x.toFixed(2)},${m.y.toFixed(2)})`);
+      }
       head.setAttribute(
         'transform',
         `translate(${p.head.x.toFixed(2)},${p.head.y.toFixed(2)}) rotate(${p.headTilt.toFixed(2)})`,
@@ -271,18 +292,9 @@ export function Person({ c }: { c: Colleague }) {
         x1="0" y1={RIG.hipY} x2="0" y2={RIG.chestY}
         stroke="currentColor" strokeWidth={RIG.bodyR * 2} strokeLinecap="round"
       />
-      <polyline
-        data-r="armL" points="0,0 0,0 0,0" fill="none"
-        stroke="currentColor" strokeWidth={RIG.armR * 2}
-        strokeLinecap="round" strokeLinejoin="round"
-      />
-      <polyline
-        data-r="armR" points="0,0 0,0 0,0" fill="none"
-        stroke="currentColor" strokeWidth={RIG.armR * 2}
-        strokeLinecap="round" strokeLinejoin="round"
-      />
     </g>
   );
+
 
   return (
     <g ref={ref} className="iso-person">
@@ -297,25 +309,37 @@ export function Person({ c }: { c: Colleague }) {
 
       {/* Accessoires du buste : nets, donc hors fusion. */}
       <g data-r="kit">
-        <path d="M -4.4 -1.4 L 0 4.5 L 4.4 -1.4 Z" fill={shade(look.shirt, 1.16)} />
-        {look.tie && <path d="M 0 3.5 L 2.6 7.5 L 0 19 L -2.6 7.5 Z" fill={look.tie} />}
-        {look.mug && (
-          <g>
-            <rect x="-15.6" y="13" width="5.6" height="6" fill="#e8e4d9" />
-            <rect x="-10" y="14.4" width="2" height="2.6" fill="#e8e4d9" />
-          </g>
-        )}
+        <path d="M -3.2 -2 L 0 2.6 L 3.2 -2 Z" fill={shade(look.shirt, 1.14)} />
+        {look.tie && <path d="M 0 2 L 2.1 5.5 L 0 15 L -2.1 5.5 Z" fill={look.tie} />}
       </g>
+
+      {look.mug && (
+        /* Tenue par la main gauche, dont la position vient de l'IK. */
+        <g data-r="hand">
+          <rect x="-3" y="-3" width="5.4" height="5.8" fill="#e8e4d9" />
+          <rect x="2.4" y="-1.6" width="1.9" height="2.6" fill="#e8e4d9" />
+          <ellipse cy="-3" rx="2.7" ry="1" fill="#4a3a2c" />
+        </g>
+      )}
 
       {/* Tête : repère local, centre en (0,0). */}
       <g data-r="head">
+        <Hair style={look.style} color={look.hair} layer="back" />
         <circle r={HEAD_R} fill={skin} />
         {discShadow(HEAD_R, skinDark)}
-        <Hair style={look.style} color={look.hair} />
+        <Hair style={look.style} color={look.hair} layer="front" />
         <circle className="iso-person__eye" cx="-4" cy="1" r="1.7" fill="#2b2620" />
         <circle className="iso-person__eye" cx="4" cy="1" r="1.7" fill="#2b2620" />
         {look.glasses && (
-          <path d="M -8.2 -0.6 L 8.2 -0.6 L 8.2 2.8 L -8.2 2.8 Z" fill="#2b2620" opacity="0.85" />
+          /* Deux verres cerclés. La « barre pleine » que j'avais mise ici
+             pour gagner en lisibilité se lisait comme un bandeau. */
+          <g>
+            <circle cx="-4.2" cy="1" r="3.4" fill="rgba(198,222,240,0.30)"
+              stroke="#2b2620" strokeWidth="1.1" />
+            <circle cx="4.2" cy="1" r="3.4" fill="rgba(198,222,240,0.30)"
+              stroke="#2b2620" strokeWidth="1.1" />
+            <path d="M -0.8 1 L 0.8 1" stroke="#2b2620" strokeWidth="1.1" />
+          </g>
         )}
       </g>
     </g>

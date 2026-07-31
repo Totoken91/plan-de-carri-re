@@ -118,17 +118,25 @@ segment doté d'un rayon, on la restitue par un trait à bout rond : même
 géométrie, sans shader ni second contexte de rendu, donc l'occlusion par le
 mobilier et le clic sur un personnage continuent de fonctionner.
 
+**Les bras ne sont pas dessinés.** Fusionnés près de l'axe, ils étaient
+absorbés et ne produisaient qu'une bosse dans le ventre ; fusionnés
+écartés, ils étalaient la silhouette en flaque ; peints par-dessus, l'IK
+repliait le coude en boucle sur la poitrine. Un corps en dôme à ~50 px ne
+supporte aucun des trois. L'IK sert donc à ce pour quoi elle est utile à
+cette échelle : placer ce que la main tient (la tasse du Fayot).
+
 **La posture dit ce qui se trame.** Un comploteur se penche, un bavard
 gesticule, un guetteur te fixe : `postureFor()` traduit l'intention de jeu en
 attitude corporelle. L'animation devient de l'information, pas de la
 décoration.
 
-Deux contraintes de production, mesurées :
+Côté production :
 - les poses sont écrites **directement dans le DOM**, hors du cycle React —
   re-rendre l'arbre à 60 Hz est intenable ;
-- la boucle est **cadencée à 32 images/s**. Chaque personnage porte un filtre
-  que le navigateur réévalue dès qu'une primitive bouge ; à 60 Hz le 95e
-  centile décrochait à 30 fps, à 32 Hz il tient les 60.
+- la boucle est **cadencée à 32 images/s**, parce qu'un mouvement d'attente
+  n'a pas besoin de plus. Un A/B dans une même page (avec filtre, sans
+  filtre, sans la copie d'ombre) donne des temps d'image identiques : la
+  fusion ne coûte rien de mesurable.
 
 La tête, elle, reste **hors fusion** : à ~50 px, un visage fondu redevient
 une bouillie.
