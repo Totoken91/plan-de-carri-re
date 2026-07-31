@@ -368,9 +368,9 @@ body {
   stroke-dasharray: 6 7; stroke-linecap: round;
   animation: schemeFlow 1.7s linear infinite;
 }
-.iso-scheme__mark { fill: #d4a54a; }
+.iso-scheme__mark { fill: #d4a54a; stroke: #d4a54a; }
 .iso-scheme.is-boosted .iso-scheme__link { stroke: rgba(190, 70, 55, 0.9); stroke-width: 2.6; }
-.iso-scheme.is-boosted .iso-scheme__mark { fill: var(--stamp); }
+.iso-scheme.is-boosted .iso-scheme__mark { fill: var(--stamp); stroke: var(--stamp); }
 @keyframes schemeFlow { to { stroke-dashoffset: -26; } }
 
 /* Balises d'opportunité */

@@ -91,6 +91,15 @@ fond-gauche) et la face à l'ombre ne descend jamais sous 0,74 du ton de
 base : plus bas, les volumes virent au noir et se lisent comme des trous
 dans la géométrie.
 
+**Les personnages n'essaient pas d'être détaillés.** À ~50 px, un visage
+modelé tourne à la bouillie ; on joue donc ce que le SVG fait le mieux —
+des formes nettes en aplat. Tête ronde volontairement grosse posée sans
+cou, buste en dôme sans bras, deux tons par forme séparés par une arête
+franche (jamais de dégradé), et un visage réduit à deux points. Ce qui
+distingue un archétype, c'est sa **silhouette** : capuche, queue de
+cheval, cheveux en rideau, crâne dégarni. Un collègue doit se reconnaître
+à 20 px, réduit à sa découpe.
+
 ### Deux règles d'interface
 
 1. **Aucun bouton muet.** Toute action affiche ses deltas exacts et sa

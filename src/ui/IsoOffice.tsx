@@ -378,13 +378,24 @@ export function IsoOffice({
           const v = seatOf(vIdx);
           const a = iso(s.gx, s.gy);
           const b = iso(v.gx, v.gy);
+          // Le trait passe AU-DESSUS des têtes (crâne ≈ −48) et sous les
+          // bulles (−66). Plus bas, il traversait les bustes et son
+          // marqueur se lisait comme une tache sur la chemise de la cible.
+          const LIFT = 52;
           const mx = (a.x + b.x) / 2;
-          const my = (a.y + b.y) / 2 - 58;
+          const my = (a.y + b.y) / 2 - LIFT - 34;
 
           return (
             <g key={`scheme-${c.id}`} className={`iso-scheme ${c.intent.boost ? 'is-boosted' : ''}`}>
-              <path d={`M ${a.x} ${a.y - 24} Q ${mx} ${my} ${b.x} ${b.y - 24}`} className="iso-scheme__link" />
-              <circle cx={b.x} cy={b.y - 24} r="4.5" className="iso-scheme__mark" />
+              <path
+                d={`M ${a.x} ${a.y - LIFT} Q ${mx} ${my} ${b.x} ${b.y - LIFT}`}
+                className="iso-scheme__link"
+              />
+              {/* cible : un réticule, pas un disque plein */}
+              <g className="iso-scheme__mark" transform={`translate(${b.x},${b.y - LIFT})`}>
+                <circle r="5" fill="none" strokeWidth="1.6" />
+                <circle r="1.6" strokeWidth="0" />
+              </g>
             </g>
           );
         })}

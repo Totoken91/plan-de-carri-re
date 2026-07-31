@@ -57,33 +57,44 @@ export function IsoBox({
     </g>
   );
 }
+// ── Personnages ──────────────────────────────────────────────
+// Parti pris : on ne cherche PAS le détail. À cette échelle (~50 px),
+// un visage modelé tourne à la bouillie. On joue donc sur ce que le SVG
+// fait le mieux — des formes nettes en aplat :
+//
+//   · une tête ronde, volontairement grosse, posée sans cou ;
+//   · un buste en dôme, sans bras articulés ;
+//   · deux tons par forme, séparés par une arête FRANCHE (jamais de
+//     dégradé) — le même vocabulaire que les facettes du mobilier ;
+//   · pour tout visage, deux points. Pas de bouche, pas de nez.
+//
+// Ce qui distingue les archétypes, c'est la SILHOUETTE : capuche, queue
+// de cheval, col relevé, crâne dégarni. Un personnage doit se lire à
+// 20 px, réduit à sa découpe.
 
-// ── Identité visuelle des archétypes ─────────────────────────
-type HairStyle = 'court' | 'chignon' | 'degarni' | 'long' | 'boucle' | 'queue';
-type Extra = 'cravate' | 'badge' | 'casque' | 'echarpe' | 'mug';
+type HairStyle = 'plaque' | 'queue' | 'capuche' | 'rideau' | 'degarni' | 'carre';
 
 interface Look {
   shirt: string;
   hair: string;
   style: HairStyle;
   glasses?: boolean;
-  extra?: Extra;
+  tie?: string;
+  mug?: boolean;
 }
 
-/** Chaque archétype doit être reconnaissable à sa silhouette seule. */
 const LOOKS: Record<string, Look> = {
-  // Chemise impeccable, cravate rouge : celui qui s'habille pour le poste d'après.
-  carrieriste: { shirt: '#d9dce3', hair: '#2a221e', style: 'court', extra: 'cravate' },
-  // Pull moutarde, lunettes, et toujours un café à porter à quelqu'un.
-  fayot: { shirt: '#c2862c', hair: '#4a3428', style: 'queue', glasses: true, extra: 'mug' },
-  // Hoodie et casque : injoignable, donc au courant de tout.
-  glandeur: { shirt: '#3d8a58', hair: '#1c1a19', style: 'boucle', extra: 'casque' },
-  // Gilet sombre, écharpe gardée à l'intérieur, lunettes.
-  parano: { shirt: '#6b57a0', hair: '#5f4736', style: 'long', glasses: true, extra: 'echarpe' },
-  // Quinze ans de maison, et les cheveux qui vont avec.
-  veteran: { shirt: '#3d83a0', hair: '#9aa0a6', style: 'degarni' },
-  // Badge visiteur jamais retiré.
-  nouveau: { shirt: '#6b7488', hair: '#7d5c3f', style: 'chignon', extra: 'badge' },
+  // Chemise claire, cravate : le seul qui s'habille pour le poste d'après.
+  carrieriste: { shirt: '#dfe3ea', hair: '#332a20', style: 'plaque', tie: '#b4453b' },
+  // Queue de cheval, lunettes, et un café qu'il porte à quelqu'un d'autre.
+  fayot: { shirt: '#cf9a3c', hair: '#5a3f2c', style: 'queue', glasses: true, mug: true },
+  // La capuche : reconnaissable même en ombre chinoise.
+  glandeur: { shirt: '#4e9b68', hair: '#241f1c', style: 'capuche' },
+  // Cheveux en rideau, lunettes : on ne voit jamais tout à fait son visage.
+  parano: { shirt: '#7d68b8', hair: '#4b3728', style: 'rideau', glasses: true },
+  // Quinze ans de maison, et le crâne qui va avec.
+  veteran: { shirt: '#4a90ab', hair: '#b9bec4', style: 'degarni' },
+  nouveau: { shirt: '#8b93a6', hair: '#8a6440', style: 'carre' },
 };
 
 const SKINS = ['#e9b78f', '#c98c62', '#8d5a3b', '#f0cba6', '#a9714a', '#6d4530'];
@@ -94,202 +105,150 @@ function hashOf(id: string): number {
   return h;
 }
 
-// ── Coiffures ────────────────────────────────────────────────
-const HEAD_Y = -46.5;
-const HEAD_R = 9;
+// Géométrie : tête volumineuse, buste court. C'est cette proportion qui
+// donne le charme — un corps réaliste ferait un pion sans caractère.
+const HEAD_R = 11;
+const HEAD_Y = -37;
+const BODY_TOP = -28;
+const BODY_W = 11;
+/** Abscisse de l'arête d'ombre : décalée du centre, jamais pile au milieu. */
+const EDGE = 3;
+
+/** Moitié droite d'un disque, coupée net à l'abscisse EDGE. */
+function discShadow(cy: number, r: number, fill: string) {
+  const dy = Math.sqrt(r * r - EDGE * EDGE);
+  return <path d={`M ${EDGE} ${cy - dy} A ${r} ${r} 0 0 1 ${EDGE} ${cy + dy} Z`} fill={fill} />;
+}
 
 function Hair({ style, color }: { style: HairStyle; color: string }) {
-  const dark = shade(color, 0.72);
+  const dark = shade(color, 0.74);
+  // Calotte : un arc plein, posé bas sur le front.
   const cap = (
-    <path d={`M ${-HEAD_R} ${HEAD_Y - 1} A ${HEAD_R} ${HEAD_R} 0 0 1 ${HEAD_R} ${HEAD_Y - 1} Z`} fill={color} />
+    <path
+      d={`M ${-HEAD_R} ${HEAD_Y - 2.5} A ${HEAD_R} ${HEAD_R} 0 0 1 ${HEAD_R} ${HEAD_Y - 2.5} Z`}
+      fill={color}
+    />
   );
 
   switch (style) {
+    case 'capuche':
+      // La capuche se dessine autour de la tête, pas dessus.
+      return (
+        <g>
+          <path
+            d={`M ${-HEAD_R - 3} ${HEAD_Y + 6} A ${HEAD_R + 3} ${HEAD_R + 3} 0 0 1 ${HEAD_R + 3} ${HEAD_Y + 6}
+                L ${HEAD_R + 1} ${HEAD_Y + 9} L ${-HEAD_R - 1} ${HEAD_Y + 9} Z`}
+            fill={color}
+          />
+          <path d={`M ${EDGE} ${HEAD_Y - 11} A ${HEAD_R + 3} ${HEAD_R + 3} 0 0 1 ${HEAD_R + 1} ${HEAD_Y + 9}
+                    L ${EDGE} ${HEAD_Y + 9} Z`} fill={dark} />
+        </g>
+      );
     case 'degarni':
       return (
-        <g>
-          <path d={`M ${-HEAD_R} ${HEAD_Y + 1} A ${HEAD_R} ${HEAD_R} 0 0 1 ${-HEAD_R + 3.4} ${HEAD_Y - 7}`}
-            fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" />
-          <path d={`M ${HEAD_R} ${HEAD_Y + 1} A ${HEAD_R} ${HEAD_R} 0 0 0 ${HEAD_R - 3.4} ${HEAD_Y - 7}`}
-            fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" />
-        </g>
-      );
-    case 'chignon':
-      return (
-        <g>
-          {cap}
-          <circle cy={HEAD_Y - 9.5} r="4.2" fill={color} />
-          <circle cx="-1.2" cy={HEAD_Y - 10.6} r="1.6" fill={shade(color, 1.35)} />
-        </g>
-      );
-    case 'long':
-      return (
-        <g>
-          <path d={`M ${-HEAD_R - 0.8} ${HEAD_Y - 0.5} L ${-HEAD_R - 0.8} ${HEAD_Y + 16}
-                    Q ${-HEAD_R + 1.5} ${HEAD_Y + 18} ${-HEAD_R + 3.4} ${HEAD_Y + 14}
-                    L ${-HEAD_R + 3.4} ${HEAD_Y} Z`} fill={dark} />
-          <path d={`M ${HEAD_R + 0.8} ${HEAD_Y - 0.5} L ${HEAD_R + 0.8} ${HEAD_Y + 16}
-                    Q ${HEAD_R - 1.5} ${HEAD_Y + 18} ${HEAD_R - 3.4} ${HEAD_Y + 14}
-                    L ${HEAD_R - 3.4} ${HEAD_Y} Z`} fill={dark} />
-          {cap}
-        </g>
-      );
-    case 'boucle':
-      return (
         <g fill={color}>
-          {cap}
-          {[-7, -3.5, 0, 3.5, 7].map((x, i) => (
-            <circle key={x} cx={x} cy={HEAD_Y - 6.5 - (i % 2 ? 1.6 : 0)} r="3.4" />
-          ))}
+          <path d={`M ${-HEAD_R} ${HEAD_Y - 1} A ${HEAD_R} ${HEAD_R} 0 0 1 ${-HEAD_R + 4} ${HEAD_Y - 8.5} L ${-HEAD_R + 4} ${HEAD_Y - 1} Z`} />
+          <path d={`M ${HEAD_R} ${HEAD_Y - 1} A ${HEAD_R} ${HEAD_R} 0 0 0 ${HEAD_R - 4} ${HEAD_Y - 8.5} L ${HEAD_R - 4} ${HEAD_Y - 1} Z`} />
         </g>
       );
     case 'queue':
       return (
         <g>
           {cap}
-          <path d={`M ${HEAD_R - 1} ${HEAD_Y - 3} Q ${HEAD_R + 6} ${HEAD_Y + 2} ${HEAD_R + 3.5} ${HEAD_Y + 10}
-                    Q ${HEAD_R + 1} ${HEAD_Y + 5} ${HEAD_R - 2.5} ${HEAD_Y + 2} Z`} fill={dark} />
+          <path d={`M ${HEAD_R - 2} ${HEAD_Y - 4} L ${HEAD_R + 5} ${HEAD_Y + 1}
+                    L ${HEAD_R + 3} ${HEAD_Y + 9} L ${HEAD_R - 3} ${HEAD_Y + 2} Z`} fill={dark} />
+        </g>
+      );
+    case 'rideau':
+      return (
+        <g>
+          <path d={`M ${-HEAD_R} ${HEAD_Y - 2} L ${-HEAD_R} ${HEAD_Y + 12} L ${-HEAD_R + 4.5} ${HEAD_Y + 12} L ${-HEAD_R + 4.5} ${HEAD_Y - 2} Z`} fill={dark} />
+          <path d={`M ${HEAD_R} ${HEAD_Y - 2} L ${HEAD_R} ${HEAD_Y + 12} L ${HEAD_R - 4.5} ${HEAD_Y + 12} L ${HEAD_R - 4.5} ${HEAD_Y - 2} Z`} fill={dark} />
+          {cap}
+        </g>
+      );
+    case 'carre':
+      return (
+        <g>
+          <path d={`M ${-HEAD_R - 1} ${HEAD_Y - 2} L ${-HEAD_R - 1} ${HEAD_Y + 7} L ${HEAD_R + 1} ${HEAD_Y + 7} L ${HEAD_R + 1} ${HEAD_Y - 2} Z`} fill={dark} />
+          {cap}
         </g>
       );
     default:
+      // Plaqué : la calotte, plus une pointe côté raie.
       return (
         <g>
           {cap}
-          <rect x={-HEAD_R - 0.4} y={HEAD_Y - 2} width="2.2" height="6" rx="1" fill={color} />
-          <rect x={HEAD_R - 1.8} y={HEAD_Y - 2} width="2.2" height="6" rx="1" fill={color} />
+          <path d={`M ${-HEAD_R + 1} ${HEAD_Y - 6} L ${-HEAD_R - 2.5} ${HEAD_Y - 1} L ${-HEAD_R + 2} ${HEAD_Y - 1.5} Z`} fill={color} />
         </g>
       );
-  }
-}
-
-// ── Accessoires ──────────────────────────────────────────────
-function Extra({ kind }: { kind: Extra }) {
-  switch (kind) {
-    case 'cravate':
-      return (
-        <g>
-          <path d="M 0 -32 L 2.6 -29.5 L 0 -27 L -2.6 -29.5 Z" fill="#b8453c" />
-          <path d="M 0 -27 L 2.2 -25 L 1.4 -13 L -1.4 -13 L -2.2 -25 Z" fill="#a13d35" />
-        </g>
-      );
-    case 'badge':
-      return (
-        <g>
-          <path d="M -5 -32 L -1.6 -22" stroke="#c9cdd6" strokeWidth="1" fill="none" />
-          <path d="M 5 -32 L 1.6 -22" stroke="#c9cdd6" strokeWidth="1" fill="none" />
-          <rect x="-3.2" y="-22" width="6.4" height="4.6" rx="0.8" fill="#e8e4d9" />
-          <rect x="-2.3" y="-20.9" width="4.6" height="0.9" fill="#8b93a3" />
-        </g>
-      );
-    case 'casque':
-      return (
-        <g>
-          <path d={`M ${-HEAD_R - 1.6} ${HEAD_Y - 1} A ${HEAD_R + 1.6} ${HEAD_R + 1.6} 0 0 1 ${HEAD_R + 1.6} ${HEAD_Y - 1}`}
-            fill="none" stroke="#2a2e36" strokeWidth="2.4" />
-          <rect x={-HEAD_R - 3.4} y={HEAD_Y - 3.4} width="3.6" height="7" rx="1.7" fill="#343a44" />
-          <rect x={HEAD_R - 0.2} y={HEAD_Y - 3.4} width="3.6" height="7" rx="1.7" fill="#343a44" />
-        </g>
-      );
-    case 'echarpe':
-      return (
-        <g>
-          <path d="M -7.5 -31 Q 0 -26.5 7.5 -31 L 7.5 -27 Q 0 -22.5 -7.5 -27 Z" fill="#8d4f52" />
-          <path d="M 4.5 -27.5 L 7.2 -17 L 3.6 -17.6 Z" fill="#7a4245" />
-        </g>
-      );
-    case 'mug':
-      return (
-        <g>
-          <rect x="-14.5" y="-16" width="5.4" height="5.6" rx="1" fill="#e8e4d9" />
-          <path d="M -9.1 -14.6 q 2.2 1.2 0 2.6" fill="none" stroke="#e8e4d9" strokeWidth="1" />
-          <ellipse cx="-11.8" cy="-16" rx="2.7" ry="1" fill="#4a3a2c" />
-        </g>
-      );
-    default:
-      return null;
   }
 }
 
 /**
- * Un collègue à son poste, vu de trois quarts face.
- * Le visage porte la lecture : on doit distinguer qui est qui d'un
- * coup d'œil sur le plateau, sans lire d'étiquette.
+ * Un collègue à son poste. Aplats francs, aucune ombre douce : tout le
+ * relief vient de l'arête entre les deux tons.
  */
 export function Person({ c }: { c: Colleague }) {
   const h = hashOf(c.id);
   const look = LOOKS[c.archetype] ?? LOOKS.nouveau!;
   const skin = SKINS[h % SKINS.length]!;
-  const shirt = look.shirt;
-  const shirtDark = shade(shirt, 0.7);
-  const skinDark = shade(skin, 0.82);
-  // Les respirations se désynchronisent : rien de plus mort qu'un
-  // open space qui bouge à l'unisson.
+  const skinDark = shade(skin, 0.76);
+  const shirtDark = shade(look.shirt, 0.76);
+  // Les respirations se désynchronisent : rien de plus mort qu'un open
+  // space qui bouge à l'unisson.
   const delay = `${((h % 20) / 10).toFixed(2)}s`;
 
   return (
     <g className={c.alive ? 'iso-person' : 'iso-person iso-gone'}>
-      {/* ombre portée : un noyau dense + une diffusion large */}
-      <ellipse rx="16" ry="6.5" fill="rgba(0,0,0,0.30)" />
-      <ellipse rx="9.5" ry="4" fill="rgba(0,0,0,0.34)" />
+      {/* ombre au sol : un aplat, pas un flou */}
+      <ellipse rx="14" ry="5.5" fill="rgba(0,0,0,0.32)" />
 
+      {/* Ordre de tracé : tête, puis cheveux, puis visage, et le buste EN
+          DERNIER. Les épaules recouvrent ainsi le bas du crâne et retiennent
+          les cheveux longs ; l'inverse faisait déborder le menton en pastille
+          de peau sur la chemise. */}
       <g className="iso-person__body" style={{ animationDelay: delay }}>
-        {/* bassin */}
-        <path d="M -8.5 -4 L 8.5 -4 L 7.5 -12 L -7.5 -12 Z" fill={shade(shirt, 0.5)} />
-
-        {/* buste : épaules marquées, taille resserrée */}
-        <path d="M -9.4 -6 C -10 -20, -8.6 -28.5, -5.4 -31.4 Q 0 -33.4 5.4 -31.4
-                 C 8.6 -28.5, 10 -20, 9.4 -6 Z" fill={shirt} />
-        {/* moitié à l'ombre */}
-        <path d="M 0 -32.6 Q 3.4 -32.6 5.4 -31.4 C 8.6 -28.5, 10 -20, 9.4 -6 L 0 -6 Z"
-          fill={shirtDark} opacity="0.5" />
-        {/* liseré de lumière côté baies */}
-        <path d="M -9.4 -8 C -10 -20, -8.6 -28.5, -5.4 -31.4" fill="none"
-          stroke="rgba(255,255,255,0.20)" strokeWidth="1.1" strokeLinecap="round" />
-
-        {/* bras : épaule → coude serré → avant-bras vers le clavier */}
-        <path d="M -8.6 -29 C -11.6 -24, -11.8 -18, -7.6 -14.5" fill="none" stroke={shirt}
-          strokeWidth="4.2" strokeLinecap="round" />
-        <path d="M 8.6 -29 C 11.6 -24, 11.8 -18, 7.6 -14.5" fill="none" stroke={shirtDark}
-          strokeWidth="4.2" strokeLinecap="round" />
-        <ellipse cx="-6.8" cy="-13.6" rx="2.5" ry="2" fill={skin} transform="rotate(-18 -6.8 -13.6)" />
-        <ellipse cx="6.8" cy="-13.6" rx="2.5" ry="2" fill={skinDark} transform="rotate(18 6.8 -13.6)" />
-
-        {/* col */}
-        <path d="M -4.6 -32.6 L 0 -26.5 L 4.6 -32.6 L 2.4 -33.4 L 0 -29.6 L -2.4 -33.4 Z"
-          fill={shade(shirt, 1.22)} />
-        {look.extra && <Extra kind={look.extra} />}
-
-        {/* cou */}
-        <path d="M -3 -33 L 3 -33 L 3.4 -38 L -3.4 -38 Z" fill={skinDark} />
-
-        {/* tête */}
-        <path d={`M 0 ${HEAD_Y - HEAD_R} A ${HEAD_R} ${HEAD_R} 0 0 1 ${HEAD_R * 0.86} ${HEAD_Y + 4.4}
-                  Q 0 ${HEAD_Y + 10.4} ${-HEAD_R * 0.86} ${HEAD_Y + 4.4}
-                  A ${HEAD_R} ${HEAD_R} 0 0 1 0 ${HEAD_Y - HEAD_R} Z`} fill={skin} />
-        {/* joue à l'ombre */}
-        <path d={`M 0 ${HEAD_Y - HEAD_R} A ${HEAD_R} ${HEAD_R} 0 0 1 ${HEAD_R * 0.86} ${HEAD_Y + 4.4}
-                  Q ${HEAD_R * 0.4} ${HEAD_Y + 7.6} 0 ${HEAD_Y + 8} Z`} fill={skinDark} opacity="0.5" />
-        {/* oreilles */}
-        <ellipse cx={-HEAD_R + 0.4} cy={HEAD_Y + 1} rx="1.7" ry="2.4" fill={skinDark} />
-        <ellipse cx={HEAD_R - 0.4} cy={HEAD_Y + 1} rx="1.7" ry="2.4" fill={shade(skin, 0.7)} />
+        <circle cy={HEAD_Y} r={HEAD_R} fill={skin} />
+        {discShadow(HEAD_Y, HEAD_R, skinDark)}
 
         <Hair style={look.style} color={look.hair} />
 
-        {/* sourcils, yeux, bouche */}
-        <path d="M -5.4 -49.4 L -1.8 -50" stroke={shade(look.hair, 0.85)} strokeWidth="1.2" strokeLinecap="round" />
-        <path d="M 5.4 -49.4 L 1.8 -50" stroke={shade(look.hair, 0.85)} strokeWidth="1.2" strokeLinecap="round" />
-        <ellipse className="iso-person__eye" style={{ animationDelay: delay }}
-          cx="-3.5" cy={HEAD_Y - 0.4} rx="1.15" ry="1.5" fill="#2b2b30" />
-        <ellipse className="iso-person__eye" style={{ animationDelay: delay }}
-          cx="3.5" cy={HEAD_Y - 0.4} rx="1.15" ry="1.5" fill="#2b2b30" />
-        <path d={`M -2 ${HEAD_Y + 5} Q 0 ${HEAD_Y + 6.4} 2 ${HEAD_Y + 5}`} fill="none"
-          stroke={shade(skin, 0.6)} strokeWidth="1" strokeLinecap="round" />
+        {/* le visage tient en deux points */}
+        <circle className="iso-person__eye" style={{ animationDelay: delay }}
+          cx="-4" cy={HEAD_Y + 1} r="1.7" fill="#2b2620" />
+        <circle className="iso-person__eye" style={{ animationDelay: delay }}
+          cx="4" cy={HEAD_Y + 1} r="1.7" fill="#2b2620" />
 
         {look.glasses && (
-          <g stroke="#20242c" strokeWidth="1.1" fill="rgba(180,210,235,0.20)">
-            <rect x="-6.6" y={HEAD_Y - 3} width="5.9" height="5.2" rx="1.6" />
-            <rect x="0.7" y={HEAD_Y - 3} width="5.9" height="5.2" rx="1.6" />
-            <path d="M -0.7 -47.4 L 0.7 -47.4" />
+          /* une barre pleine : à cette taille, deux verres cerclés bavent */
+          <path d={`M -8.2 ${HEAD_Y - 0.6} L 8.2 ${HEAD_Y - 0.6} L 8.2 ${HEAD_Y + 2.8} L -8.2 ${HEAD_Y + 2.8} Z`}
+            fill="#2b2620" opacity="0.85" />
+        )}
+
+        {/* buste en dôme, sans bras */}
+        <path
+          d={`M ${-BODY_W} -1 L ${-BODY_W} ${BODY_TOP + 9}
+              A ${BODY_W} ${BODY_W} 0 0 1 ${BODY_W} ${BODY_TOP + 9}
+              L ${BODY_W} -1 Z`}
+          fill={look.shirt}
+        />
+        <path
+          d={`M ${EDGE} ${BODY_TOP + 1.6} A ${BODY_W} ${BODY_W} 0 0 1 ${BODY_W} ${BODY_TOP + 9}
+              L ${BODY_W} -1 L ${EDGE} -1 Z`}
+          fill={shirtDark}
+        />
+        {/* col : une simple encoche */}
+        <path d={`M -4.4 ${BODY_TOP - 1.4} L 0 ${BODY_TOP + 4.5} L 4.4 ${BODY_TOP - 1.4} Z`}
+          fill={shade(look.shirt, 1.16)} />
+        {look.tie && (
+          <path d={`M 0 ${BODY_TOP + 3.5} L 2.6 ${BODY_TOP + 7.5} L 0 ${BODY_TOP + 19}
+                    L -2.6 ${BODY_TOP + 7.5} Z`} fill={look.tie} />
+        )}
+        {look.mug && (
+          <g>
+            <rect x="-15.6" y="-13" width="5.6" height="6" fill="#e8e4d9" />
+            <rect x="-10" y="-11.6" width="2" height="2.6" fill="#e8e4d9" />
           </g>
         )}
       </g>
