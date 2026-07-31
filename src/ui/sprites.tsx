@@ -12,8 +12,18 @@
 // Face +gy éclairée, face +gx dans l'ombre, liseré clair sur les
 // contours tournés vers la lumière.
 // ─────────────────────────────────────────────────────────────
+import { useEffect, useRef } from 'react';
 import type { Colleague } from '@state/schema';
 import { DESK_D, DESK_W, box, iso, panelAlongX, quad } from './iso';
+import {
+  DEFAULT_RIG as RIG,
+  makeMotion,
+  phaseOf,
+  poseFigure,
+  postureFor,
+  registerPainter,
+  type Vec,
+} from './figure';
 
 // ── Ombrage ──────────────────────────────────────────────────
 // La face à l'ombre ne descend pas sous 0,74 : en dessous, les volumes
@@ -72,20 +82,24 @@ export function IsoBox({
     </g>
   );
 }
+
 // ── Personnages ──────────────────────────────────────────────
-// Parti pris : on ne cherche PAS le détail. À cette échelle (~50 px),
-// un visage modelé tourne à la bouillie. On joue donc sur ce que le SVG
-// fait le mieux — des formes nettes en aplat :
+// 100 % procéduraux : aucun sprite, aucune keyframe. Le corps est une
+// poignée de primitives (un disque pour le bassin, des capsules pour le
+// buste et les bras) fusionnées entre elles de façon organique.
 //
-//   · une tête ronde, volontairement grosse, posée sans cou ;
-//   · un buste en dôme, sans bras articulés ;
-//   · deux tons par forme, séparés par une arête FRANCHE (jamais de
-//     dégradé) — le même vocabulaire que les facettes du mobilier ;
-//   · pour tout visage, deux points. Pas de bouche, pas de nez.
+// La fusion est un vrai smooth-min : on floute l'alpha puis on la
+// seuille durement (filtre #goo). Le rayon du flou joue exactement le
+// rôle du k d'un smin polynomial — plus il est large, plus les membres
+// se soudent mollement au tronc. Et une capsule SDF n'étant qu'un
+// segment doté d'un rayon, on la restitue par un trait à bout rond :
+// même géométrie, sans shader ni second contexte de rendu.
 //
-// Ce qui distingue les archétypes, c'est la SILHOUETTE : capuche, queue
-// de cheval, col relevé, crâne dégarni. Un personnage doit se lire à
-// 20 px, réduit à sa découpe.
+// La TÊTE reste hors fusion, nette. À ~50 px, un visage fondu redevient
+// la bouillie qu'on cherchait à éviter.
+//
+// Les positions viennent de figure.ts et sont réécrites directement
+// dans le DOM à chaque image, hors du cycle de rendu React.
 
 type HairStyle = 'plaque' | 'queue' | 'capuche' | 'rideau' | 'degarni' | 'carre';
 
@@ -120,151 +134,188 @@ function hashOf(id: string): number {
   return h;
 }
 
-// Géométrie : tête volumineuse, buste court. C'est cette proportion qui
-// donne le charme — un corps réaliste ferait un pion sans caractère.
+// Tête volumineuse, buste court : c'est cette proportion qui donne le
+// charme. Le repère de la tête est LOCAL — son centre est (0, 0) — pour
+// que le groupe entier puisse être déplacé et incliné d'un coup.
 const HEAD_R = 11;
-const HEAD_Y = -37;
-const BODY_TOP = -28;
-const BODY_W = 11;
 /** Abscisse de l'arête d'ombre : décalée du centre, jamais pile au milieu. */
 const EDGE = 3;
 
 /** Moitié droite d'un disque, coupée net à l'abscisse EDGE. */
-function discShadow(cy: number, r: number, fill: string) {
+function discShadow(r: number, fill: string) {
   const dy = Math.sqrt(r * r - EDGE * EDGE);
-  return <path d={`M ${EDGE} ${cy - dy} A ${r} ${r} 0 0 1 ${EDGE} ${cy + dy} Z`} fill={fill} />;
+  return <path d={`M ${EDGE} ${-dy} A ${r} ${r} 0 0 1 ${EDGE} ${dy} Z`} fill={fill} />;
 }
 
 function Hair({ style, color }: { style: HairStyle; color: string }) {
   const dark = shade(color, 0.74);
-  // Calotte : un arc plein, posé bas sur le front.
   const cap = (
-    <path
-      d={`M ${-HEAD_R} ${HEAD_Y - 2.5} A ${HEAD_R} ${HEAD_R} 0 0 1 ${HEAD_R} ${HEAD_Y - 2.5} Z`}
-      fill={color}
-    />
+    <path d={`M ${-HEAD_R} ${-2.5} A ${HEAD_R} ${HEAD_R} 0 0 1 ${HEAD_R} ${-2.5} Z`} fill={color} />
   );
 
   switch (style) {
     case 'capuche':
-      // La capuche se dessine autour de la tête, pas dessus.
       return (
         <g>
           <path
-            d={`M ${-HEAD_R - 3} ${HEAD_Y + 6} A ${HEAD_R + 3} ${HEAD_R + 3} 0 0 1 ${HEAD_R + 3} ${HEAD_Y + 6}
-                L ${HEAD_R + 1} ${HEAD_Y + 9} L ${-HEAD_R - 1} ${HEAD_Y + 9} Z`}
+            d={`M ${-HEAD_R - 3} 6 A ${HEAD_R + 3} ${HEAD_R + 3} 0 0 1 ${HEAD_R + 3} 6
+                L ${HEAD_R + 1} 9 L ${-HEAD_R - 1} 9 Z`}
             fill={color}
           />
-          <path d={`M ${EDGE} ${HEAD_Y - 11} A ${HEAD_R + 3} ${HEAD_R + 3} 0 0 1 ${HEAD_R + 1} ${HEAD_Y + 9}
-                    L ${EDGE} ${HEAD_Y + 9} Z`} fill={dark} />
+          <path d={`M ${EDGE} -11 A ${HEAD_R + 3} ${HEAD_R + 3} 0 0 1 ${HEAD_R + 1} 9 L ${EDGE} 9 Z`}
+            fill={dark} />
         </g>
       );
     case 'degarni':
       return (
         <g fill={color}>
-          <path d={`M ${-HEAD_R} ${HEAD_Y - 1} A ${HEAD_R} ${HEAD_R} 0 0 1 ${-HEAD_R + 4} ${HEAD_Y - 8.5} L ${-HEAD_R + 4} ${HEAD_Y - 1} Z`} />
-          <path d={`M ${HEAD_R} ${HEAD_Y - 1} A ${HEAD_R} ${HEAD_R} 0 0 0 ${HEAD_R - 4} ${HEAD_Y - 8.5} L ${HEAD_R - 4} ${HEAD_Y - 1} Z`} />
+          <path d={`M ${-HEAD_R} -1 A ${HEAD_R} ${HEAD_R} 0 0 1 ${-HEAD_R + 4} -8.5 L ${-HEAD_R + 4} -1 Z`} />
+          <path d={`M ${HEAD_R} -1 A ${HEAD_R} ${HEAD_R} 0 0 0 ${HEAD_R - 4} -8.5 L ${HEAD_R - 4} -1 Z`} />
         </g>
       );
     case 'queue':
       return (
         <g>
           {cap}
-          <path d={`M ${HEAD_R - 2} ${HEAD_Y - 4} L ${HEAD_R + 5} ${HEAD_Y + 1}
-                    L ${HEAD_R + 3} ${HEAD_Y + 9} L ${HEAD_R - 3} ${HEAD_Y + 2} Z`} fill={dark} />
+          <path d={`M ${HEAD_R - 2} -4 L ${HEAD_R + 5} 1 L ${HEAD_R + 3} 9 L ${HEAD_R - 3} 2 Z`} fill={dark} />
         </g>
       );
     case 'rideau':
       return (
         <g>
-          <path d={`M ${-HEAD_R} ${HEAD_Y - 2} L ${-HEAD_R} ${HEAD_Y + 12} L ${-HEAD_R + 4.5} ${HEAD_Y + 12} L ${-HEAD_R + 4.5} ${HEAD_Y - 2} Z`} fill={dark} />
-          <path d={`M ${HEAD_R} ${HEAD_Y - 2} L ${HEAD_R} ${HEAD_Y + 12} L ${HEAD_R - 4.5} ${HEAD_Y + 12} L ${HEAD_R - 4.5} ${HEAD_Y - 2} Z`} fill={dark} />
+          <path d={`M ${-HEAD_R} -2 L ${-HEAD_R} 12 L ${-HEAD_R + 4.5} 12 L ${-HEAD_R + 4.5} -2 Z`} fill={dark} />
+          <path d={`M ${HEAD_R} -2 L ${HEAD_R} 12 L ${HEAD_R - 4.5} 12 L ${HEAD_R - 4.5} -2 Z`} fill={dark} />
           {cap}
         </g>
       );
     case 'carre':
       return (
         <g>
-          <path d={`M ${-HEAD_R - 1} ${HEAD_Y - 2} L ${-HEAD_R - 1} ${HEAD_Y + 7} L ${HEAD_R + 1} ${HEAD_Y + 7} L ${HEAD_R + 1} ${HEAD_Y - 2} Z`} fill={dark} />
+          <path d={`M ${-HEAD_R - 1} -2 L ${-HEAD_R - 1} 7 L ${HEAD_R + 1} 7 L ${HEAD_R + 1} -2 Z`} fill={dark} />
           {cap}
         </g>
       );
     default:
-      // Plaqué : la calotte, plus une pointe côté raie.
       return (
         <g>
           {cap}
-          <path d={`M ${-HEAD_R + 1} ${HEAD_Y - 6} L ${-HEAD_R - 2.5} ${HEAD_Y - 1} L ${-HEAD_R + 2} ${HEAD_Y - 1.5} Z`} fill={color} />
+          <path d={`M ${-HEAD_R + 1} -6 L ${-HEAD_R - 2.5} -1 L ${-HEAD_R + 2} -1.5 Z`} fill={color} />
         </g>
       );
   }
 }
 
 /**
- * Un collègue à son poste. Aplats francs, aucune ombre douce : tout le
- * relief vient de l'arête entre les deux tons.
+ * Un collègue à son poste.
+ *
+ * Le corps est décrit une fois en primitives ; chaque image ne fait que
+ * réécrire leurs coordonnées. La posture, elle, est dictée par ce que le
+ * personnage manigance — un comploteur se penche, un bavard gesticule,
+ * un guetteur te fixe. L'animation devient de l'information.
  */
 export function Person({ c }: { c: Colleague }) {
+  const ref = useRef<SVGGElement>(null);
   const h = hashOf(c.id);
   const look = LOOKS[c.archetype] ?? LOOKS.nouveau!;
   const skin = SKINS[h % SKINS.length]!;
   const skinDark = shade(skin, 0.76);
-  const shirtDark = shade(look.shirt, 0.76);
-  // Les respirations se désynchronisent : rien de plus mort qu'un open
-  // space qui bouge à l'unisson.
-  const delay = `${((h % 20) / 10).toFixed(2)}s`;
+  const shirtDark = shade(look.shirt, 0.72);
+  const bodyId = `body-${c.id}`;
+  const posture = postureFor(c.intent?.kind);
+
+  useEffect(() => {
+    const root = ref.current;
+    if (!root) return;
+    const pick = (role: string) => root.querySelector<SVGElement>(`[data-r="${role}"]`);
+    const hip = pick('hip');
+    const torso = pick('torso');
+    const armL = pick('armL');
+    const armR = pick('armR');
+    const head = pick('head');
+    const kit = pick('kit');
+    if (!hip || !torso || !armL || !armR || !head || !kit) return;
+
+    const motion = makeMotion(phaseOf(c.id));
+    const pts = (a: Vec, b: Vec, d: Vec) =>
+      `${a.x.toFixed(2)},${a.y.toFixed(2)} ${b.x.toFixed(2)},${b.y.toFixed(2)} ${d.x.toFixed(2)},${d.y.toFixed(2)}`;
+
+    return registerPainter((t, dt) => {
+      const p = poseFigure(t, dt, motion, posture, RIG);
+      hip.setAttribute('cx', p.hip.x.toFixed(2));
+      hip.setAttribute('cy', p.hip.y.toFixed(2));
+      torso.setAttribute('x1', p.hip.x.toFixed(2));
+      torso.setAttribute('y1', p.hip.y.toFixed(2));
+      torso.setAttribute('x2', p.chest.x.toFixed(2));
+      torso.setAttribute('y2', p.chest.y.toFixed(2));
+      armL.setAttribute('points', pts(p.arms[0]!.a, p.arms[0]!.b, p.arms[0]!.c));
+      armR.setAttribute('points', pts(p.arms[1]!.a, p.arms[1]!.b, p.arms[1]!.c));
+      head.setAttribute(
+        'transform',
+        `translate(${p.head.x.toFixed(2)},${p.head.y.toFixed(2)}) rotate(${p.headTilt.toFixed(2)})`,
+      );
+      kit.setAttribute(
+        'transform',
+        `translate(${p.chest.x.toFixed(2)},${p.chest.y.toFixed(2)})`,
+      );
+    });
+  }, [c.id, posture]);
+
+  // Le corps : quelques primitives, une seule couleur. `currentColor`
+  // permet d'en tirer la copie d'ombre par <use>, sans dupliquer ni les
+  // formes ni les mises à jour.
+  const body = (
+    <g id={bodyId} filter="url(#goo)">
+      <circle data-r="hip" cx="0" cy={RIG.hipY} r={RIG.hipR} fill="currentColor" />
+      <line
+        data-r="torso"
+        x1="0" y1={RIG.hipY} x2="0" y2={RIG.chestY}
+        stroke="currentColor" strokeWidth={RIG.bodyR * 2} strokeLinecap="round"
+      />
+      <polyline
+        data-r="armL" points="0,0 0,0 0,0" fill="none"
+        stroke="currentColor" strokeWidth={RIG.armR * 2}
+        strokeLinecap="round" strokeLinejoin="round"
+      />
+      <polyline
+        data-r="armR" points="0,0 0,0 0,0" fill="none"
+        stroke="currentColor" strokeWidth={RIG.armR * 2}
+        strokeLinecap="round" strokeLinejoin="round"
+      />
+    </g>
+  );
 
   return (
-    <g className={c.alive ? 'iso-person' : 'iso-person iso-gone'}>
-      {/* ombre au sol : un aplat, pas un flou */}
+    <g ref={ref} className="iso-person">
       <ellipse rx="14" ry="5.5" fill="rgba(0,0,0,0.32)" />
 
-      {/* Ordre de tracé : tête, puis cheveux, puis visage, et le buste EN
-          DERNIER. Les épaules recouvrent ainsi le bas du crâne et retiennent
-          les cheveux longs ; l'inverse faisait déborder le menton en pastille
-          de peau sur la chemise. */}
-      <g className="iso-person__body" style={{ animationDelay: delay }}>
-        <circle cy={HEAD_Y} r={HEAD_R} fill={skin} />
-        {discShadow(HEAD_Y, HEAD_R, skinDark)}
+      {/* Copie décalée en ton sombre : elle dépasse à droite et rend
+          l'arête d'ombre franche du reste du décor. */}
+      <g style={{ color: shirtDark }} transform="translate(3.4,0)">
+        <use href={`#${bodyId}`} />
+      </g>
+      <g style={{ color: look.shirt }}>{body}</g>
 
-        <Hair style={look.style} color={look.hair} />
-
-        {/* le visage tient en deux points */}
-        <circle className="iso-person__eye" style={{ animationDelay: delay }}
-          cx="-4" cy={HEAD_Y + 1} r="1.7" fill="#2b2620" />
-        <circle className="iso-person__eye" style={{ animationDelay: delay }}
-          cx="4" cy={HEAD_Y + 1} r="1.7" fill="#2b2620" />
-
-        {look.glasses && (
-          /* une barre pleine : à cette taille, deux verres cerclés bavent */
-          <path d={`M -8.2 ${HEAD_Y - 0.6} L 8.2 ${HEAD_Y - 0.6} L 8.2 ${HEAD_Y + 2.8} L -8.2 ${HEAD_Y + 2.8} Z`}
-            fill="#2b2620" opacity="0.85" />
-        )}
-
-        {/* buste en dôme, sans bras */}
-        <path
-          d={`M ${-BODY_W} -1 L ${-BODY_W} ${BODY_TOP + 9}
-              A ${BODY_W} ${BODY_W} 0 0 1 ${BODY_W} ${BODY_TOP + 9}
-              L ${BODY_W} -1 Z`}
-          fill={look.shirt}
-        />
-        <path
-          d={`M ${EDGE} ${BODY_TOP + 1.6} A ${BODY_W} ${BODY_W} 0 0 1 ${BODY_W} ${BODY_TOP + 9}
-              L ${BODY_W} -1 L ${EDGE} -1 Z`}
-          fill={shirtDark}
-        />
-        {/* col : une simple encoche */}
-        <path d={`M -4.4 ${BODY_TOP - 1.4} L 0 ${BODY_TOP + 4.5} L 4.4 ${BODY_TOP - 1.4} Z`}
-          fill={shade(look.shirt, 1.16)} />
-        {look.tie && (
-          <path d={`M 0 ${BODY_TOP + 3.5} L 2.6 ${BODY_TOP + 7.5} L 0 ${BODY_TOP + 19}
-                    L -2.6 ${BODY_TOP + 7.5} Z`} fill={look.tie} />
-        )}
+      {/* Accessoires du buste : nets, donc hors fusion. */}
+      <g data-r="kit">
+        <path d="M -4.4 -1.4 L 0 4.5 L 4.4 -1.4 Z" fill={shade(look.shirt, 1.16)} />
+        {look.tie && <path d="M 0 3.5 L 2.6 7.5 L 0 19 L -2.6 7.5 Z" fill={look.tie} />}
         {look.mug && (
           <g>
-            <rect x="-15.6" y="-13" width="5.6" height="6" fill="#e8e4d9" />
-            <rect x="-10" y="-11.6" width="2" height="2.6" fill="#e8e4d9" />
+            <rect x="-15.6" y="13" width="5.6" height="6" fill="#e8e4d9" />
+            <rect x="-10" y="14.4" width="2" height="2.6" fill="#e8e4d9" />
           </g>
+        )}
+      </g>
+
+      {/* Tête : repère local, centre en (0,0). */}
+      <g data-r="head">
+        <circle r={HEAD_R} fill={skin} />
+        {discShadow(HEAD_R, skinDark)}
+        <Hair style={look.style} color={look.hair} />
+        <circle className="iso-person__eye" cx="-4" cy="1" r="1.7" fill="#2b2620" />
+        <circle className="iso-person__eye" cx="4" cy="1" r="1.7" fill="#2b2620" />
+        {look.glasses && (
+          <path d="M -8.2 -0.6 L 8.2 -0.6 L 8.2 2.8 L -8.2 2.8 Z" fill="#2b2620" opacity="0.85" />
         )}
       </g>
     </g>

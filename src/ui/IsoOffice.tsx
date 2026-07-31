@@ -301,6 +301,20 @@ export function IsoOffice({
             </feMerge>
           </filter>
 
+          {/* Fusion metaball des primitives d'un personnage.
+              C'est un smooth-min : on floute l'alpha, puis on la seuille
+              durement. Le rayon du flou EST le k du smin — plus il est
+              large, plus les membres se soudent mollement au tronc.
+              Le seuil (18 / −8) règle la netteté du contour obtenu. */}
+          <filter id="goo" x="-22%" y="-18%" width="144%" height="136%" colorInterpolationFilters="sRGB">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2.0" result="blur" />
+            <feColorMatrix
+              in="blur"
+              type="matrix"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8"
+            />
+          </filter>
+
           <filter id="glowSelect" x="-150%" y="-150%" width="400%" height="400%">
             <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="b" />
             <feColorMatrix in="b" values="0 0 0 0 0.42  0 0 0 0 0.72  0 0 0 0 0.7  0 0 0 0.9 0" result="c" />

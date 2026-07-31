@@ -62,6 +62,8 @@ src/
     hooks.ts           Chantage : utiliser un secret comme levier
   ui/            Écrans React
     iso.ts             Projection isométrique 2:1 + plan du plateau (zones, postes)
+    figure.ts          Personnages procéduraux : rig, IK, ressorts, postures
+                       (aucun rendu — ne renvoie que des coordonnées)
     sprites.tsx        Le dessin : personnages et mobilier en SVG pur
     IsoOffice.tsx      Le plateau : placement des objets et ordre de rendu
     Inspector.tsx      Panneau contextuel : actions auto-documentées et chiffrées
@@ -93,7 +95,45 @@ fond-gauche) et la face à l'ombre ne descend jamais sous 0,74 du ton de
 base : plus bas, les volumes virent au noir et se lisent comme des trous
 dans la géométrie.
 
-**Les personnages n'essaient pas d'être détaillés.** À ~50 px, un visage
+### Personnages 100 % procéduraux
+
+Aucun sprite, aucune image, aucune keyframe. Un collègue est une liste de
+primitives — un disque pour le bassin, des capsules pour le buste et les
+bras — dont les paramètres sont **recalculés à chaque image** :
+
+- **sinusoïdes déphasées** pour les cycles (respiration, frappe au clavier).
+  Deux périodes non multiples ne se resynchronisent jamais, ce qui suffit à
+  casser l'aspect métronome ; un déphasage dérivé de l'identifiant évite en
+  plus que tout l'étage bouge à l'unisson ;
+- **ressorts amortis** pour le secondary motion : la tête suit le buste avec
+  du retard, et c'est ce décalage qui donne l'impression de masse ;
+- **IK à 2 segments** : les mains visent un point du plan de travail, les
+  coudes sont déduits. Aucune position d'articulation n'est écrite à la main.
+
+La **fusion** entre primitives est un vrai smooth-min : on floute l'alpha
+puis on la seuille durement (filtre SVG `#goo`). Le rayon du flou joue
+exactement le rôle du `k` d'un smin polynomial — plus il est large, plus les
+membres se soudent mollement au tronc. Et une capsule SDF n'étant qu'un
+segment doté d'un rayon, on la restitue par un trait à bout rond : même
+géométrie, sans shader ni second contexte de rendu, donc l'occlusion par le
+mobilier et le clic sur un personnage continuent de fonctionner.
+
+**La posture dit ce qui se trame.** Un comploteur se penche, un bavard
+gesticule, un guetteur te fixe : `postureFor()` traduit l'intention de jeu en
+attitude corporelle. L'animation devient de l'information, pas de la
+décoration.
+
+Deux contraintes de production, mesurées :
+- les poses sont écrites **directement dans le DOM**, hors du cycle React —
+  re-rendre l'arbre à 60 Hz est intenable ;
+- la boucle est **cadencée à 32 images/s**. Chaque personnage porte un filtre
+  que le navigateur réévalue dès qu'une primitive bouge ; à 60 Hz le 95e
+  centile décrochait à 30 fps, à 32 Hz il tient les 60.
+
+La tête, elle, reste **hors fusion** : à ~50 px, un visage fondu redevient
+une bouillie.
+
+**Le reste n'essaie pas non plus d'être détaillé.** À ~50 px, un visage
 modelé tourne à la bouillie ; on joue donc ce que le SVG fait le mieux —
 des formes nettes en aplat. Tête ronde volontairement grosse posée sans
 cou, buste en dôme sans bras, deux tons par forme séparés par une arête
