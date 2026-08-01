@@ -249,6 +249,7 @@ export function DeskScreen({
           slot={store.openSlot}
           playerName={state.player.name}
           week={state.week}
+          traits={state.player.traits}
           onClose={() => setPaused(false)}
           onMenu={onMenu}
           onManual={() => {

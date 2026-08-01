@@ -200,6 +200,12 @@ modelé tourne à la bouillie ; on joue donc ce que le SVG fait le mieux —
 des formes nettes en aplat. Tête ronde volontairement grosse posée sans
 cou, buste en dôme sans bras, deux tons par forme séparés par une arête
 franche (jamais de dégradé), et un visage réduit à deux points. Ce qui
+**Aucune primitive à dessus plat.** Les épaules étaient une capsule
+horizontale à bouts ronds : entre ses deux bouts, le dessus est
+rigoureusement plat, d'où une coupe nette au-dessus des épaules. C'est
+une **ellipse** — elle n'a de plat nulle part, et sa pente naturelle du
+cou vers les bras est justement celle d'une épaule.
+
 **Le corps se lit par ses proportions, pas par ses détails.** La
 silhouette est bâtie sur trois primitives fusionnées : bassin, buste, et
 une **capsule d'épaules horizontale** qui est la plus large de la figure.
@@ -379,6 +385,41 @@ te guide.
 ### `Condition` (filtre) et `Effect` (mutation)
 Ce sont les deux briques réutilisées partout. Tout ce qu'un événement, un choix ou
 un plan peut exiger ou provoquer s'exprime avec elles — voir `schema.ts`.
+
+## Traits : un budget à placer exactement
+
+À l'embauche, on place **4 points** : les qualités en coûtent, les défauts
+en rendent, trois défauts au maximum. On ne peut pas signer tant que le
+budget n'est pas dépensé **exactement** — laisser partir quelqu'un avec
+des points en poche, c'est lui faire commencer une partie diminuée sans
+qu'il l'ait choisi.
+
+Le contenu vit dans `data/traits.json`. **Le moteur ne connaît aucun trait
+par son nom** : il connaît des quantités génériques (`TraitModKey`) — « les
+hausses de suspicion », « les gains d'opinion », « la réussite des
+complots » — et demande au catalogue quel coefficient s'y applique.
+« Discret » et « Maladroit » n'existent que dans le JSON.
+
+Deux natures de modificateur, et le moteur doit savoir laquelle :
+**multiplicatif** pour ce qui est une quantité (un gain, un coût), qu'on
+compose par produit ; **additif** pour ce qui est déjà un pourcentage de
+réussite, où ajouter 8 points à une chance de 40 % est lisible alors que
+la multiplier ne l'est pas.
+
+Cette fonctionnalité a forcé un nettoyage utile : les hausses de suspicion
+étaient écrites **en quatorze endroits** sous la forme
+`clamp(suspicion + n)`. Un trait qui modifie la discrétion n'avait alors
+aucun point d'application — il aurait fallu le brancher quatorze fois, et
+le quinzième appel écrit plus tard l'aurait oublié en silence. Tout passe
+désormais par `raiseSuspicion()`. Une hausse de suspicion est une règle du
+jeu, elle mérite une fonction.
+
+Corollaire de la règle « aucun bouton muet » : `preview.ts` appelle les
+**mêmes fonctions** que les actions (`nerfCost`, `opinionGain`,
+`caughtRisk`) plutôt que de refaire le calcul. Deux formules pour la même
+chose, c'est la garantie qu'elles divergent. Même exigence sur l'écran
+d'embauche, où les « conditions d'entrée » affichent les stats **traits
+compris**, mises à jour à chaque case cochée.
 
 ## Menu et dossiers de sauvegarde
 

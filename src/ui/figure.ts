@@ -164,8 +164,8 @@ export const DEFAULT_RIG: FigureRig = {
   // Cible : 19 aux épaules, 15 à la taille, 16 aux hanches.
   bodyR: 7.9,
   hipR: 8,
-  shoulderHalf: 4.1,
-  shoulderR: 5.5,
+  shoulderHalf: 3.4,
+  shoulderR: 6.3,
   shoulder: 6.5,
   // Segments COURTS : avec des bras longs et une cible proche, l'IK plie
   // à fond et le coude dessine une boucle sur la poitrine. En gardant la

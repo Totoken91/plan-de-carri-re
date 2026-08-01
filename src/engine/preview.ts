@@ -9,7 +9,8 @@
 import type { Colleague, Effect, GameState, StatKey } from '@state/schema';
 import { balance } from '@data/balance';
 import { getPlanDef } from '@data/content';
-import { diminishingFactor } from './actions';
+import { caughtRisk, diminishingFactor, nerfCost, opinionGain } from './actions';
+import { traitFactor } from './traits';
 import { activeScheme, canDefuse, defuseChance, schemeChance } from './intents';
 import { SCAPEGOAT_FLAG, prepareChance, scapegoatOf, scapegoatWeeksLeft } from './scapegoat';
 import { availableHooks } from './hooks';
@@ -62,7 +63,11 @@ export function previewBosser(state: GameState): ActionOption {
   const cfg = balance.actions.bosser;
   const f = diminishingFactor(state, 'bosser');
   const rendement = Math.round(cfg.rendement * f);
-  const reputation = Math.round(cfg.reputation * f);
+  // Mêmes formules que l'action elle-même, appelées depuis actions.ts :
+  // un chiffre annoncé qui ne serait pas celui qu'on applique ferait
+  // mentir tous les boutons du jeu.
+  const reputation = Math.round(cfg.reputation * f * traitFactor(state, 'reputationGain'));
+  const nerfs = nerfCost(state, cfg.nerfs);
   const worn = f < 0.9;
 
   return {
@@ -76,7 +81,7 @@ export function previewBosser(state: GameState): ActionOption {
     lines: [
       good(`${sign(reputation)} réputation`),
       good(`${sign(rendement)} Rendement`),
-      bad(`${sign(cfg.nerfs)} Nerfs`),
+      bad(`${sign(nerfs)} Nerfs`),
       ...(worn ? [flat(`Rendement en baisse (${Math.round(f * 100)}% cette semaine)`)] : []),
     ],
   };
@@ -110,8 +115,10 @@ export function previewGlander(state: GameState): ActionOption {
 
 // ── Actions ciblées (sur un collègue) ────────────────────────
 
-export function previewCafe(_state: GameState, c: Colleague): ActionOption {
+export function previewCafe(state: GameState, c: Colleague): ActionOption {
   const cfg = balance.actions.cafe;
+  const gain = opinionGain(state, cfg.opinion);
+  const nerfs = nerfCost(state, cfg.nerfs);
   return {
     key: `cafe:${c.id}`,
     id: { kind: 'cafe', targetId: c.id },
@@ -121,12 +128,13 @@ export function previewCafe(_state: GameState, c: Colleague): ActionOption {
     available: reachable(c),
     reason: reachable(c) ? undefined : 'Ce collègue n’est plus là.',
     summary: 'Un café, deux banalités. Son opinion monte.',
-    lines: [good(`${sign(cfg.opinion)} opinion de ${c.name}`), bad(`${sign(cfg.nerfs)} Nerfs`)],
+    lines: [good(`${sign(gain)} opinion de ${c.name}`), bad(`${sign(nerfs)} Nerfs`)],
   };
 }
 
-export function previewFouiner(_state: GameState, c: Colleague): ActionOption {
+export function previewFouiner(state: GameState, c: Colleague): ActionOption {
   const cfg = balance.actions.fouiner;
+  const risk = caughtRisk(state, cfg.suspicionRisk);
   const hidden = c.secrets.filter((s) => !s.discovered).length;
   return {
     key: `fouiner:${c.id}`,
@@ -137,11 +145,11 @@ export function previewFouiner(_state: GameState, c: Colleague): ActionOption {
     available: reachable(c) && hidden > 0,
     reason: hidden > 0 ? undefined : `Plus rien à trouver sur ${c.name}.`,
     summary: 'Chercher un secret : un secret en main devient un levier.',
-    chance: 100 - cfg.suspicionRisk,
+    chance: 100 - risk,
     danger: true,
     lines: [
       good(`${hidden} secret${hidden > 1 ? 's' : ''} encore à découvrir`),
-      bad(`${cfg.suspicionRisk}% de te faire voir (+${cfg.suspicionOnCaught} Suspicion)`),
+      bad(`${risk}% de te faire voir (+${cfg.suspicionOnCaught} Suspicion)`),
     ],
   };
 }

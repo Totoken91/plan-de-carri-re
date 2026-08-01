@@ -78,8 +78,8 @@ export function App() {
     return (
       <div className="app" style={THEME_VARS}>
         <CharacterCreation
-          onHire={(name, appearance) => {
-            store.startCareer(slot, name, appearance);
+          onHire={(name, appearance, traits) => {
+            store.startCareer(slot, name, appearance, traits);
             setScreen({ kind: 'playing' });
           }}
           onCancel={backToMenu}

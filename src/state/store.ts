@@ -5,7 +5,7 @@
 // le moteur (fonctions pures/mutatives sur le clone), persiste le curseur
 // RNG, sauvegarde et notifie les abonnés (React).
 // ─────────────────────────────────────────────────────────────
-import type { Appearance, GameEvent, GameState, Player } from './schema';
+import type { Appearance, GameEvent, GameState, Player, TraitId } from './schema';
 import { startingColleagues } from '@data/content';
 import { DEFAULT_APPEARANCE, randomName } from '@data/appearance';
 import { balance } from '@data/balance';
@@ -26,6 +26,7 @@ import { generateOpportunities, resolveOpportunity, type OppResolution } from '@
 import { useHook, type HookMode } from '@engine/hooks';
 import { abetScheme, assignIntents, defuseIntent, warnVictim } from '@engine/intents';
 import { prepareScapegoat } from '@engine/scapegoat';
+import { applyTraitsAtStart } from '@engine/traits';
 import type { ActionId } from '@engine/preview';
 
 import { SAVE_VERSION, readSlot, writeSlot } from './saves';
@@ -37,6 +38,7 @@ export function createInitialState(
   seed = randomSeed(),
   playerName?: string,
   appearance: Appearance = DEFAULT_APPEARANCE,
+  traits: TraitId[] = [],
 ): GameState {
   const player: Player = {
     name: playerName?.trim() || randomName(),
@@ -44,8 +46,9 @@ export function createInitialState(
     rank: 'stagiaire',
     reputation: 0,
     appearance,
+    traits,
   };
-  return {
+  const state: GameState = {
     version: SAVE_VERSION,
     seed,
     rngCursor: 0,
@@ -64,6 +67,11 @@ export function createInitialState(
     status: 'playing',
     log: [{ week: 1, text: 'Premier jour. L’open space t’attend. Le sommet aussi.', tone: 'neutral' }],
   };
+  // Les traits posent leurs valeurs de départ AVANT que quoi que ce soit
+  // d'autre ne touche à l'état : ce sont des conditions initiales, pas
+  // des effets récurrents.
+  applyTraitsAtStart(state);
+  return state;
 }
 
 // La persistance vit dans saves.ts : le store ne sait qu'une chose,
@@ -134,8 +142,14 @@ export class GameStore {
   }
 
   /** Démarre une carrière dans un dossier, en écrasant ce qu'il contenait. */
-  startCareer(slot: number, name: string, appearance: Appearance, seed?: number): void {
-    this.state = createInitialState(seed, name, appearance);
+  startCareer(
+    slot: number,
+    name: string,
+    appearance: Appearance,
+    traits: TraitId[] = [],
+    seed?: number,
+  ): void {
+    this.state = createInitialState(seed, name, appearance, traits);
     this.slot = slot;
     this.rng = new Rng(this.state.seed, 0);
     generateOpportunities(this.state, this.rng);

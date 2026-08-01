@@ -216,6 +216,38 @@ export interface Appearance {
   glasses: boolean;
 }
 
+// ── Traits de personnage ─────────────────────────────────────
+// Un trait modifie des QUANTITÉS que le moteur connaît par leur nom
+// générique (« les gains de réputation », « les hausses de suspicion »),
+// jamais par le nom du trait. Le moteur ignore donc qui est « Discret » :
+// il sait seulement qu'un facteur s'applique aux hausses de suspicion.
+export type TraitModKey =
+  | 'reputationGain' // ×
+  | 'opinionGain' // ×
+  | 'suspicionGain' // ×
+  | 'nerfsCost' // ×
+  | 'planSuccess' // + points de %
+  | 'defuseChance' // + points de %
+  | 'secretChance'; // + points de %
+
+export type TraitId = string;
+
+export interface TraitDef {
+  id: TraitId;
+  nom: string;
+  description: string;
+  /** Ce que ça change concrètement, en clair, pour l'écran d'embauche. */
+  detail: string;
+  /** > 0 : coûte des points. < 0 : en rend. */
+  cout: number;
+  stats?: Partial<Stats>;
+  /** Suspicion au premier jour. */
+  suspicion?: number;
+  /** Opinion de départ de TOUS les collègues. */
+  opinion?: number;
+  mods?: Partial<Record<TraitModKey, number>>;
+}
+
 // ── État global du jeu (sérialisé en localStorage) ───────────
 export interface Player {
   name: string;
@@ -223,6 +255,7 @@ export interface Player {
   rank: RankId;
   reputation: number; // progression légitime vers la promotion
   appearance: Appearance;
+  traits: TraitId[];
 }
 
 export type GameStatus = 'playing' | 'won' | 'fired' | 'burnout';

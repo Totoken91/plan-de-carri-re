@@ -8,11 +8,13 @@
 // il ne saurait pas qu'il ne sert à rien.
 // ─────────────────────────────────────────────────────────────
 import { useEffect } from 'react';
+import { getTrait } from '@data/traits';
 
 export function PauseMenu({
   slot,
   playerName,
   week,
+  traits,
   onClose,
   onMenu,
   onManual,
@@ -20,6 +22,7 @@ export function PauseMenu({
   slot: number | undefined;
   playerName: string;
   week: number;
+  traits: string[];
   onClose: () => void;
   onMenu: () => void;
   onManual: () => void;
@@ -41,6 +44,23 @@ export function PauseMenu({
           Semaine {week}
           {slot !== undefined && ` · dossier ${slot + 1}`}
         </p>
+
+        {traits.length > 0 && (
+          /* Les traits ont été choisis à l'embauche et ne changent plus :
+             il faut pouvoir les relire trois semaines plus tard. */
+          <ul className="pause__traits">
+            {traits.map((id) => {
+              const t = getTrait(id);
+              if (!t) return null;
+              return (
+                <li key={id} className={t.cout > 0 ? 'is-qualite' : 'is-defaut'}>
+                  <b>{t.nom}</b>
+                  <span>{t.detail}</span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
 
         <p className="pause__saved">
           Dossier à jour. Tout est enregistré jusqu’à ta dernière action — tu peux fermer l’onglet.

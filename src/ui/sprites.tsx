@@ -364,11 +364,10 @@ export function Figure({
       torso.setAttribute('x2', p.chest.x.toFixed(2));
       torso.setAttribute('y2', p.chest.y.toFixed(2));
       if (shoulders) {
-        shoulders.setAttribute('stroke-width', (p.shoulderR * 2).toFixed(2));
-        shoulders.setAttribute('x1', (p.chest.x - p.shoulderHalf).toFixed(2));
-        shoulders.setAttribute('y1', p.chest.y.toFixed(2));
-        shoulders.setAttribute('x2', (p.chest.x + p.shoulderHalf).toFixed(2));
-        shoulders.setAttribute('y2', p.chest.y.toFixed(2));
+        shoulders.setAttribute('cx', p.chest.x.toFixed(2));
+        shoulders.setAttribute('cy', p.chest.y.toFixed(2));
+        shoulders.setAttribute('rx', (p.shoulderHalf + p.shoulderR).toFixed(2));
+        shoulders.setAttribute('ry', p.shoulderR.toFixed(2));
       }
       // L'IK ne dessine plus de membre : elle place ce que la main tient.
       if (hand) {
@@ -397,14 +396,17 @@ export function Figure({
         x1="0" y1={RIG.hipY} x2="0" y2={RIG.chestY}
         stroke="currentColor" strokeWidth={RIG.bodyR * 2} strokeLinecap="round"
       />
-      {/* Les ÉPAULES : une capsule horizontale, donc la primitive la plus
-          large de la figure. Sans elle le tronc est un tube de largeur
-          constante et la tête se pose sur un sac. C'est le rapport
-          épaules / taille qui fait lire un corps, pas le détail. */}
-      <line
+      {/* Les ÉPAULES : la primitive la plus large de la figure. C'est le
+          rapport épaules / taille qui fait lire un corps.
+          Une capsule horizontale à bouts ronds a un dessus PLAT entre ses
+          deux bouts — d'où la coupe nette au-dessus des épaules. Une
+          ellipse n'a de plat nulle part, et sa pente naturelle depuis le
+          cou vers les bras est justement celle d'une épaule. */}
+      <ellipse
         data-r="shoulders"
-        x1={-RIG.shoulderHalf} y1={RIG.chestY} x2={RIG.shoulderHalf} y2={RIG.chestY}
-        stroke="currentColor" strokeWidth={RIG.shoulderR * 2} strokeLinecap="round"
+        cx="0" cy={RIG.chestY}
+        rx={RIG.shoulderHalf + RIG.shoulderR} ry={RIG.shoulderR}
+        fill="currentColor"
       />
     </g>
   );

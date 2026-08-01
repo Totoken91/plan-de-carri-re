@@ -1148,3 +1148,67 @@ body {
   .dossiers { grid-template-columns: 1fr; }
   .btn--menu { grid-column: 2; }
 }
+
+/* ── Évaluation d'entrée : les traits ────────────────────── */
+.traits { margin-top: 26px; padding-top: 16px; border-top: 1px solid var(--rule); }
+.traits__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.traits__solde {
+  font-family: var(--font-form); font-size: 12px; color: var(--stamp);
+  border: 1px solid var(--stamp); padding: 2px 8px;
+}
+.traits__solde.is-ok { color: var(--seal); border-color: var(--seal); }
+.traits__rule { margin: 6px 0 14px; font-size: 12.5px; color: var(--ink-soft); }
+.traits__sub {
+  margin: 14px 0 8px; font-family: var(--font-form); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.16em; color: var(--ink-2);
+}
+.traits__grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); gap: 7px;
+}
+/* Une case de trait est une case à cocher de formulaire, pas une carte
+   de jeu : filet d'1 px, coin vif, et l'état coché se lit à l'encre. */
+.trait {
+  display: flex; flex-direction: column; gap: 3px; text-align: left;
+  padding: 8px 10px; cursor: pointer;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--rule); border-left-width: 3px;
+  border-radius: 0; color: var(--ink);
+  transition: background 0.12s, border-color 0.12s;
+}
+.trait--qualite { border-left-color: var(--seal); }
+.trait--defaut { border-left-color: var(--stamp); }
+.trait:hover:not(:disabled) { background: rgba(255, 255, 255, 0.34); }
+.trait.is-on { background: var(--ink); color: var(--paper-hi); border-color: var(--ink); }
+/* Le survol est plus spécifique que `.is-on` : sans cette règle, passer
+   la souris sur un trait coché le faisait paraître décoché. */
+.trait.is-on:hover { background: var(--ink-2); color: var(--paper-hi); }
+.trait.is-on .trait__desc, .trait.is-on .trait__detail { color: rgba(230, 225, 210, 0.72); }
+.trait:disabled { opacity: 0.38; cursor: not-allowed; }
+.trait__head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.trait__head b { font-family: var(--font-title); font-size: 15px; font-weight: 700; }
+.trait__cout { font-family: var(--font-form); font-size: 12px; font-style: normal; }
+.trait--qualite .trait__cout { color: var(--stamp); }
+.trait--defaut .trait__cout { color: var(--seal); }
+.trait.is-on .trait__cout { color: var(--paper-hi); }
+.trait__desc { font-size: 12px; font-style: italic; color: var(--ink-2); }
+.trait__detail {
+  font-family: var(--font-form); font-size: 10px; line-height: 1.4; color: var(--ink-soft);
+}
+
+.pause__traits { list-style: none; margin: 0 0 16px; padding: 0; }
+.pause__traits li {
+  padding: 6px 0 6px 10px; border-left: 3px solid var(--rule);
+  margin-bottom: 5px; font-size: 12.5px; color: var(--ink-2);
+}
+.pause__traits li.is-qualite { border-left-color: var(--seal); }
+.pause__traits li.is-defaut { border-left-color: var(--stamp); }
+.pause__traits b { display: block; font-family: var(--font-title); font-size: 14px; color: var(--ink); }
+
+.manual__cout { font-family: var(--font-form); font-style: normal; color: var(--ink-soft); }
+
+.hire__stats em i {
+  font-style: normal; font-size: 10px; margin-left: 7px;
+  font-family: var(--font-form);
+}
+.hire__stats em i.is-up { color: var(--seal); }
+.hire__stats em i.is-down { color: var(--stamp); }

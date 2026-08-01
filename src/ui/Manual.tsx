@@ -9,6 +9,7 @@
 // ─────────────────────────────────────────────────────────────
 import { catalog } from '@data/content';
 import { balance } from '@data/balance';
+import { MAX_DEFAUTS, TRAIT_BUDGET, defauts, qualites } from '@data/traits';
 
 export function Manual({
   onClose,
@@ -132,6 +133,25 @@ export function Manual({
                 <div key={a.id} className="manual__pair">
                   <dt>{a.name}</dt>
                   <dd>{a.description}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+
+          <section>
+            <h3 className="section-title">Traits</h3>
+            <p>
+              À l’embauche, tu places exactement <b>{TRAIT_BUDGET} points</b> : les qualités en
+              coûtent, les défauts en rendent, et tu ne peux pas prendre plus de {MAX_DEFAUTS}{' '}
+              défauts. Un trait ne se change plus ensuite.
+            </p>
+            <dl className="manual__dl">
+              {[...qualites, ...defauts].map((t) => (
+                <div key={t.id} className="manual__pair">
+                  <dt>
+                    {t.nom} <em className="manual__cout">{t.cout > 0 ? `−${t.cout}` : `+${-t.cout}`}</em>
+                  </dt>
+                  <dd>{t.detail}</dd>
                 </div>
               ))}
             </dl>

@@ -14,6 +14,8 @@ import { getArchetype } from '@data/content';
 import { aliveColleagues, clamp, getColleague } from './util';
 import type { ActionResult } from './actions';
 import type { Rng } from './rng';
+import { raiseSuspicion } from './suspicion';
+import { traitBonus } from './traits';
 
 // ── Fabriques d'intentions (le texte porte le jeu) ───────────
 const PLOT_LABELS: Array<{ label: string; detail: string }> = [
@@ -214,7 +216,7 @@ export function resolveIntents(state: GameState, rng: Rng): IntentOutcome[] {
         const raw = 10 + Math.round(c.stats.combine * 0.15);
         const loss = Math.max(3, raw - Math.round(state.player.stats.aura * 0.1));
         state.player.reputation = Math.max(0, state.player.reputation - loss);
-        state.suspicion = clamp(state.suspicion + 5, 0, 100);
+        raiseSuspicion(state, 5);
         out.push({
           tone: 'bad',
           text: `${c.name} a déposé son dossier. −${loss} réputation, +5 Suspicion.`,
@@ -250,7 +252,7 @@ export function resolveIntents(state: GameState, rng: Rng): IntentOutcome[] {
       }
       case 'watch': {
         const add = Math.round(3 * (arch?.suspicionSensitivity ?? 1));
-        state.suspicion = clamp(state.suspicion + add, 0, 100);
+        raiseSuspicion(state, add);
         out.push({
           tone: 'bad',
           text: `${c.name} t'a eu à l'œil toute la semaine. +${add} Suspicion.`,
@@ -363,7 +365,7 @@ export function abetScheme(state: GameState, schemerId: string): ActionResult {
   found.intent.boost = 25;
   schemer.opinion = clamp(schemer.opinion + 14, -100, 100);
   found.victim.opinion = clamp(found.victim.opinion - 12, -100, 100);
-  state.suspicion = clamp(state.suspicion + 3, 0, 100);
+  raiseSuspicion(state, 3);
   return {
     ok: true,
     tone: 'neutral',
@@ -380,7 +382,12 @@ export function canDefuse(c: Colleague): boolean {
 export function defuseChance(state: GameState, c: Colleague): number {
   const vigilance = getArchetype(c.archetype)?.baseVigilance ?? 40;
   const raw =
-    35 + state.player.stats.aura * 0.6 + c.opinion * 0.15 - vigilance * 0.3 - state.suspicion * 0.1;
+    35 +
+    state.player.stats.aura * 0.6 +
+    c.opinion * 0.15 -
+    vigilance * 0.3 -
+    state.suspicion * 0.1 +
+    traitBonus(state, 'defuseChance');
   return Math.round(clamp(raw, 10, 90));
 }
 
@@ -406,7 +413,7 @@ export function defuseIntent(state: GameState, colleagueId: string, rng: Rng): A
     };
   }
 
-  state.suspicion = clamp(state.suspicion + 4, 0, 100);
+  raiseSuspicion(state, 4);
   c.opinion = clamp(c.opinion - 5, -100, 100);
   return {
     ok: true,

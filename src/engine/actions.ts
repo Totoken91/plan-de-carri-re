@@ -7,8 +7,10 @@ import type { GameState } from '@state/schema';
 import { balance } from '@data/balance';
 import { getPlanDef } from '@data/content';
 import { clamp, getColleague } from './util';
+import { traitBonus, traitFactor } from './traits';
 import { canStartPlan, startPlan } from './plans';
 import type { Rng } from './rng';
+import { raiseSuspicion } from './suspicion';
 
 export type ActionKind = 'bosser' | 'cafe' | 'fouiner' | 'comploter' | 'glander';
 
@@ -44,17 +46,38 @@ export function diminishingFactor(state: GameState, key: string): number {
 // se servent aussi bien l'anti-spam que l'accueil guidé.
 const diminishing = diminishingFactor;
 
+// ── Quantités que les traits peuvent moduler ─────────────────
+// Exposées en lecture seule : `preview.ts` les rappelle pour annoncer
+// AVANT le clic exactement ce que l'action fera. Deux formules pour la
+// même chose, c'est la garantie qu'elles divergent.
+
+/** Coût en Nerfs (négatif) après traits. */
+export function nerfCost(state: GameState, base: number): number {
+  return -Math.round(Math.abs(base) * traitFactor(state, 'nerfsCost'));
+}
+
+/** Gain d'opinion après traits. */
+export function opinionGain(state: GameState, base: number): number {
+  return Math.round(base * traitFactor(state, 'opinionGain'));
+}
+
+/** Risque de se faire surprendre en fouinant, après traits. */
+export function caughtRisk(state: GameState, base: number): number {
+  return clamp(base - traitBonus(state, 'secretChance'), 0, 100);
+}
+
 /** Bosser un projet : +Rendement, +réputation légitime, −Nerfs (rendement décroissant). */
 export function actBosser(state: GameState): ActionResult {
   const cfg = balance.actions.bosser;
   const f = diminishing(state, 'bosser');
   const rendement = Math.round(cfg.rendement * f);
-  const reputation = Math.round(cfg.reputation * f);
+  const reputation = Math.round(cfg.reputation * f * traitFactor(state, 'reputationGain'));
+  const nerfs = nerfCost(state, cfg.nerfs);
   adjust(state, 'rendement', rendement);
-  adjust(state, 'nerfs', cfg.nerfs); // le coût nerveux, lui, ne diminue pas
+  adjust(state, 'nerfs', nerfs); // le coût nerveux, lui, ne diminue pas
   state.player.reputation += reputation;
   const worn = f < 0.9 ? ' (rendement en baisse — tu tournes en rond)' : '';
-  return good(`Tu abats du travail. +${rendement} Rendement, +${reputation} réput., ${cfg.nerfs} Nerfs.${worn}`);
+  return good(`Tu abats du travail. +${rendement} Rendement, +${reputation} réput., ${nerfs} Nerfs.${worn}`);
 }
 
 /** Machine à café : réseauter avec un collègue → +son opinion. */
@@ -62,9 +85,10 @@ export function actCafe(state: GameState, targetId: string): ActionResult {
   const c = getColleague(state, targetId);
   if (!c || !c.alive) return fail('Ce collègue est introuvable près de la machine à café.');
   const cfg = balance.actions.cafe;
-  c.opinion = clamp(c.opinion + cfg.opinion, -100, 100);
-  adjust(state, 'nerfs', cfg.nerfs);
-  return good(`Café avec ${c.name}. Son opinion grimpe (+${cfg.opinion}).`);
+  const gain = opinionGain(state, cfg.opinion);
+  c.opinion = clamp(c.opinion + gain, -100, 100);
+  adjust(state, 'nerfs', nerfCost(state, cfg.nerfs));
+  return good(`Café avec ${c.name}. Son opinion grimpe (+${gain}).`);
 }
 
 /** Fouiner : chercher un secret sur une cible. Risque de +Suspicion. */
@@ -73,9 +97,9 @@ export function actFouiner(state: GameState, targetId: string, rng: Rng): Action
   if (!c || !c.alive) return fail('Personne à fouiner ici.');
   const cfg = balance.actions.fouiner;
 
-  // Se faire griller ?
-  if (rng.chance(cfg.suspicionRisk)) {
-    state.suspicion = clamp(state.suspicion + cfg.suspicionOnCaught, 0, 100);
+  // Se faire griller ? Un fouineur aguerri se fait moins voir.
+  if (rng.chance(caughtRisk(state, cfg.suspicionRisk))) {
+    raiseSuspicion(state, cfg.suspicionOnCaught);
     return bad(`On t'a vu fouiner ${c.name}. La Suspicion monte (+${cfg.suspicionOnCaught}).`);
   }
 
@@ -108,12 +132,12 @@ export function actComploter(
     }
     startPlan(state, planDefId, targetId);
     plan = state.activePlans.find((p) => p.defId === planDefId)!;
-    state.suspicion = clamp(state.suspicion + cfg.suspicionPerPrep, 0, 100);
+    raiseSuspicion(state, cfg.suspicionPerPrep);
     return neutral(`Tu lances « ${def.name} ». Préparation en cours.`);
   }
 
   plan.preparation = clamp(plan.preparation + cfg.preparationGain, 0, 100);
-  state.suspicion = clamp(state.suspicion + cfg.suspicionPerPrep, 0, 100);
+  raiseSuspicion(state, cfg.suspicionPerPrep);
   return neutral(`Tu avances « ${def.name} » (préparation ${plan.preparation}/100).`);
 }
 
@@ -128,7 +152,7 @@ export function actGlander(state: GameState, rng: Rng): ActionResult {
     (c) => c.alive && c.archetype === 'fayot' && c.opinion < 20,
   );
   if (fayotWatching && rng.chance(40)) {
-    state.suspicion = clamp(state.suspicion + cfg.fayotSuspicion, 0, 100);
+    raiseSuspicion(state, cfg.fayotSuspicion);
     return bad(`Tu récupères (+${nerfs} Nerfs)… mais un Fayot t'a repéré. +${cfg.fayotSuspicion} Suspicion.`);
   }
   const worn = f < 0.9 ? ' (tu culpabilises, ça repose moins)' : '';

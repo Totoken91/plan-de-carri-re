@@ -4,6 +4,31 @@
 import type { GameState } from '@state/schema';
 import { balance } from '@data/balance';
 import { burnScapegoat, scapegoatOf } from './scapegoat';
+import { traitFactor } from './traits';
+
+/**
+ * TOUTE hausse de suspicion passe par ici.
+ *
+ * Elle était écrite en douze endroits sous la forme `clamp(suspicion + n)`.
+ * Un trait qui modifie la discrétion n'avait alors aucun point
+ * d'application : il aurait fallu le brancher douze fois, et le treizième
+ * appel écrit plus tard l'aurait oublié en silence. Une hausse est une
+ * règle du jeu, elle mérite une fonction.
+ *
+ * Renvoie la hausse RÉELLEMENT appliquée, pour que les messages
+ * annoncent le bon chiffre.
+ */
+export function raiseSuspicion(state: GameState, amount: number): number {
+  const applied = Math.round(amount * traitFactor(state, 'suspicionGain'));
+  const before = state.suspicion;
+  state.suspicion = Math.max(0, Math.min(100, state.suspicion + applied));
+  return state.suspicion - before;
+}
+
+/** Baisse de suspicion : jamais modifiée par les traits (c'est un soulagement, pas une trace). */
+export function easeSuspicion(state: GameState, amount: number): void {
+  state.suspicion = Math.max(0, Math.min(100, state.suspicion - amount));
+}
 
 export interface AuditResult {
   triggered: boolean;

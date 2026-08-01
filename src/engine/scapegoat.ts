@@ -18,6 +18,7 @@ import { balance } from '@data/balance';
 import { aliveColleagues, clamp, getColleague } from './util';
 import type { ActionResult } from './actions';
 import type { Rng } from './rng';
+import { raiseSuspicion } from './suspicion';
 
 export const SCAPEGOAT_FLAG = 'bouc_emissaire';
 const SINCE_PREFIX = 'bouc_since:';
@@ -70,7 +71,7 @@ export function prepareScapegoat(state: GameState, colleagueId: string, rng: Rng
   const chance = prepareChance(state, c);
 
   if (!rng.chance(chance)) {
-    state.suspicion = clamp(state.suspicion + cfg.suspicionOnFail, 0, 100);
+    raiseSuspicion(state, cfg.suspicionOnFail);
     c.opinion = clamp(c.opinion + cfg.opinionOnFail, -100, 100);
     return {
       ok: true,
@@ -81,7 +82,7 @@ export function prepareScapegoat(state: GameState, colleagueId: string, rng: Rng
 
   c.flags.push(SCAPEGOAT_FLAG);
   c.flags.push(`${SINCE_PREFIX}${state.week}`);
-  state.suspicion = clamp(state.suspicion + cfg.suspicionOnPrepare, 0, 100);
+  raiseSuspicion(state, cfg.suspicionOnPrepare);
   return {
     ok: true,
     tone: 'neutral',

@@ -12,11 +12,21 @@
 // mentir.
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from 'react';
-import type { Appearance, HairStyle } from '@state/schema';
+import type { Appearance, HairStyle, TraitDef, TraitId } from '@state/schema';
 import { DEFAULT_APPEARANCE, palettes, randomAppearance, randomName } from '@data/appearance';
 import { balance } from '@data/balance';
+import {
+  MAX_DEFAUTS,
+  TRAIT_BUDGET,
+  countDefauts,
+  defauts,
+  pointsLeft,
+  qualites,
+  selectionValid,
+} from '@data/traits';
 import { topRank } from '@data/content';
 import { STAT_KEYS } from '@engine/util';
+import { getTrait } from '@data/traits';
 import { STAT_LABELS } from './Bits';
 import { theme as T } from '@data/board';
 import { iso } from './iso';
@@ -83,13 +93,47 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+/** Une case de trait : coût à gauche, ce que ça change en clair dessous. */
+function TraitCard({
+  t,
+  on,
+  blocked,
+  onToggle,
+}: {
+  t: TraitDef;
+  on: boolean;
+  blocked: string | undefined;
+  onToggle: () => void;
+}) {
+  const qualite = t.cout > 0;
+  return (
+    <button
+      type="button"
+      className={`trait ${on ? 'is-on' : ''} ${qualite ? 'trait--qualite' : 'trait--defaut'}`}
+      onClick={onToggle}
+      disabled={!on && !!blocked}
+      title={blocked}
+    >
+      <span className="trait__head">
+        <b>{t.nom}</b>
+        <em className="trait__cout">
+          {t.cout > 0 ? `−${t.cout}` : `+${-t.cout}`}
+        </em>
+      </span>
+      <span className="trait__desc">{t.description}</span>
+      <span className="trait__detail">{t.detail}</span>
+    </button>
+  );
+}
+
 export function CharacterCreation({
   onHire,
   onCancel,
 }: {
-  onHire: (name: string, appearance: Appearance) => void;
+  onHire: (name: string, appearance: Appearance, traits: TraitId[]) => void;
   onCancel: () => void;
 }) {
+  const [chosen, setChosen] = useState<TraitId[]>([]);
   const [name, setName] = useState(() => randomName());
   const [look, setLook] = useState<Appearance>(() => ({ ...DEFAULT_APPEARANCE }));
   // Change à chaque tirage : suffit à redéphaser l'animation de l'aperçu,
@@ -107,6 +151,38 @@ export function CharacterCreation({
 
   const trimmed = name.trim();
   const previewId = useMemo(() => `preview-${take}`, [take]);
+
+  const reste = pointsLeft(chosen);
+  const nbDefauts = countDefauts(chosen);
+  const pret = selectionValid(chosen);
+
+  const toggle = (id: TraitId) =>
+    setChosen((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]));
+
+  /**
+   * Les conditions d'entrée doivent montrer ce avec quoi on VA démarrer,
+   * traits compris. Afficher les valeurs de base pendant qu'on coche des
+   * traits qui les changent, c'est un chiffre faux à l'écran.
+   */
+  const statsDepart = STAT_KEYS.reduce(
+    (acc, k) => {
+      let v = balance.startStats[k];
+      for (const id of chosen) v += getTrait(id)?.stats?.[k] ?? 0;
+      acc[k] = Math.max(0, Math.min(100, v));
+      return acc;
+    },
+    {} as Record<(typeof STAT_KEYS)[number], number>,
+  );
+  const suspicionDepart = chosen.reduce((n, id) => n + (getTrait(id)?.suspicion ?? 0), 0);
+  const opinionDepart = chosen.reduce((n, id) => n + (getTrait(id)?.opinion ?? 0), 0);
+
+  /** Pourquoi ce trait est-il hors de portée ? Un bouton muet n'explique rien. */
+  const blockedReason = (t: TraitDef): string | undefined => {
+    if (chosen.includes(t.id)) return undefined;
+    if (t.cout > 0 && t.cout > reste) return `Il te reste ${reste} point(s).`;
+    if (t.cout < 0 && nbDefauts >= MAX_DEFAUTS) return `${MAX_DEFAUTS} défauts au maximum.`;
+    return undefined;
+  };
 
   return (
     <div className="hire">
@@ -208,6 +284,44 @@ export function CharacterCreation({
                 </button>
               </div>
             </Field>
+            <div className="traits">
+              <div className="traits__head">
+                <span className="field__label">Évaluation d’entrée</span>
+                <span className={`traits__solde ${reste === 0 ? 'is-ok' : ''}`}>
+                  {reste} / {TRAIT_BUDGET} point{TRAIT_BUDGET > 1 ? 's' : ''} à placer
+                </span>
+              </div>
+              <p className="traits__rule">
+                Les qualités coûtent des points, les défauts en rendent. Il faut tomber
+                <b> juste</b> — {MAX_DEFAUTS} défauts au maximum.
+              </p>
+
+              <h4 className="traits__sub">Qualités</h4>
+              <div className="traits__grid">
+                {qualites.map((t) => (
+                  <TraitCard
+                    key={t.id}
+                    t={t}
+                    on={chosen.includes(t.id)}
+                    blocked={blockedReason(t)}
+                    onToggle={() => toggle(t.id)}
+                  />
+                ))}
+              </div>
+
+              <h4 className="traits__sub">Défauts</h4>
+              <div className="traits__grid">
+                {defauts.map((t) => (
+                  <TraitCard
+                    key={t.id}
+                    t={t}
+                    on={chosen.includes(t.id)}
+                    blocked={blockedReason(t)}
+                    onToggle={() => toggle(t.id)}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
 
           <aside className="hire__preview">
@@ -253,12 +367,41 @@ export function CharacterCreation({
             <div className="hire__terms">
               <h3 className="section-title">Conditions d’entrée</h3>
               <ul className="hire__stats">
-                {STAT_KEYS.map((k) => (
-                  <li key={k}>
-                    <span>{STAT_LABELS[k]}</span>
-                    <em>{balance.startStats[k]}</em>
+                {STAT_KEYS.map((k) => {
+                  const delta = statsDepart[k] - balance.startStats[k];
+                  return (
+                    <li key={k}>
+                      <span>{STAT_LABELS[k]}</span>
+                      <em>
+                        {statsDepart[k]}
+                        {delta !== 0 && (
+                          <i className={delta > 0 ? 'is-up' : 'is-down'}>
+                            {delta > 0 ? `+${delta}` : `−${-delta}`}
+                          </i>
+                        )}
+                      </em>
+                    </li>
+                  );
+                })}
+                {suspicionDepart !== 0 && (
+                  <li>
+                    <span>Suspicion</span>
+                    <em>
+                      {suspicionDepart}
+                      <i className="is-down">de départ</i>
+                    </em>
                   </li>
-                ))}
+                )}
+                {opinionDepart !== 0 && (
+                  <li>
+                    <span>Accueil de l’étage</span>
+                    <em>
+                      <i className={opinionDepart > 0 ? 'is-up' : 'is-down'}>
+                        {opinionDepart > 0 ? `+${opinionDepart}` : `−${-opinionDepart}`} opinion
+                      </i>
+                    </em>
+                  </li>
+                )}
               </ul>
               <p className="hire__note">
                 Objectif de carrière : <b>{topRank().name}</b>. Aucune date n’est fixée. Aucun
@@ -280,10 +423,11 @@ export function CharacterCreation({
           <button
             type="button"
             className="btn btn--primary"
-            disabled={!trimmed}
-            onClick={() => onHire(trimmed, look)}
+            disabled={!trimmed || !pret}
+            onClick={() => onHire(trimmed, look, chosen)}
+            title={pret ? undefined : `Place tes ${TRAIT_BUDGET} points exactement.`}
           >
-            Signer et prendre le poste
+            {pret ? 'Signer et prendre le poste' : `Encore ${reste} point(s) à placer`}
           </button>
         </footer>
       </div>

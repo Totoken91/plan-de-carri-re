@@ -9,9 +9,11 @@ import { getArchetype, getPlanDef } from '@data/content';
 import { balance } from '@data/balance';
 import { checkCondition } from './conditions';
 import { applyEffect } from './effects';
+import { traitBonus } from './traits';
 import { clamp, getColleague } from './util';
 import { scapegoatOf } from './scapegoat';
 import type { Rng } from './rng';
+import { raiseSuspicion } from './suspicion';
 
 /** Peut-on lancer ce plan maintenant (rang, prérequis, cible) ? */
 export function canStartPlan(state: GameState, def: PlanDef, targetId?: string): boolean {
@@ -89,7 +91,8 @@ export function successChance(state: GameState, plan: ActivePlan): number {
     def.baseSuccess +
     state.player.stats.combine * cfg.combineWeight -
     vigilance * cfg.vigilanceWeight +
-    plan.preparation * cfg.preparationWeight;
+    plan.preparation * cfg.preparationWeight +
+    traitBonus(state, 'planSuccess');
 
   return Math.round(clamp(raw, cfg.minSuccess, cfg.maxSuccess));
 }
@@ -124,10 +127,10 @@ export function resolveDuePlans(state: GameState, rng: Rng): PlanResolution[] {
 
     if (success) {
       applyEffect(state, def.successEffects, plan.targetId);
-      state.suspicion = clamp(state.suspicion + def.suspicionOnSuccess, 0, 100);
+      raiseSuspicion(state, def.suspicionOnSuccess);
     } else {
       applyEffect(state, def.failureEffects, plan.targetId);
-      state.suspicion = clamp(state.suspicion + def.suspicionOnFailure, 0, 100);
+      raiseSuspicion(state, def.suspicionOnFailure);
     }
 
     resolutions.push({ planName: def.name, success, chance });

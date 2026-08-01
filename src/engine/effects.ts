@@ -7,6 +7,7 @@ import type { Effect, GameState, StatKey } from '@state/schema';
 import { clamp } from './util';
 import { findRival } from './util';
 import { startPlan } from './plans';
+import { raiseSuspicion } from './suspicion';
 
 const STAT_MIN = 0;
 const STAT_MAX = 100;
@@ -34,7 +35,7 @@ export function applyEffect(state: GameState, effect: Effect, targetId?: string)
   }
 
   if (effect.suspicion !== undefined) {
-    state.suspicion = clamp(state.suspicion + effect.suspicion, 0, 100);
+    raiseSuspicion(state, effect.suspicion);
   }
 
   if (effect.reputation !== undefined) {

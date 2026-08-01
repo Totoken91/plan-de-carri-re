@@ -5,6 +5,7 @@
 import type { GameState, Secret } from '@state/schema';
 import { clamp, getColleague } from './util';
 import type { ActionResult } from './actions';
+import { raiseSuspicion } from './suspicion';
 
 export type HookMode = 'coerce' | 'expose';
 
@@ -47,7 +48,7 @@ export function useHook(
   // expose
   c.opinion = clamp(c.opinion - Math.round(20 + weight * 0.3), -100, 100);
   if (!c.flags.includes('discredite')) c.flags.push('discredite');
-  state.suspicion = clamp(state.suspicion + 4, 0, 100);
+  raiseSuspicion(state, 4);
   state.player.reputation += Math.round(weight * 0.15);
   return {
     ok: true,

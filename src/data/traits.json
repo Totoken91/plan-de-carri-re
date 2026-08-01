@@ -1,0 +1,131 @@
+{
+  "budget": 4,
+  "maxDefauts": 3,
+  "traits": [
+    {
+      "id": "bosseur",
+      "nom": "Bosseur",
+      "cout": 2,
+      "description": "Tu produis, et ça se voit sur les tableaux de bord.",
+      "detail": "Tu commences avec un meilleur Rendement, et tout ce que tu gagnes en réputation compte un peu plus.",
+      "stats": { "rendement": 8 },
+      "mods": { "reputationGain": 1.12 }
+    },
+    {
+      "id": "charismatique",
+      "nom": "Charismatique",
+      "cout": 2,
+      "description": "Les gens t’écoutent sans savoir pourquoi.",
+      "detail": "Meilleure Aura de départ, et tes gains d’opinion sont amplifiés.",
+      "stats": { "aura": 8 },
+      "mods": { "opinionGain": 1.25 }
+    },
+    {
+      "id": "fouineur",
+      "nom": "Fouineur",
+      "cout": 2,
+      "description": "Tu remarques ce que les autres laissent traîner.",
+      "detail": "Tu te fais bien moins souvent surprendre en train de fouiner.",
+      "mods": { "secretChance": 12 }
+    },
+    {
+      "id": "sang_froid",
+      "nom": "Sang-froid",
+      "cout": 2,
+      "description": "Rien ne t’atteint, en tout cas rien ne se voit.",
+      "detail": "Plus de Nerfs au départ, et tout te coûte moins nerveusement.",
+      "stats": { "nerfs": 10 },
+      "mods": { "nerfsCost": 0.8 }
+    },
+    {
+      "id": "manipulateur",
+      "nom": "Manipulateur",
+      "cout": 3,
+      "description": "Tu sais exactement quoi dire à qui.",
+      "detail": "Meilleure Combine de départ, et tes complots aboutissent plus souvent.",
+      "stats": { "combine": 8 },
+      "mods": { "planSuccess": 8 }
+    },
+    {
+      "id": "discret",
+      "nom": "Discret",
+      "cout": 3,
+      "description": "Personne ne se souvient de t’avoir vu passer.",
+      "detail": "Toute hausse de suspicion est réduite d’un cinquième.",
+      "mods": { "suspicionGain": 0.78 }
+    },
+    {
+      "id": "pistonne",
+      "nom": "Pistonné",
+      "cout": 1,
+      "description": "Quelqu’un a glissé un mot pour toi. On ne sait pas qui.",
+      "detail": "Tout l’étage démarre avec une meilleure opinion de toi.",
+      "opinion": 10
+    },
+    {
+      "id": "vigilant",
+      "nom": "Vigilant",
+      "cout": 1,
+      "description": "Tu vois venir les coups une semaine à l’avance.",
+      "detail": "Tu désamorces bien plus souvent ce qu’on te prépare.",
+      "mods": { "defuseChance": 12 }
+    },
+    {
+      "id": "tete_a_claques",
+      "nom": "Tête à claques",
+      "cout": -2,
+      "description": "Ce n’est pas ce que tu dis, c’est ta façon de le dire.",
+      "detail": "L’étage démarre en froid avec toi, et tes gains d’opinion sont rabotés.",
+      "opinion": -12,
+      "mods": { "opinionGain": 0.78 }
+    },
+    {
+      "id": "maladroit",
+      "nom": "Maladroit",
+      "cout": -2,
+      "description": "Tu laisses toujours quelque chose derrière toi.",
+      "detail": "Toute hausse de suspicion est majorée d’un quart.",
+      "mods": { "suspicionGain": 1.28 }
+    },
+    {
+      "id": "grille",
+      "nom": "Déjà repéré",
+      "cout": -2,
+      "description": "Ton nom est apparu dans un compte-rendu. Pas en bien.",
+      "detail": "Tu démarres avec de la suspicion au compteur.",
+      "suspicion": 16
+    },
+    {
+      "id": "bras_casse",
+      "nom": "Bras cassé",
+      "cout": -2,
+      "description": "Le travail, c’est pas trop ton truc.",
+      "detail": "Rendement de départ nettement plus bas.",
+      "stats": { "rendement": -10 }
+    },
+    {
+      "id": "fragile",
+      "nom": "Fragile",
+      "cout": -1,
+      "description": "Tu encaisses mal les semaines chargées.",
+      "detail": "Tout te coûte plus cher en Nerfs.",
+      "mods": { "nerfsCost": 1.3 }
+    },
+    {
+      "id": "transparent",
+      "nom": "Transparent",
+      "cout": -1,
+      "description": "On oublie ton prénom en réunion.",
+      "detail": "Aura de départ plus basse.",
+      "stats": { "aura": -10 }
+    },
+    {
+      "id": "impulsif",
+      "nom": "Impulsif",
+      "cout": -1,
+      "description": "Tu déclenches avant d’avoir fini de préparer.",
+      "detail": "Tes complots aboutissent moins souvent.",
+      "mods": { "planSuccess": -7 }
+    }
+  ]
+}
