@@ -47,9 +47,53 @@ const sameRects = (a: Rect[], b: Rect[]) =>
   });
 
 /** Le voile : l'écran entier, moins un rectangle par trou. */
+/**
+ * `a` moins `b`, en rectangles à axes alignés. Renvoie 0 à 4 morceaux.
+ */
+function soustraire(a: Rect, b: Rect): Rect[] {
+  const x0 = Math.max(a.x, b.x);
+  const x1 = Math.min(a.x + a.w, b.x + b.w);
+  const y0 = Math.max(a.y, b.y);
+  const y1 = Math.min(a.y + a.h, b.y + b.h);
+  if (x0 >= x1 || y0 >= y1) return [a]; // aucun recouvrement
+
+  const out: Rect[] = [];
+  if (b.y > a.y) out.push({ x: a.x, y: a.y, w: a.w, h: b.y - a.y });
+  if (b.y + b.h < a.y + a.h) {
+    out.push({ x: a.x, y: b.y + b.h, w: a.w, h: a.y + a.h - (b.y + b.h) });
+  }
+  if (b.x > a.x) out.push({ x: a.x, y: y0, w: b.x - a.x, h: y1 - y0 });
+  if (b.x + b.w < a.x + a.w) {
+    out.push({ x: b.x + b.w, y: y0, w: a.x + a.w - (b.x + b.w), h: y1 - y0 });
+  }
+  return out;
+}
+
+/**
+ * L'union des trous, découpée en rectangles DISJOINTS.
+ *
+ * Indispensable, et découvert à la dure : le voile est un seul chemin en
+ * `evenodd`, donc l'intersection de deux trous qui se chevauchent se
+ * retrouve REMPLIE — un trou dans le trou. Tant que l'inspecteur était
+ * une colonne à côté du plateau, les deux rectangles étaient disjoints
+ * et personne ne voyait le problème. Depuis que c'est un tiroir POSÉ
+ * SUR le plateau, éclairer les deux à la fois rendait l'inspecteur
+ * opaque et non cliquable — soit exactement l'inverse de la consigne
+ * affichée juste à côté.
+ */
+function disjoindre(rects: Rect[]): Rect[] {
+  const out: Rect[] = [];
+  for (const r of rects) {
+    let morceaux: Rect[] = [r];
+    for (const deja of out) morceaux = morceaux.flatMap((m) => soustraire(m, deja));
+    out.push(...morceaux);
+  }
+  return out;
+}
+
 function scrimPath(vw: number, vh: number, holes: Rect[]): string {
   const outer = `M0 0 H${vw} V${vh} H0 Z`;
-  const cut = holes
+  const cut = disjoindre(holes)
     .map((r) => `M${r.x} ${r.y} H${r.x + r.w} V${r.y + r.h} H${r.x} Z`)
     .join(' ');
   return `${outer} ${cut}`;
@@ -207,8 +251,19 @@ export function Tutorial({
       left = toRight ? r.x + r.w + GAP : r.x - w - GAP;
       top = Math.max(MARGIN, Math.min(vh - cardH - MARGIN, r.y));
     } else {
-      left = r.x + r.w / 2 - w / 2;
-      top = Math.max(MARGIN, Math.min(vh - cardH - MARGIN, r.y + GAP));
+      // Aucune bande libre : l'élément éclairé occupe presque tout
+      // l'écran. C'est le cas du PLATEAU depuis que la coque est en
+      // plein écran — et c'est justement l'étape où l'on demande de
+      // cliquer quelqu'un. Centrer la carte la posait sur les
+      // collègues, donc sur la consigne elle-même.
+      //
+      // On la range dans l'angle BAS-GAUCHE : les postes occupés vivent
+      // dans la moitié haute de la projection isométrique, l'angle
+      // bas-gauche n'a que les archives. C'est le seul coin dont on
+      // puisse dire qu'il ne cache jamais personne.
+      w = Math.min(w, Math.max(MIN_W, vw * 0.34));
+      left = MARGIN;
+      top = Math.max(MARGIN, vh - cardH - MARGIN);
     }
   }
 

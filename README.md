@@ -78,7 +78,8 @@ src/
     sprites.tsx        Le dessin : personnages et mobilier en SVG pur
     IsoOffice.tsx      Le plateau : placement des objets et ordre de rendu
     Inspector.tsx      Panneau contextuel : actions auto-documentées et chiffrées
-    DeskScreen.tsx     Écran principal (HUD, plateau, agenda, journal)
+    DeskScreen.tsx     La coque : barre, plateau plein écran, panneaux
+    alertes.ts         Ce qui réclame l'attention + le conseil du moment
     ViePrivee.tsx      Blocs d'inspecteur : romance, périmètre, dépenses
     Appart.tsx         Le week-end : chez soi, logement, mobilier
     Marche.tsx         Bourse et casino (au poste comme à la maison)
@@ -517,6 +518,61 @@ espérance, et c'est délibéré.
   capital en une petite chance d'un gros capital, tout de suite. Joué
   depuis le poste de travail, il fait monter la suspicion, gagné ou perdu :
   c'est ce qui lui donne une place **dans** le jeu plutôt qu'à côté.
+
+### La coque : un écran, zéro défilement
+
+L'ancienne mise en page était un flux vertical — barre, HUD, plateau,
+agenda, journal, empilés. Mesuré : **1 398 px de contenu pour 937 px de
+fenêtre**, soit 461 px hors de vue sur un écran de bureau ordinaire et
+620 px sur un portable. La moitié du jeu n'existait que pour qui pensait
+à faire défiler.
+
+La coque est maintenant une grille de la hauteur exacte de la fenêtre, et
+rien n'en sort. Le chrome du haut est passé de **245 px à 49**, et le
+plateau a gagné 100 px de hauteur au passage.
+
+Le choix de fond : **on ne rétrécit pas le plateau pour faire tenir des
+listes.** Agenda, opportunités, journal, dossier et périmètre vivent dans
+des panneaux qui s'ouvrent par-dessus et se referment ; l'inspecteur est
+un tiroir posé sur le plateau, plus une colonne permanente. Un seul
+panneau à la fois, délibérément — deux panneaux ouverts, c'est la mise en
+page empilée d'avant avec des bordures en plus.
+
+Seuls les **corps** de panneaux défilent, jamais la page. `100dvh` et non
+`100vh` : sur mobile, la barre d'URL fait varier la seconde et la coque
+déborderait d'une trentaine de pixels qu'on ne verrait qu'en la faisant
+apparaître.
+
+### Alertes et conseil
+
+`ui/alertes.ts` dérive de l'état ce qui réclame l'attention — jamais
+stocké, sinon deux sources pour la même vérité. Trois règles :
+
+- **une alerte porte toujours un geste.** Elle dit ce qui va mal *et*
+  ouvre l'endroit où l'on peut y répondre. Un voyant qui ne mène nulle
+  part est un reproche, pas une information ;
+- **l'ordre est celui de l'urgence réelle** : ce qui peut terminer la
+  partie cette semaine passe avant ce qui coûtera quelques points ;
+- **le conseil est unique.** Une liste de dix recommandations, c'est
+  l'inverse d'un conseil.
+
+Deux défauts sont apparus en refaisant la coque, et aucun des deux ne se
+serait vu à la lecture :
+
+1. **Le voile du tutoriel est un seul chemin en `evenodd`**, donc
+   l'intersection de deux trous qui se chevauchent se retrouve *remplie*
+   — un trou dans le trou. Tant que l'inspecteur était une colonne à côté
+   du plateau, les deux rectangles étaient disjoints. Devenu un tiroir
+   posé *sur* le plateau, éclairer les deux à la fois rendait
+   l'inspecteur opaque et non cliquable, soit l'inverse exact de la
+   consigne affichée juste à côté. Les trous sont maintenant découpés en
+   rectangles disjoints avant d'être soustraits.
+2. **La carte du tutoriel se posait sur ce qu'elle demandait de
+   cliquer.** Elle cherche une bande libre autour de l'élément éclairé ;
+   le plateau occupant désormais tout l'écran, il n'y a plus de bande.
+   Elle se range dans l'angle bas-gauche — les postes occupés vivent dans
+   la moitié haute de la projection isométrique, c'est le seul coin dont
+   on puisse dire qu'il ne cache jamais personne.
 
 ### Le poste de travail : un écran DANS le jeu
 

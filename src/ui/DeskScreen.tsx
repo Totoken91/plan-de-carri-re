@@ -1,8 +1,35 @@
+// ─────────────────────────────────────────────────────────────
+// DeskScreen.tsx — La coque du jeu. Un écran, zéro défilement.
+//
+// L'ancienne mise en page était un FLUX vertical : barre, HUD, plateau,
+// agenda, journal, les uns sous les autres. Mesuré, ça donnait 1 398 px
+// de contenu pour 937 px de fenêtre — 461 px hors de vue sur un écran de
+// bureau ordinaire, 620 px sur un portable. Autrement dit, la moitié des
+// informations n'existaient que pour qui pensait à faire défiler.
+//
+// La coque est maintenant une GRILLE de la hauteur exacte de la fenêtre,
+// et rien n'en sort :
+//
+//   ┌── barre haute : identité, objectif, ressources, vendredi ──┐
+//   │                                              ┌───────────┐ │
+//   │              LE PLATEAU (tout l'espace)      │ alertes   │ │
+//   │                                              └───────────┘ │
+//   ├── barre basse : les panneaux ouvrables + le conseil ───────┤
+//
+// Le reste — agenda, opportunités, journal, statistiques, périmètre —
+// vit dans des panneaux qui s'OUVRENT PAR-DESSUS le plateau et se
+// referment. C'est le choix de fond : on ne rétrécit pas le plateau pour
+// faire tenir des listes, on montre les listes quand on les demande.
+//
+// Un seul panneau à la fois, volontairement. Deux panneaux ouverts, c'est
+// la même mise en page empilée qu'avant, avec des bordures en plus.
+// ─────────────────────────────────────────────────────────────
 import { useEffect, useState } from 'react';
 import { STAT_KEYS } from '@engine/util';
 import { getRank, nextRank, getOpportunity } from '@data/content';
 import { suspicionTier } from '@engine/suspicion';
 import { scapegoatOf, scapegoatWeeksLeft } from '@engine/scapegoat';
+import { ORDRES, placesDeSubordonnes, subordonnesDe } from '@engine/subordonnes';
 import { useGame } from './useGame';
 import { StatBar, SuspicionGauge } from './Bits';
 import { IsoOffice } from './IsoOffice';
@@ -13,6 +40,7 @@ import { PauseMenu } from './PauseMenu';
 import { Ecran } from './Ecran';
 import { euros, loyerDe, salaireDe } from '@engine/argent';
 import { balance } from '@data/balance';
+import { alertesDe, conseilDe, type Alerte, type PanneauId } from './alertes';
 import { tutorialSeen } from './tutorial';
 import type { Selection } from './iso';
 
@@ -25,6 +53,14 @@ const TIER_MEANING: Record<string, string> = {
   critique: 'Audit imminent. Sans alibi ni bouc émissaire, c’est le licenciement.',
 };
 
+const PANNEAUX: Array<{ id: PanneauId; nom: string; glyphe: string }> = [
+  { id: 'stats', nom: 'Ton dossier', glyphe: '▤' },
+  { id: 'agenda', nom: 'Ce qui se trame', glyphe: '⚑' },
+  { id: 'opportunites', nom: 'Opportunités', glyphe: '◆' },
+  { id: 'perimetre', nom: 'Ton équipe', glyphe: '👥' },
+  { id: 'journal', nom: 'Journal', glyphe: '✒' },
+];
+
 export function DeskScreen({
   onEndWeek,
   onMenu,
@@ -35,29 +71,29 @@ export function DeskScreen({
   const { state, store } = useGame();
   const [selection, setSelection] = useState<Selection>(null);
   const [toast, setToast] = useState<Toast>(null);
-  // Le tuto s'ouvre tout seul à la toute première visite, jamais ensuite.
   const [tuto, setTuto] = useState(() => !tutorialSeen());
   const [manual, setManual] = useState(false);
   const [paused, setPaused] = useState(false);
-  // Le poste de travail : bosser, la bourse et le casino s'y font, parce
-  // que ce sont trois choses qu'on fait devant un écran.
   const [poste, setPoste] = useState(false);
+  const [panneau, setPanneau] = useState<PanneauId | null>(null);
+  const [conseilOuvert, setConseilOuvert] = useState(true);
 
-  // Échap : le raccourci que tout le monde essaie en premier.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
-      // Le tuto, le règlement et le poste ont déjà leur propre Échap.
-      // Sans cette garde, fermer l'écran du poste ouvrait le menu pause
-      // dans la foulée : deux écouteurs sur `window` recevaient la même
-      // touche, et le second n'avait aucun moyen de savoir que le premier
-      // venait de s'en servir.
+      // Chaque surcouche a son propre Échap. Sans cette garde, fermer
+      // l'écran du poste ouvrait le menu pause dans la foulée : deux
+      // écouteurs sur `window` recevaient la même touche.
       if (tuto || manual || poste) return;
+      // Échap referme d'abord ce qui est ouvert, et n'ouvre le menu que
+      // s'il n'y a plus rien à fermer. C'est l'ordre que la main attend.
+      if (panneau) return setPanneau(null);
+      if (selection) return setSelection(null);
       setPaused((p) => !p);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [tuto, manual, poste]);
+  }, [tuto, manual, poste, panneau, selection]);
 
   useEffect(() => {
     if (!toast) return;
@@ -75,25 +111,27 @@ export function DeskScreen({
   const to = next?.reputationRequired ?? state.player.reputation;
   const progress = to > from ? ((state.player.reputation - from) / (to - from)) * 100 : 100;
   const tier = suspicionTier(state.suspicion);
-
   const scapegoat = scapegoatOf(state);
-  const threats = state.colleagues.filter((c) => c.alive && c.intent?.tone === 'threat');
-  const landingFriday = threats.filter((c) => (c.intent?.weeksLeft ?? 2) <= 1);
-  const lastLog = state.log.slice(-7).reverse();
+  const alertes = alertesDe(state);
+  const conseil = conseilDe(state);
+  const landingFriday = alertes.find((a) => a.id === 'menaces')?.compte ?? 0;
+
+  const suivreAlerte = (a: Alerte) => {
+    if (a.selection) setSelection(a.selection);
+    if (a.panneau) setPanneau(a.panneau);
+  };
 
   return (
-    <div className="desk">
-      <header className="topbar">
-        <div className="topbar__id">
-          <span className="topbar__rank">{rank?.name ?? state.player.rank}</span>
-          <span className="topbar__name">{state.player.name}</span>
+    <div className="coque">
+      {/* ── Barre haute ────────────────────────────────────── */}
+      <header className="barre">
+        <div className="barre__id">
+          <span className="barre__rang">{rank?.name ?? state.player.rank}</span>
+          <span className="barre__nom">{state.player.name}</span>
         </div>
-        <span className="stampmark stampmark--corner" aria-hidden="true">
-          Confidentiel
-        </span>
 
-        <div className="objective">
-          <div className="objective__head">
+        <div className="objectif">
+          <div className="objectif__tete">
             <span>
               {next ? (
                 <>
@@ -103,177 +141,294 @@ export function DeskScreen({
                 <b>Au sommet — tiens la position</b>
               )}
             </span>
-            <span className="objective__num">
+            <span className="objectif__num">
               {state.player.reputation}
-              {next && ` / ${next.reputationRequired}`} réput.
+              {next && ` / ${next.reputationRequired}`}
             </span>
           </div>
-          <div className="objective__track">
-            <div className="objective__fill" style={{ width: `${Math.min(100, progress)}%` }} />
+          <div className="objectif__rail">
+            <div className="objectif__jauge" style={{ width: `${Math.min(100, progress)}%` }} />
           </div>
         </div>
 
-        <div className="topbar__week">
-          <span className="topbar__weeknum">Semaine {state.week}</span>
+        <div className="barre__ressources">
           <span
-            className={`topbar__argent ${state.loyersImpayes > 0 ? 'is-danger' : ''}`}
+            className={`ressource ${state.loyersImpayes > 0 ? 'is-danger' : ''}`}
             title={`Loyer ${euros(loyerDe(state))} · salaire ${euros(salaireDe(state))} par semaine`}
           >
+            <em>Trésorerie</em>
             {euros(state.argent)}
           </span>
-          {/* Un impayé doit se voir AVANT le vendredi suivant : une fin
-              de partie qu'on n'a pas vue venir n'est pas un enjeu. */}
-          {state.loyersImpayes > 0 && (
-            <span className="topbar__expulsion">
-              Loyer impayé {state.loyersImpayes}/{balance.expulsionApres}
-            </span>
-          )}
-          <span className="topbar__ap" title="Points d'action restants">
+          <span className="ressource" title="Points d’action restants cette semaine">
+            <em>Semaine {state.week}</em>
             {'●'.repeat(state.actionPointsRemaining)}
-            {'○'.repeat(Math.max(0, 5 - state.actionPointsRemaining))}
-            <em> {state.actionPointsRemaining} PA</em>
+            {'○'.repeat(Math.max(0, balance.actionPointsPerWeek - state.actionPointsRemaining))}
+          </span>
+          <span
+            className={`ressource ressource--${tier}`}
+            title={TIER_MEANING[tier]}
+          >
+            <em>Suspicion</em>
+            {state.suspicion}
           </span>
         </div>
 
-        <button
-          className="btn btn--help"
-          onClick={() => setManual(true)}
-          title="Règlement intérieur et tutoriel"
-          aria-label="Aide"
-        >
-          ?
-        </button>
-
-        <button
-          className="btn btn--small btn--menu"
-          onClick={() => setPaused(true)}
-          title="Menu · Échap"
-        >
-          Menu
-        </button>
-
-        <button
-          className="btn btn--primary btn--endweek"
-          disabled={state.status !== 'playing' || !!state.pendingEvent}
-          onClick={onEndWeek}
-          title={
-            landingFriday.length > 0
-              ? `${landingFriday.length} manœuvre(s) se résolvent ce vendredi`
-              : 'Passer au vendredi soir'
-          }
-        >
-          {state.actionPointsRemaining > 0 ? 'Terminer la semaine' : '→ Vendredi soir'}
-          {landingFriday.length > 0 && <span className="btn__warn">⚠ {landingFriday.length}</span>}
-        </button>
+        <div className="barre__boutons">
+          <button className="btn btn--help" onClick={() => setManual(true)} aria-label="Aide">
+            ?
+          </button>
+          <button
+            className="btn btn--small btn--menu"
+            onClick={() => setPaused(true)}
+            title="Menu · Échap"
+          >
+            Menu
+          </button>
+          <button
+            className="btn btn--primary btn--endweek"
+            disabled={state.status !== 'playing' || !!state.pendingEvent}
+            onClick={onEndWeek}
+          >
+            {state.actionPointsRemaining > 0 ? 'Terminer la semaine' : '→ Vendredi soir'}
+            {landingFriday > 0 && <span className="btn__warn">⚠ {landingFriday}</span>}
+          </button>
+        </div>
       </header>
 
-      <div className="hud">
-        <div className="hud__stats">
-          {STAT_KEYS.map((k) => (
-            <StatBar key={k} stat={k} value={state.player.stats[k]} />
+      {/* ── La scène : le plateau prend tout ───────────────── */}
+      <main className="scene">
+        <IsoOffice
+          selection={selection}
+          onSelect={(s) => {
+            // Cliquer son propre poste, c'est s'y asseoir.
+            if (s?.kind === 'zone' && s.id === 'player') setPoste(true);
+            setSelection(s);
+          }}
+        />
+
+        {/* Le rail d'alertes : ce qui réclame ton attention, du plus
+            urgent au plus dormant. Chaque voyant MÈNE quelque part — un
+            voyant qui n'ouvre rien est un reproche, pas une info. */}
+        <aside className="rail" aria-label="Alertes">
+          {alertes.map((a) => (
+            <button key={a.id} className={`voyant voyant--${a.ton}`} onClick={() => suivreAlerte(a)}>
+              <span className="voyant__icone">{a.icone}</span>
+              {a.compte !== undefined && a.compte > 1 && (
+                <span className="voyant__compte">{a.compte}</span>
+              )}
+              <span className="voyant__bulle">
+                <b>{a.titre}</b>
+                <span>{a.detail}</span>
+              </span>
+            </button>
           ))}
-        </div>
-        <div className="hud__susp">
-          <SuspicionGauge value={state.suspicion} tier={tier} />
-          <p className="hud__meaning">{TIER_MEANING[tier]}</p>
-          {/* Savoir si on est couvert change toute la lecture du risque. */}
-          <p className={`hud__cover ${scapegoat ? 'is-ready' : ''}`}>
-            {scapegoat
-              ? `Couverture : dossier monté sur ${scapegoat.name} · ${scapegoatWeeksLeft(state, scapegoat)} sem.`
-              : 'Aucune couverture. Un audit remonterait jusqu’à toi.'}
-          </p>
-        </div>
-      </div>
+        </aside>
 
-      <div className="desk__body">
-        <section className="board">
-          <IsoOffice
-            selection={selection}
-            onSelect={(s) => {
-              // Cliquer son propre poste, c'est s'y asseoir. C'est le
-              // seul endroit du jeu où une zone ouvre un écran plutôt que
-              // de remplir l'inspecteur — parce que c'est le seul endroit
-              // où le personnage a quelque chose devant les yeux.
-              if (s?.kind === 'zone' && s.id === 'player') setPoste(true);
-              setSelection(s);
-            }}
-          />
+        {/* L'inspecteur : un tiroir par-dessus le plateau, pas une
+            colonne qui le rétrécit en permanence. */}
+        {selection && (
+          <aside className="tiroir">
+            <Inspector selection={selection} onSelect={setSelection} onResult={flash} />
+          </aside>
+        )}
 
-          <div className="agenda">
-            <div className="agenda__col">
-              <h3 className="section-title">Ce qui se trame</h3>
-              {threats.length === 0 && (
-                <p className="muted">Personne ne complote contre toi cette semaine. Profites-en.</p>
+        {/* Les panneaux : ouverts par la barre du bas, refermés par
+            Échap ou par leur croix. */}
+        {panneau && (
+          <section className="panneau">
+            <header className="panneau__tete">
+              <h2>{PANNEAUX.find((p) => p.id === panneau)?.nom}</h2>
+              <button className="btn btn--ghost" onClick={() => setPanneau(null)} aria-label="Fermer">
+                ✕
+              </button>
+            </header>
+            <div className="panneau__corps">
+              {panneau === 'stats' && (
+                <>
+                  <div className="hud__stats">
+                    {STAT_KEYS.map((k) => (
+                      <StatBar key={k} stat={k} value={state.player.stats[k]} />
+                    ))}
+                  </div>
+                  <SuspicionGauge value={state.suspicion} tier={tier} />
+                  <p className="muted">{TIER_MEANING[tier]}</p>
+                  <p className={`hud__cover ${scapegoat ? 'is-ready' : ''}`}>
+                    {scapegoat
+                      ? `Couverture : dossier monté sur ${scapegoat.name} · ${scapegoatWeeksLeft(state, scapegoat)} sem.`
+                      : 'Aucune couverture. Un audit remonterait jusqu’à toi.'}
+                  </p>
+                  <dl className="fiche">
+                    <div>
+                      <dt>Salaire</dt>
+                      <dd>{euros(salaireDe(state))} / semaine</dd>
+                    </div>
+                    <div>
+                      <dt>Loyer</dt>
+                      <dd>{euros(loyerDe(state))} / semaine</dd>
+                    </div>
+                    <div>
+                      <dt>Trésorerie</dt>
+                      <dd>{euros(state.argent)}</dd>
+                    </div>
+                  </dl>
+                </>
               )}
-              <ul className="agenda__list">
-                {state.colleagues
-                  .filter((c) => c.alive && c.intent && c.intent.kind !== 'idle')
-                  .map((c) => (
-                    <li key={c.id}>
-                      <button
-                        className={`agendaitem agendaitem--${c.intent!.tone} agendaitem--${c.intent!.kind}`}
-                        onClick={() => setSelection({ kind: 'colleague', id: c.id })}
-                      >
-                        <span className="agendaitem__icon">{c.intent!.icon}</span>
-                        <span className="agendaitem__body">
-                          <b>{c.name}</b> — {c.intent!.label}
-                        </span>
-                        {c.intent!.weeksLeft > 1 && (
-                          <span className="agendaitem__count">{c.intent!.weeksLeft} sem.</span>
-                        )}
-                      </button>
-                    </li>
-                  ))}
-              </ul>
-            </div>
 
-            <div className="agenda__col">
-              <h3 className="section-title">Opportunités — expirent vendredi</h3>
-              {state.opportunities.length === 0 && (
-                <p className="muted">Rien à saisir. Bosse, réseaute, ou complote.</p>
+              {panneau === 'agenda' && (
+                <>
+                  {state.colleagues.filter((c) => c.alive && c.intent && c.intent.kind !== 'idle')
+                    .length === 0 && (
+                    <p className="muted">Personne ne complote cette semaine. Profites-en.</p>
+                  )}
+                  <ul className="agenda__list">
+                    {state.colleagues
+                      .filter((c) => c.alive && c.intent && c.intent.kind !== 'idle')
+                      .map((c) => (
+                        <li key={c.id}>
+                          <button
+                            className={`agendaitem agendaitem--${c.intent!.tone} agendaitem--${c.intent!.kind}`}
+                            onClick={() => {
+                              setSelection({ kind: 'colleague', id: c.id });
+                              setPanneau(null);
+                            }}
+                          >
+                            <span className="agendaitem__icon">{c.intent!.icon}</span>
+                            <span className="agendaitem__body">
+                              <b>{c.name}</b> — {c.intent!.label}
+                            </span>
+                            {c.intent!.weeksLeft > 1 && (
+                              <span className="agendaitem__count">{c.intent!.weeksLeft} sem.</span>
+                            )}
+                          </button>
+                        </li>
+                      ))}
+                  </ul>
+                </>
               )}
-              <ul className="agenda__list">
-                {state.opportunities.map((opp, i) => {
-                  const def = getOpportunity(opp.defId);
-                  if (!def) return null;
-                  const target = state.colleagues.find((c) => c.id === opp.targetId);
-                  return (
-                    <li key={`${opp.defId}-${i}`}>
-                      <button
-                        className="agendaitem agendaitem--opp"
-                        onClick={() => setSelection({ kind: 'opportunity', index: i })}
-                      >
-                        <span className="agendaitem__icon">{def.icon}</span>
-                        <span className="agendaitem__body">
-                          <b>{def.title}</b>
-                          {target && <em> · {target.name}</em>}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
+
+              {panneau === 'opportunites' && (
+                <>
+                  {state.opportunities.length === 0 && (
+                    <p className="muted">Rien à saisir. Bosse, réseaute, ou complote.</p>
+                  )}
+                  <ul className="agenda__list">
+                    {state.opportunities.map((opp, i) => {
+                      const def = getOpportunity(opp.defId);
+                      if (!def) return null;
+                      const target = state.colleagues.find((c) => c.id === opp.targetId);
+                      return (
+                        <li key={`${opp.defId}-${i}`}>
+                          <button
+                            className="agendaitem agendaitem--opp"
+                            onClick={() => {
+                              setSelection({ kind: 'opportunity', index: i });
+                              setPanneau(null);
+                            }}
+                          >
+                            <span className="agendaitem__icon">{def.icon}</span>
+                            <span className="agendaitem__body">
+                              <b>{def.title}</b>
+                              {target && <em> · {target.name}</em>}
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
+              )}
+
+              {panneau === 'perimetre' && (
+                <>
+                  <p className="muted">
+                    {placesDeSubordonnes(state) === 0
+                      ? 'À ton rang, tu n’encadres personne. Ça vient avec les promotions.'
+                      : `${subordonnesDe(state).length} / ${placesDeSubordonnes(state)} place(s) occupée(s). Clique quelqu’un sur le plateau pour le rattacher.`}
+                  </p>
+                  <ul className="agenda__list">
+                    {subordonnesDe(state).map((c) => (
+                      <li key={c.id}>
+                        <button
+                          className="agendaitem agendaitem--neutral"
+                          onClick={() => {
+                            setSelection({ kind: 'colleague', id: c.id });
+                            setPanneau(null);
+                          }}
+                        >
+                          <span className="agendaitem__icon">
+                            {c.ordre
+                              ? (ORDRES.find((o) => o.kind === c.ordre!.kind)?.icone ?? '📋')
+                              : '·'}
+                          </span>
+                          <span className="agendaitem__body">
+                            <b>{c.name}</b> —{' '}
+                            {c.ordre
+                              ? `${ORDRES.find((o) => o.kind === c.ordre!.kind)?.nom} (${c.ordre.semaines} sem.)`
+                              : 'sans consigne'}
+                          </span>
+                          <span className="agendaitem__count">op. {c.opinion}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+
+              {panneau === 'journal' && (
+                <ul className="feed__list">
+                  {state.log
+                    .slice(-40)
+                    .reverse()
+                    .map((l, i) => (
+                      <li key={i} className={`feed__line feed__line--${l.tone}`}>
+                        <span className="feed__week">S{l.week}</span> {l.text}
+                      </li>
+                    ))}
+                </ul>
+              )}
             </div>
+          </section>
+        )}
+      </main>
+
+      {/* ── Barre basse : les panneaux, et le conseil ──────── */}
+      <footer className="dock">
+        <nav className="dock__onglets">
+          {PANNEAUX.map((p) => {
+            const compte = alertes.find((a) => a.panneau === p.id)?.compte;
+            return (
+              <button
+                key={p.id}
+                className={`dock__bouton ${panneau === p.id ? 'is-on' : ''}`}
+                onClick={() => setPanneau((cur) => (cur === p.id ? null : p.id))}
+              >
+                <span className="dock__glyphe">{p.glyphe}</span>
+                {p.nom}
+                {compte !== undefined && compte > 0 && (
+                  <span className="dock__pastille">{compte}</span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+
+        {conseil && (
+          <div className={`conseil ${conseilOuvert ? '' : 'is-replie'}`}>
+            <button
+              className="conseil__bascule"
+              onClick={() => setConseilOuvert((o) => !o)}
+              title={conseilOuvert ? 'Masquer le conseil' : 'Afficher le conseil'}
+            >
+              ☞
+            </button>
+            {conseilOuvert && <p className="conseil__texte">{conseil}</p>}
           </div>
-
-          <div className="feed">
-            <h3 className="section-title">Journal</h3>
-            <ul>
-              {lastLog.map((l, i) => (
-                <li key={i} className={`feed__line feed__line--${l.tone}`}>
-                  <span className="feed__week">S{l.week}</span> {l.text}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-
-        <Inspector selection={selection} onSelect={setSelection} onResult={flash} />
-      </div>
-
-      {poste && <Ecran onClose={() => setPoste(false)} />}
+        )}
+      </footer>
 
       {toast && <div className={`toast toast--${toast.tone}`}>{toast.text}</div>}
+
+      {poste && <Ecran onClose={() => setPoste(false)} />}
 
       {tuto && (
         <Tutorial selection={selection} onSelect={setSelection} onClose={() => setTuto(false)} />

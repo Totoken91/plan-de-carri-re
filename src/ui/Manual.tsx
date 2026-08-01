@@ -318,6 +318,35 @@ export function Manual({
           </section>
 
           <section>
+            <h3 className="section-title">L’écran</h3>
+            <p>
+              Tout tient sur un écran : rien ne défile. Le plateau occupe toute la
+              place, et ce qui n’y est pas s’ouvre par-dessus.
+            </p>
+            <ul className="manual__list">
+              <li>
+                <b>La barre du bas</b> ouvre les cinq panneaux : ton dossier, ce qui
+                se trame, les opportunités, ton équipe, le journal. Un seul à la
+                fois — deux panneaux ouverts, c’est un écran qui défile.
+              </li>
+              <li>
+                <b>Le rail de droite</b> montre ce qui réclame ton attention, du
+                plus urgent au plus dormant. Survole un voyant pour savoir de quoi
+                il s’agit, clique-le pour aller là où on peut y répondre.
+              </li>
+              <li>
+                <b>La ligne du conseil</b>, en bas, dit la seule chose la plus utile
+                à faire maintenant. Le doigt la replie si elle t’agace.
+              </li>
+              <li>
+                <b>Échap</b> referme d’abord ce qui est ouvert — un panneau, puis
+                une fiche — et n’ouvre le menu que quand il n’y a plus rien à
+                fermer.
+              </li>
+            </ul>
+          </section>
+
+          <section>
             <h3 className="section-title">Le plateau</h3>
             <ul className="manual__list">
               <li>Molette (ou pincement) : zoomer.</li>

@@ -70,7 +70,7 @@ export const TUTORIAL: TutorialStep[] = [
       'Une seule chose fait monter : la réputation.',
       'La jauge indique ce qu’il te reste avant le grade suivant. Rien d’autre ne promeut — ni les stats, ni le nombre de gens que tu as fait tomber. Ceux-là ne font que rendre la réputation plus facile à obtenir.',
     ],
-    anchor: ['.objective'],
+    anchor: ['.objectif'],
   },
   {
     id: 'pa',
@@ -81,7 +81,7 @@ export const TUTORIAL: TutorialStep[] = [
       'Refaire deux fois la même dans la semaine rapporte nettement moins la seconde fois : le jeu récompense la variété, pas le matraquage.',
       'Quand tu n’as plus de PA, il ne reste qu’à terminer la semaine.',
     ],
-    anchor: ['.topbar__ap'],
+    anchor: ['.barre__ressources'],
   },
   {
     id: 'stats',
@@ -93,7 +93,7 @@ export const TUTORIAL: TutorialStep[] = [
       'Combine : tu manœuvres. Il augmente les chances de réussite de tes coups et réduit ce qu’on remarque.',
       'Nerfs : ton carburant. À zéro, c’est le burn-out — et le burn-out finit la partie.',
     ],
-    anchor: ['.hud__stats'],
+    anchor: ['.dock__onglets'],
   },
   {
     id: 'suspicion',
@@ -104,7 +104,7 @@ export const TUTORIAL: TutorialStep[] = [
       'Au rouge, un audit tombe. Sans alibi ni bouc émissaire, l’audit remonte jusqu’à toi et la partie s’arrête là.',
       'La ligne du dessous te dit en permanence si tu es couvert. Lis-la avant de comploter, pas après.',
     ],
-    anchor: ['.hud__susp'],
+    anchor: ['.barre__ressources'],
   },
   {
     id: 'plateau',
@@ -163,7 +163,7 @@ export const TUTORIAL: TutorialStep[] = [
       'Une bulle rouge te vise : le chiffre est le nombre de semaines avant qu’elle ne te tombe dessus. Tu peux la désamorcer pendant qu’il en est encore temps.',
       'Une bulle qui vise un autre collègue est une affaire entre eux. Tu peux prévenir la victime — elle t’en sera reconnaissante — ou alimenter le coup en douce, ce qui l’enfonce sans que ton nom apparaisse.',
     ],
-    anchor: ['.agenda'],
+    anchor: ['.dock__onglets', '.rail'],
   },
   {
     id: 'complot',
@@ -184,7 +184,7 @@ export const TUTORIAL: TutorialStep[] = [
       'L’argent achète ce que les points d’action n’achètent pas — un café, un dîner, un avocat qui fait baisser la suspicion, un détective, et plus tard un cabinet de conseil qui trouvera qu’un poste est « redondant ».',
       'Rien ne se paie à crédit. Si la somme n’y est pas, l’action est refusée.',
     ],
-    anchor: ['.topbar__argent'],
+    anchor: ['.barre__ressources'],
   },
   {
     id: 'marche',
@@ -195,7 +195,7 @@ export const TUTORIAL: TutorialStep[] = [
       'La bourse monte lentement et immobilise ton argent. Le casino a une espérance négative, écrite sur chaque table : il ne sert pas à s’enrichir, il sert à tenter un gros coup tout de suite.',
       'Jouer depuis le bureau fait monter la suspicion, que tu gagnes ou non. Chez toi le week-end, personne ne regarde ton écran.',
     ],
-    anchor: ['.topbar__argent'],
+    anchor: ['.barre__ressources'],
   },
   {
     id: 'romance',

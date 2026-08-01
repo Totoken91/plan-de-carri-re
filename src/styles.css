@@ -1448,6 +1448,7 @@ body {
 .iso__svg .iso-zone,
 .iso__svg .iso-zone__hit,
 .iso__svg .iso-hit,
+.iso__svg .iso-hit--personne,
 .iso__svg .iso-beacon:not(.is-disabled),
 .iso__svg .iso-beacon:not(.is-disabled) * { pointer-events: auto; }
 
@@ -1622,3 +1623,251 @@ body {
   font-family: var(--font-form); font-size: 10.5px; letter-spacing: 0.05em;
   color: var(--paper-hi); background: var(--stamp); padding: 1px 5px;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   La coque — un écran, zéro défilement
+   ──────────────────────────────────────────────────────────────
+   L'ancienne mise en page était un flux vertical : 1 398 px de
+   contenu pour 937 px de fenêtre, mesuré. La moitié du jeu
+   n'existait que pour qui pensait à faire défiler.
+
+   Ici, la page ne défile PAS. La coque fait exactement la hauteur
+   de la fenêtre, le plateau prend tout ce qui reste entre les deux
+   barres, et le reste s'ouvre par-dessus. Seuls les CORPS de
+   panneaux défilent, jamais la page.
+
+   `100dvh` et non `100vh` : sur mobile, la barre d'URL fait varier
+   la seconde et la coque déborderait d'une trentaine de pixels
+   qu'on ne verrait qu'en la faisant apparaître.
+   ══════════════════════════════════════════════════════════════ */
+html, body { height: 100%; }
+body:has(.coque) { overflow: hidden; }
+.app:has(.coque) { max-width: none; margin: 0; padding: 0; height: 100dvh; }
+
+.coque {
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  padding: 8px 10px 10px;
+  overflow: hidden;
+}
+
+/* ── Barre haute ─────────────────────────────────────────── */
+.barre {
+  display: grid;
+  grid-template-columns: minmax(150px, auto) minmax(180px, 1fr) auto auto;
+  align-items: center; gap: 18px;
+  padding: 7px 14px;
+  background-color: var(--paper);
+  background-image: var(--grain-papier);
+  background-blend-mode: overlay;
+  border: 1px solid var(--rule);
+  box-shadow: var(--shadow-sheet);
+}
+.barre__id { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+.barre__rang {
+  font-family: var(--font-form); font-size: 10px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-soft);
+}
+.barre__nom {
+  font-family: var(--font-title); font-size: 19px; font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.objectif { min-width: 0; }
+.objectif__tete {
+  display: flex; justify-content: space-between; gap: 10px;
+  font-size: 12.5px; margin-bottom: 3px;
+}
+.objectif__num { font-family: var(--font-form); font-variant-numeric: tabular-nums; }
+.objectif__rail { height: 5px; background: var(--paper-shade); border: 1px solid var(--rule); }
+.objectif__jauge { height: 100%; background: var(--seal); }
+
+.barre__ressources { display: flex; gap: 16px; }
+.ressource {
+  display: flex; flex-direction: column; line-height: 1.2;
+  font-family: var(--font-form); font-variant-numeric: tabular-nums;
+  font-size: 13px; white-space: nowrap;
+}
+.ressource em {
+  font-style: normal; font-size: 9.5px; letter-spacing: 0.13em;
+  text-transform: uppercase; color: var(--ink-soft);
+}
+.ressource.is-danger { color: var(--stamp); font-weight: 700; }
+.ressource--surveillance { color: var(--note); }
+.ressource--critique { color: var(--stamp); font-weight: 700; }
+.barre__boutons { display: flex; align-items: center; gap: 8px; }
+
+/* ── La scène ────────────────────────────────────────────── */
+.scene { position: relative; min-height: 0; display: flex; }
+.scene .iso { flex: 1; min-height: 0; }
+.scene .iso__svg { height: 100%; width: 100%; }
+
+/* ── Rail d'alertes ──────────────────────────────────────── */
+.rail {
+  position: absolute; top: 10px; right: 10px; z-index: 6;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.voyant {
+  position: relative; width: 38px; height: 38px;
+  display: grid; place-items: center;
+  background-color: var(--paper);
+  border: 1px solid var(--rule); box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+  cursor: pointer; color: var(--ink); font-size: 16px; padding: 0;
+}
+.voyant:hover { background-color: var(--paper-hi); }
+.voyant--danger { border-color: var(--stamp); box-shadow: 0 0 0 1px var(--stamp) inset, 0 3px 10px rgba(0, 0, 0, 0.4); }
+.voyant--attention { border-color: var(--note); }
+.voyant--bon { border-color: var(--seal); }
+.voyant--danger .voyant__icone { animation: pulseVoyant 1.6s ease-in-out infinite; }
+@keyframes pulseVoyant { 0%, 100% { opacity: 1 } 50% { opacity: 0.45 } }
+@media (prefers-reduced-motion: reduce) {
+  .voyant--danger .voyant__icone { animation: none; }
+}
+.voyant__compte {
+  position: absolute; top: -5px; right: -5px; min-width: 16px; height: 16px;
+  display: grid; place-items: center; padding: 0 3px;
+  background: var(--ink); color: var(--paper-hi);
+  font-family: var(--font-form); font-size: 10px;
+}
+/* L'infobulle : au SURVOL seulement, et à gauche du rail — à droite
+   elle sortirait de la fenêtre, ce qui est exactement ce qu'on cherche
+   à éliminer partout ailleurs. */
+.voyant__bulle {
+  position: absolute; right: calc(100% + 8px); top: 0; width: 260px;
+  display: none; flex-direction: column; gap: 3px;
+  padding: 8px 10px; text-align: left;
+  background-color: var(--paper); border: 1px solid var(--rule);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  font-size: 12px; line-height: 1.4;
+}
+.voyant__bulle b { font-family: var(--font-title); font-size: 13.5px; }
+.voyant__bulle span { color: var(--ink-2); }
+.voyant:hover .voyant__bulle, .voyant:focus-visible .voyant__bulle { display: flex; }
+
+/* ── Tiroir de l'inspecteur ──────────────────────────────── */
+.tiroir {
+  position: absolute; top: 0; right: 56px; bottom: 0; width: min(380px, 34vw);
+  z-index: 5; display: flex;
+  animation: tiroirEntre 0.16s ease-out;
+}
+@keyframes tiroirEntre { from { transform: translateX(14px); opacity: 0 } }
+@media (prefers-reduced-motion: reduce) { .tiroir { animation: none; } }
+.tiroir .inspector {
+  flex: 1; min-height: 0; overflow-y: auto;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.45);
+}
+
+/* ── Panneaux ouvrables ──────────────────────────────────── */
+.panneau {
+  position: absolute; left: 0; bottom: 0; z-index: 5;
+  width: min(520px, 44vw); max-height: min(560px, 100%);
+  display: flex; flex-direction: column;
+  background-color: var(--paper);
+  background-image: var(--grain-papier);
+  background-blend-mode: overlay;
+  border: 1px solid var(--rule);
+  box-shadow: 0 -6px 30px rgba(0, 0, 0, 0.5);
+  animation: panneauMonte 0.16s ease-out;
+}
+@keyframes panneauMonte { from { transform: translateY(12px); opacity: 0 } }
+@media (prefers-reduced-motion: reduce) { .panneau { animation: none; } }
+.panneau__tete {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px 8px 14px; border-bottom: 1px solid var(--rule);
+}
+.panneau__tete h2 {
+  margin: 0; font-family: var(--font-form); font-size: 11px;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-2);
+}
+.panneau__tete .btn { margin-left: auto; }
+.panneau__corps { padding: 10px 14px 14px; overflow-y: auto; min-height: 0; }
+
+.fiche { margin: 10px 0 0; display: grid; gap: 3px; }
+.fiche > div { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--rule-soft); padding: 3px 0; }
+.fiche dt { font-size: 12.5px; color: var(--ink-soft); }
+.fiche dd { margin: 0; font-family: var(--font-form); font-variant-numeric: tabular-nums; font-size: 12.5px; }
+
+.feed__list { list-style: none; margin: 0; padding: 0; }
+
+/* ── Barre basse ─────────────────────────────────────────── */
+.dock {
+  display: flex; align-items: center; gap: 14px;
+  padding: 6px 12px;
+  background-color: var(--paper);
+  background-image: var(--grain-papier);
+  background-blend-mode: overlay;
+  border: 1px solid var(--rule);
+  box-shadow: var(--shadow-sheet);
+}
+.dock__onglets { display: flex; gap: 4px; flex-shrink: 0; }
+.dock__bouton {
+  position: relative; display: flex; align-items: center; gap: 7px;
+  padding: 6px 11px; background: none; border: 1px solid transparent;
+  font: inherit; font-size: 12.5px; color: var(--ink); cursor: pointer;
+}
+.dock__bouton:hover { background: var(--paper-hi); border-color: var(--rule-soft); }
+.dock__bouton.is-on { background: var(--ink); color: var(--paper-hi); border-color: var(--ink); }
+.dock__glyphe { font-size: 14px; }
+.dock__pastille {
+  min-width: 16px; height: 16px; display: grid; place-items: center; padding: 0 3px;
+  background: var(--stamp); color: var(--paper-hi);
+  font-family: var(--font-form); font-size: 10px;
+}
+.dock__bouton.is-on .dock__pastille { background: var(--paper-hi); color: var(--ink); }
+
+/* Le conseil : un seul, jamais une liste. Repliable, parce que le
+   joueur qui sait ce qu'il fait n'a pas à le lire chaque semaine. */
+.conseil {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 9px;
+  border-left: 1px solid var(--rule); padding-left: 14px;
+}
+.conseil__bascule {
+  flex-shrink: 0; width: 24px; height: 24px; padding: 0;
+  background: none; border: 1px solid var(--rule); color: var(--note);
+  cursor: pointer; font-size: 13px;
+}
+.conseil__bascule:hover { background: var(--paper-hi); }
+.conseil__texte {
+  margin: 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.35;
+  overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+}
+.conseil.is-replie { flex: 0; }
+
+/* Écrans étroits : le tiroir prend toute la largeur plutôt que de
+   comprimer le plateau à rien. */
+@media (max-width: 900px) {
+  .tiroir { right: 0; width: 100%; }
+  .panneau { width: 100%; }
+  .barre { grid-template-columns: 1fr auto; row-gap: 8px; }
+  .objectif { grid-column: 1 / -1; order: 3; }
+  .dock__bouton { padding: 6px 8px; font-size: 0; gap: 0; }
+  .dock__glyphe { font-size: 16px; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   Le week-end, même règle : un écran, zéro défilement
+   ──────────────────────────────────────────────────────────────
+   Mesuré avant : 952 px pour 800 sur l'onglet du week-end,
+   1 194 sur le logement, 1 825 sur l'argent — c'est-à-dire deux
+   écrans et demi de contenu pour une fenêtre.
+
+   Même coque que le bureau : barre, corps qui prend le reste, et
+   c'est la COLONNE qui défile, jamais la page. La vignette du
+   logement reste fixe à gauche : elle n'a rien à faire défiler et
+   sert de repère pendant qu'on lit la liste d'à côté.
+   ══════════════════════════════════════════════════════════════ */
+body:has(.appart) { overflow: hidden; }
+.app:has(.appart) { max-width: none; margin: 0; padding: 0; height: 100dvh; }
+.appart {
+  max-width: none; margin: 0; padding: 8px 10px 10px;
+  height: 100dvh;
+  display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 8px;
+  overflow: hidden;
+}
+.topbar--appart { padding: 7px 14px; }
+.appart__body { margin-top: 0; min-height: 0; align-items: stretch; }
+.appart__scene { position: static; overflow-y: auto; }
+.appart__col { min-height: 0; overflow-y: auto; padding-right: 4px; align-content: start; }

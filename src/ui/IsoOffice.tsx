@@ -243,7 +243,7 @@ export function IsoOffice({
                 width="48"
                 height="76"
                 fill="transparent"
-                className="iso-hit"
+                className="iso-hit iso-hit--personne"
                 onClick={() => onSelect({ kind: 'colleague', id: c.id })}
               />
             )}
