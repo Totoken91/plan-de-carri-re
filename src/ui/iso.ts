@@ -98,7 +98,14 @@ export type Selection =
   | null;
 
 // ── Zones du plateau ─────────────────────────────────────────
-export type ZoneId = 'manager' | 'cafe' | 'meeting' | 'archive' | 'detente' | 'player';
+export type ZoneId =
+  | 'manager'
+  | 'cafe'
+  | 'meeting'
+  | 'archive'
+  | 'detente'
+  | 'toilettes'
+  | 'player';
 
 export interface IsoZone {
   id: ZoneId;
@@ -124,6 +131,11 @@ export const ZONES: IsoZone[] = [
     d: 2.2,
     action: 'bosser',
   },
+  // Étroites, coincées entre ton poste et le coin détente : c'est
+  // exactement la place qu'occupent des toilettes dans un open space, et
+  // c'est aussi ce qui les rend praticables — on y passe devant tout le
+  // monde.
+  { id: 'toilettes', label: 'Toilettes', gx: 8.75, gy: 9.6, w: 1.25, d: 2.4 },
   {
     id: 'detente',
     label: 'Coin détente',

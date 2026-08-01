@@ -17,6 +17,9 @@
 // qu'elles divergent.
 // ─────────────────────────────────────────────────────────────
 import type { GameState } from './schema';
+import { balance } from '@data/balance';
+import { appartDeDepart } from '@data/vieprivee';
+import { coursInitiaux } from '@engine/marche';
 
 export const SAVE_VERSION = 8;
 export const SLOT_COUNT = 3;
@@ -131,14 +134,36 @@ export function firstFreeSlot(): number | undefined {
 
 // ── Reprise d'une sauvegarde d'avant les dossiers ────────────
 /**
+ * Complète une sauvegarde ancienne avec ce que le schéma a gagné depuis.
+ *
+ * Se contenter de retamponner le numéro de version marchait tant que
+ * seul l'emballage bougeait. Ce n'est plus le cas : une partie d'avant
+ * l'argent n'a ni trésorerie, ni logement, ni cours de bourse, et le
+ * premier vendredi soir irait chercher le loyer d'un logement
+ * `undefined`. On donne donc à ces champs leur valeur de début de partie
+ * — le joueur reprend sa carrière là où il l'avait laissée, avec une vie
+ * privée qui commence.
+ */
+function completerSchema(state: GameState): GameState {
+  const s = state as Partial<GameState> & GameState;
+  s.phase ??= 'bureau';
+  s.weekendPointsRemaining ??= 0;
+  s.argent ??= balance.argentDepart;
+  s.appart ??= { niveau: appartDeDepart().id, meubles: [] };
+  s.portefeuille ??= {};
+  s.cours ??= coursInitiaux();
+  s.depensesSemaine ??= {};
+  return s;
+}
+
+/**
  * Une partie en cours ne doit pas disparaître parce que le format a
  * changé. La sauvegarde unique de l'ancienne version est déplacée dans
  * le premier dossier — une seule fois, puis l'ancienne clé est retirée.
  *
  * Elle porte la version précédente, donc `readRaw` la refuserait : on la
- * relit ici sans contrôle de version et on la marque à la version
- * courante. C'est légitime tant que le schéma n'a pas changé — et il n'a
- * pas changé, seul l'emballage a bougé.
+ * relit ici sans contrôle de version, on la complète, et on la marque à
+ * la version courante.
  */
 export function migrateLegacySave(): boolean {
   try {
@@ -148,6 +173,7 @@ export function migrateLegacySave(): boolean {
     const state = JSON.parse(raw) as GameState;
     if (!state?.player || typeof state.week !== 'number') return false;
     if (readSlot(0)) return false; // un dossier occupe déjà la place
+    completerSchema(state);
     state.version = SAVE_VERSION;
     writeSlot(0, state);
     return true;

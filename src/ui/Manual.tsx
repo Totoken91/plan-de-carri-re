@@ -10,6 +10,9 @@
 import { catalog } from '@data/content';
 import { balance } from '@data/balance';
 import { MAX_DEFAUTS, TRAIT_BUDGET, defauts, qualites } from '@data/traits';
+import { apparts, casino, titres } from '@data/vieprivee';
+import { euros } from '@engine/argent';
+import { ORDRES } from '@engine/subordonnes';
 
 export function Manual({
   onClose,
@@ -155,6 +158,122 @@ export function Manual({
                 </div>
               ))}
             </dl>
+          </section>
+
+          <section>
+            <h3 className="section-title">L’argent</h3>
+            <p>
+              Tu es payé chaque vendredi, et ton loyer est prélevé dans la foulée.
+              Le salaire dépend du rang — c’est la deuxième raison de monter :
+              {' '}
+              {catalog.ranks.map((r) => `${r.name} ${euros(r.salaire)}`).join(' · ')}.
+            </p>
+            <p>
+              <b>Rien ne se paie à crédit.</b> Une dépense que tu ne peux pas
+              couvrir est refusée, pas empruntée. Ce que l’argent achète : des
+              cafés, des dîners, des cadeaux, un avocat qui fait baisser la
+              suspicion, un détective qui trouve un secret, et — à partir de
+              Confirmé — un cabinet extérieur qui conclura qu’un poste est
+              redondant.
+            </p>
+          </section>
+
+          <section>
+            <h3 className="section-title">La vie privée</h3>
+            <p>
+              L’<b>attachement</b> n’est pas l’opinion. On peut plaire à quelqu’un
+              qui vous méprise professionnellement, et l’inverse arrive tout
+              autant. Trois paliers : flirt à {balance.romance.seuilFlirt},
+              liaison à {balance.romance.seuilLiaison}, et de quoi officialiser à
+              {' '}{balance.romance.seuilCouple}.
+            </p>
+            <p>
+              Ce qui relie les deux, c’est le risque. Tant que ça reste discret,
+              rien de public ne bouge. Dès que ça se sait — surpris aux toilettes,
+              ou officialisé —, les autres histoires en cours s’effondrent,
+              l’étage baisse de {Math.abs(balance.romance.toilettesScandaleOpinion)}{' '}
+              d’opinion et les RH ouvrent un dossier. La Combine réduit le risque
+              de se faire surprendre.
+            </p>
+            <p>
+              Officialiser garantit un plancher d’opinion de{' '}
+              {balance.romance.conjointOpinionPlancher} et rend{' '}
+              {balance.romance.conjointNerfs} nerfs par semaine. C’est le marché :
+              un allié qui ne te lâchera pas, contre la discrétion, pour toujours.
+              Une histoire qu’on n’entretient pas perd{' '}
+              {Math.abs(balance.romance.derivePasEntretenue)} par semaine.
+            </p>
+          </section>
+
+          <section>
+            <h3 className="section-title">Le week-end</h3>
+            <p>
+              Après le bilan du vendredi, tu rentres chez toi. Le week-end a ses
+              propres points d’action, et c’est le logement qui décide combien :
+            </p>
+            <dl className="manual__dl">
+              {apparts.map((a) => (
+                <div key={a.id} className="manual__pair">
+                  <dt>{a.nom}</dt>
+                  <dd>
+                    {a.prix === 0 ? 'de départ' : euros(a.prix)} · loyer{' '}
+                    {euros(a.loyer)} · {a.pointsWeekend} action(s) · {a.places} meuble(s)
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <p>
+              Déménager, ce n’est donc pas acheter un décor : c’est acheter du
+              temps libre. Le mobilier majore ce que les activités rapportent,
+              sans jamais leur ajouter un effet qu’elles n’avaient pas.
+            </p>
+          </section>
+
+          <section>
+            <h3 className="section-title">Bourse et casino</h3>
+            <p>
+              Deux façons opposées de faire travailler ton salaire.{' '}
+              <b>La bourse</b> ({titres.map((t) => t.symbole).join(', ')}) a une
+              dérive positive : sur la durée, y laisser son argent rapporte. Ce
+              qu’elle prend en échange, c’est de la liquidité — un titre ne paie
+              pas un cabinet de conseil le jour où il en faudrait un.
+            </p>
+            <p>
+              <b>Le casino</b> a une espérance négative sur ses{' '}
+              {casino.length} tables, et elle est affichée sur chacune. Il ne sert
+              pas à s’enrichir : il sert à convertir un petit capital en une
+              petite chance d’un gros capital, tout de suite. Joué depuis ton
+              poste, il fait monter la suspicion — gagné ou perdu.
+            </p>
+          </section>
+
+          <section>
+            <h3 className="section-title">Ton périmètre</h3>
+            <p>
+              À partir de Junior, des collègues d’un rang strictement inférieur
+              peuvent t’être rattachés ({catalog.ranks
+                .filter((r) => r.subordonnes > 0)
+                .map((r) => `${r.name} ${r.subordonnes}`)
+                .join(' · ')}
+              ). Tu leur donnes un ordre par semaine :
+            </p>
+            <dl className="manual__dl">
+              {ORDRES.map((o) => (
+                <div key={o.kind} className="manual__pair">
+                  <dt>
+                    {o.icone} {o.nom}
+                  </dt>
+                  <dd>{o.description}</dd>
+                </div>
+              ))}
+            </dl>
+            <p>
+              Un subordonné n’obéit pas parce qu’il t’aime : il obéit parce que tu
+              notes son évaluation. Son opinion ne décide donc pas s’il exécute —
+              elle décide ce qu’il raconte ensuite. En dessous de{' '}
+              {balance.subordonnes.trahisonSousOpinion} d’opinion, il fait quand
+              même ce que tu demandes, puis il va le raconter aux RH.
+            </p>
           </section>
 
           <section>

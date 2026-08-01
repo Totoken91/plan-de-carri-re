@@ -15,7 +15,7 @@ import { getOpportunity } from '@data/content';
 import { useGame } from './useGame';
 import { StatBar, OpinionPip } from './Bits';
 import { archetypeName, planViews } from './selectors';
-import { BlocDepenses, BlocRomance, BlocSubordonne } from './ViePrivee';
+import { BlocDepenses, BlocRomance, BlocSubordonne, BlocToilettes } from './ViePrivee';
 import { zoneById, type Selection, type ZoneId } from './iso';
 
 const ZONE_TEXT: Record<ZoneId, string> = {
@@ -26,6 +26,8 @@ const ZONE_TEXT: Record<ZoneId, string> = {
   archive: 'Papier, imprimante, et tout ce que les gens y oublient. Un fouineur patient y trouve son bonheur.',
   player: 'Ton poste. La voie propre : produire, se rendre indispensable, monter sans faire de vagues.',
   detente: 'Canapé, plante verte, silence. Le seul endroit où tes Nerfs remontent.',
+  toilettes:
+    'Deux cabines, un sèche-mains bruyant, et la seule porte de l’étage qui ferme. Ce n’est pas un hasard si tout le monde sait ce qui s’y passe.',
 };
 
 // ── Bouton d'action auto-documenté ───────────────────────────
@@ -277,11 +279,12 @@ export function Inspector({
           </button>
         </header>
         <p className="inspector__flavor">{ZONE_TEXT[zone.id]}</p>
+        {zone.id === 'toilettes' && <BlocToilettes onResult={run} />}
         {opt ? (
           <div className="actlist">
             <ActionButton opt={opt} blocked={blocked} onRun={() => run(store.perform(opt.id))} />
           </div>
-        ) : (
+        ) : zone.id === 'toilettes' ? null : (
           <p className="muted">Rien à y faire directement — mais il s’y passe des choses.</p>
         )}
       </aside>

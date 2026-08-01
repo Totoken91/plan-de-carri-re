@@ -68,6 +68,8 @@ export interface BoardTheme {
     boisFonce: string;
     metal: string;
     metalFonce: string;
+    /** Cloison OPAQUE : le seul volume plein d'un étage tout en verre. */
+    cloisonPleine: string;
     metalClair: string;
     ecranDos: string;
     ecranPied: string;

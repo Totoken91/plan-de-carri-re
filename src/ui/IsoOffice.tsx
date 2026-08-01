@@ -17,7 +17,6 @@ import { useGame } from './useGame';
 import {
   Bins,
   CoffeeMachine,
-  Credenza,
   Desk,
   Figure,
   FlipChart,
@@ -532,9 +531,56 @@ export function IsoOffice({
             onClick={() => onSelect({ kind: 'zone', id: 'player' })}
           />
 
-          {/* angle mort entre ton poste et le coin détente */}
-          <Credenza gx={8.85} gy={10.15} w={1} d={0.7} />
-          <Plant gx={9.35} gy={10.5} scale={0.72} />
+          {/* Les toilettes, entre ton poste et le coin détente. Deux
+              cloisons pleines et une porte : c'est le seul volume OPAQUE
+              de l'étage, et c'est tout ce qu'il faut lui dire. Le reste
+              du plateau est en verre — c'est le contraste qui explique à
+              lui seul pourquoi les gens y vont. */}
+          <g className="iso-wc">
+            <IsoBox gx={8.72} gy={9.62} w={0.14} d={2.36} h={62} color={T.structure.cloisonPleine} />
+            <IsoBox gx={9.88} gy={9.62} w={0.14} d={2.36} h={62} color={T.structure.cloisonPleine} />
+            <IsoBox gx={8.72} gy={9.62} w={1.3} d={0.14} h={62} color={T.structure.cloisonPleine} />
+            {/* La porte : encastrée, plus sombre, avec sa poignée. */}
+            <IsoBox gx={8.98} gy={11.86} w={0.72} d={0.1} h={48} color={T.structure.boisFonce} />
+            {(() => {
+              const p = iso(9.7, 11.9, 26);
+              return <circle cx={p.x} cy={p.y} r="1.6" fill={T.structure.metal} />;
+            })()}
+            {/* Le pictogramme sur la porte. Une seule glyphe, mais c'est
+                elle qui nomme la pièce à l'échelle de jeu. */}
+            {(() => {
+              const p = iso(9.34, 11.86, 40);
+              return (
+                <text className="iso-wc__signe" x={p.x} y={p.y} textAnchor="middle">
+                  🚻
+                </text>
+              );
+            })()}
+            {/* On clique la PORTE, pas la pièce.
+                Les toilettes sont le seul volume fermé de l'étage : en
+                projection isométrique, leurs cloisons recouvrent
+                entièrement leur propre sol, donc la surface cliquable
+                générique des zones était rigoureusement inatteignable.
+                Une zone qu'on ne peut pas sélectionner n'existe pas. */}
+            {(() => {
+              const p = iso(9.34, 11.9, 22);
+              return (
+                <rect
+                  x={p.x - 22}
+                  y={p.y - 44}
+                  width="44"
+                  height="52"
+                  fill="transparent"
+                  className="iso-hit"
+                  onClick={() => onSelect({ kind: 'zone', id: 'toilettes' })}
+                />
+              );
+            })()}
+          </g>
+          {isSelectedZone('toilettes') && (
+            <polygon points={quad(8.75, 9.6, 1.25, 2.4)} className="iso-zone-ring" filter="url(#glowSelect)" />
+          )}
+          <Plant gx={10.05} gy={11.7} scale={0.66} />
 
           <Sofa gx={10.6} gy={10.4} />
           <Plant gx={13.2} gy={10.2} />

@@ -355,3 +355,77 @@ export function BlocDepenses({
     </section>
   );
 }
+
+// ── Les toilettes, vues depuis le plateau ────────────────────
+/**
+ * Le lieu ne fait rien tout seul : il liste qui on peut y emmener.
+ *
+ * C'est le seul endroit du jeu où une zone propose une action VISANT
+ * quelqu'un. Elle est donc rendue ici plutôt que dans le catalogue
+ * d'actions d'un collègue : le joueur qui clique sur les toilettes se
+ * demande « avec qui », pas « quoi faire ».
+ */
+export function BlocToilettes({ onResult }: { onResult: (r: ActionResult) => void }) {
+  const { state, store } = useGame();
+  const bloque =
+    state.status !== 'playing' || state.actionPointsRemaining < 1 || !!state.pendingEvent;
+  const risque = Math.round(Math.max(6, R.toilettesRisque - state.player.stats.combine * 0.35));
+
+  const candidats = state.colleagues.filter(
+    (c) => c.alive && romanceDe(c).niveau >= R.seuilLiaison && romanceDe(c).statut !== 'ex',
+  );
+  const amorces = state.colleagues.filter(
+    (c) => c.alive && romanceDe(c).niveau > 0 && romanceDe(c).niveau < R.seuilLiaison,
+  );
+
+  return (
+    <section className="inspector__block">
+      <h3 className="section-title">Avec qui ?</h3>
+
+      {candidats.length === 0 && (
+        <p className="muted">
+          Personne. Il faut au moins {R.seuilLiaison} d’attachement — c’est-à-dire
+          une liaison, pas un flirt.
+          {amorces.length > 0 && (
+            <>
+              {' '}
+              Le plus avancé : <b>{amorces.sort((a, b) => romanceDe(b).niveau - romanceDe(a).niveau)[0]!.name}</b>{' '}
+              ({romanceDe(amorces.sort((a, b) => romanceDe(b).niveau - romanceDe(a).niveau)[0]!).niveau}).
+            </>
+          )}
+        </p>
+      )}
+
+      <div className="actlist actlist--tight">
+        {candidats.map((c) => (
+          <button
+            key={c.id}
+            className="act act--danger"
+            disabled={bloque}
+            onClick={() => onResult(store.performToilettes(c.id))}
+          >
+            <span className="act__icon">🚻</span>
+            <span className="act__body">
+              <span className="act__head">
+                <span className="act__label">{c.name}</span>
+                <span className="act__chance">{risque}% de se faire prendre</span>
+              </span>
+              <span className="act__summary">
+                +{R.toilettesGain} attachement, +{R.toilettesSuspicion} suspicion. Si ça se
+                voit : +{R.toilettesScandaleSuspicion} de plus, l’étage baisse de{' '}
+                {Math.abs(R.toilettesScandaleOpinion)} d’opinion, et tes autres histoires
+                s’arrêtent net.
+              </span>
+            </span>
+            <span className="act__cost">1 PA</span>
+          </button>
+        ))}
+      </div>
+
+      <p className="muted romance__note">
+        La Combine réduit le risque : {R.toilettesRisque} % de base, {risque} % au vu de
+        la tienne.
+      </p>
+    </section>
+  );
+}

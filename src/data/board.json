@@ -38,7 +38,8 @@
           "meeting": "#c7d2d6",
           "archive": "#d4d0c4",
           "player": "#c3d4ca",
-          "detente": "#c9d4c3"
+          "detente": "#c9d4c3",
+          "toilettes": "#c9ccd2"
         }
       },
       "mur": {
@@ -65,7 +66,8 @@
         "ecranPied": "#a6aeb6",
         "ecranArete": "#9ea7b0",
         "tissu": "#9fa8b4",
-        "tissuFonce": "#9da7b4"
+        "tissuFonce": "#9da7b4",
+        "cloisonPleine": "#d6d2c9"
       },
       "habillage": {
         "papier": "#efede9",
@@ -266,7 +268,8 @@
           "meeting": "#1f2b33",
           "archive": "#2b2820",
           "player": "#1e3029",
-          "detente": "#26302a"
+          "detente": "#26302a",
+          "toilettes": "#1e242c"
         }
       },
       "mur": {
@@ -293,7 +296,8 @@
         "ecranPied": "#434c59",
         "ecranArete": "#272d37",
         "tissu": "#3d4654",
-        "tissuFonce": "#333a45"
+        "tissuFonce": "#333a45",
+        "cloisonPleine": "#232a33"
       },
       "habillage": {
         "papier": "#e8e4d9",

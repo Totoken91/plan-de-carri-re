@@ -1422,3 +1422,7 @@ body {
   .appart__body { grid-template-columns: 1fr; }
   .appart__scene { position: static; }
 }
+
+/* Le pictogramme des toilettes : petit, mais c'est lui qui nomme la
+   pièce à l'échelle de jeu. */
+.iso-wc__signe { font-size: 13px; }

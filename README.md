@@ -44,6 +44,11 @@ src/
     scapegoat.ts   Montage d'un bouc émissaire, péremption, consommation
                    à l'audit
     preview.ts     Chiffre l'impact d'une action AVANT le clic (lecture seule)
+    argent.ts      Salaire, loyer, et l'interdiction du crédit
+    romance.ts     Attachement, statuts, jalousie, ébruitement
+    subordonnes.ts Périmètre hiérarchique et ordres hebdomadaires
+    marche.ts      Bourse (dérive positive) et casino (espérance négative)
+    vieprivee.ts   Résolveur commun des dépenses et des activités
     week.ts        Orchestration de la résolution du vendredi
   state/
     schema.ts      TOUTES les interfaces typées (le contrat moteur ↔ contenu)
@@ -56,6 +61,11 @@ src/
     ranks.json         Échelle hiérarchique
     colleagues.json    Roster de départ
     balance.json       Tuning mécanique des actions de base (magnitudes)
+    depenses.json      Ce que l'argent achète, au bureau comme chez soi
+    appart.json        Logements et mobilier
+    weekend.json       Activités du week-end
+    marche.json        Titres cotés et tables de casino
+    vieprivee.ts       Charge les catalogues ci-dessus
     content.ts         Charge et expose les catalogues typés (point d'entrée unique)
   engine/
     opportunities.ts   Génère/résout les opportunités de la semaine
@@ -68,6 +78,9 @@ src/
     IsoOffice.tsx      Le plateau : placement des objets et ordre de rendu
     Inspector.tsx      Panneau contextuel : actions auto-documentées et chiffrées
     DeskScreen.tsx     Écran principal (HUD, plateau, agenda, journal)
+    ViePrivee.tsx      Blocs d'inspecteur : romance, périmètre, dépenses
+    Appart.tsx         Le week-end : chez soi, logement, mobilier
+    Marche.tsx         Bourse et casino (même panneau au bureau et à la maison)
     ...                événement, résolution hebdo, game over
 ```
 
@@ -429,6 +442,103 @@ visible.
 aux questions qu'on se pose trois semaines plus tard. Tout ce qui y est
 chiffré est lu dans `data/` : un équilibrage qui change met le manuel à
 jour tout seul.
+
+## L'argent, et les quatre systèmes qu'il porte
+
+Le salaire est la colonne vertébrale de tout ce qui suit. Une règle le
+tient : **rien ne se paie à crédit**. Une dépense qu'on ne peut pas
+couvrir est refusée, jamais empruntée — un jeu où l'on peut toujours agir
+n'a pas de décisions, seulement des séquences.
+
+Le salaire dépend du rang, le loyer du logement, et la paie est calculée
+**avant** le prélèvement : personne ne doit se faire expulser le jour
+d'une promotion. `Effect` a gagné `argent`, donc n'importe quel événement
+existant peut désormais coûter ou rapporter sans une ligne de moteur.
+
+### La vie privée : l'attachement n'est pas l'opinion
+
+C'est la décision qui structure `engine/romance.ts`. On peut plaire à
+quelqu'un qui vous méprise professionnellement, et l'inverse arrive tout
+autant. Les confondre aurait ramené la romance à « une opinion qui monte
+plus vite », c'est-à-dire à rien.
+
+Ce qui les relie, c'est le **risque**. Tant que ça reste discret, une
+liaison ne produit aucun effet public. Dès que ça se sait — surpris aux
+toilettes, ou officialisé — trois choses arrivent d'un coup : les autres
+histoires en cours s'effondrent (la jalousie), l'étage a un avis, les RH
+ont un dossier. C'est la règle qui rend le harem coûteux **sans
+l'interdire** : on peut mener trois histoires de front, mais la première
+qui s'ébruite fait tomber les deux autres.
+
+Officialiser garantit un plancher d'opinion et rend des nerfs chaque
+semaine. Le marché est explicite : un allié définitif contre la
+discrétion, pour toujours.
+
+Les toilettes sont le seul volume **opaque** d'un étage entièrement
+vitré, et c'est tout ce qu'il faut dire pour expliquer pourquoi les gens
+y vont. Conséquence technique qu'il a fallu corriger : en projection
+isométrique, leurs cloisons recouvrent intégralement leur propre sol, donc
+la surface cliquable générique des zones était rigoureusement
+inatteignable. On clique la **porte**. Une zone qu'on ne peut pas
+sélectionner n'existe pas.
+
+### Le week-end : une phase, pas un écran de plus
+
+Après le bilan du vendredi, on rentre chez soi, avec une monnaie de temps
+distincte. Le logement n'est donc pas un décor : il détermine combien
+d'actions le week-end contient. **Déménager, c'est acheter du temps
+libre.** Le mobilier majore ce que les activités rapportent sans jamais
+leur ajouter un effet qu'elles n'avaient pas — un canapé rend une soirée
+plus efficace, il n'invente pas une soirée.
+
+Le week-end appartient à la semaine qui *commence*, pas à celle qui
+finit : les opportunités de lundi sont déjà tirées quand on rentre, et ce
+qu'on fait à la maison peut les préparer.
+
+### Bourse et casino : deux formes mathématiques opposées
+
+Elles ne racontent pas la même chose, donc elles n'ont pas la même
+espérance, et c'est délibéré.
+
+- **La bourse** a une dérive positive. C'est un placement, pas un pari.
+  Ce qu'elle prend en échange, c'est de la *liquidité* — un titre ne paie
+  pas un cabinet de conseil le jour où il en faudrait un. Le cours vit
+  dans l'état sauvegardé : sinon il repartirait de zéro à chaque
+  rechargement et le joueur pourrait relancer le dé en rouvrant l'onglet.
+  Marche multiplicative, pour qu'une variation de 5 % pèse pareil sur un
+  titre à 12 € et sur un titre à 210 €.
+- **Le casino** a une espérance négative sur les quatre tables, écrite en
+  clair sur chacune. Ce n'est pas de la pédagogie, c'est de la lisibilité :
+  une table dont on ne peut pas évaluer le prix n'est pas un choix, c'est
+  un bouton. Il ne sert jamais à s'enrichir — il sert à convertir un petit
+  capital en une petite chance d'un gros capital, tout de suite. Joué
+  depuis le poste de travail, il fait monter la suspicion, gagné ou perdu :
+  c'est ce qui lui donne une place **dans** le jeu plutôt qu'à côté.
+
+### Les subordonnés : déléguer met le sale boulot dans une bouche
+
+Un subordonné n'exécute pas parce qu'il t'aime, il exécute parce que tu
+notes son entretien annuel. Son opinion ne décide donc **pas** s'il obéit
+— elle décide s'il le fait bien, et surtout ce qu'il raconte ensuite.
+
+La trahison est vérifiée *après* l'effet et ne l'annule pas : le
+subordonné fait ce qu'on lui a demandé, puis va le raconter. C'est plus
+juste, et bien plus désagréable, que « il refuse » — on obtient ce qu'on
+voulait et on le paie quand même.
+
+### Le résolveur commun
+
+Une dépense coûte de l'argent et des points d'action ; une activité coûte
+des points de week-end. Tout le reste — le jet, l'application de
+l'`Effect`, le texte d'issue — est identique, donc n'existe **qu'une
+fois** (`engine/vieprivee.ts`). Deux résolveurs séparés auraient fini par
+diverger sur un détail comme l'ordre entre paiement et effet, et cette
+divergence-là ne se voit qu'en jeu, tard.
+
+L'ordre est d'ailleurs le point délicat : on vérifie tout, on **paie**,
+puis on applique. Payer après l'effet laisserait passer une dépense
+insolvable ; appliquer avant de vérifier la cible laisserait un effet
+orphelin.
 
 ## Ajouter du contenu
 
