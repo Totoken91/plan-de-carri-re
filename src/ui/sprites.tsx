@@ -126,6 +126,16 @@ const HEAD_R = 11;
 const EDGE = 3;
 
 /**
+ * Rayon des mains flottantes.
+ *
+ * 3,8 pour une tête de 11 : assez pour se lire à l'échelle de jeu, pas
+ * assez pour concurrencer le visage. Au-delà de 4,5, la silhouette
+ * devient trois boules de taille comparable et on ne sait plus où
+ * regarder.
+ */
+const HAND_R = 3.8;
+
+/**
  * Ombre propre d'une sphère.
  *
  * Le terminateur d'une sphère est une ELLIPSE, pas une droite : il passe
@@ -629,7 +639,8 @@ export function Figure({
     const shoulders = pick('shoulders');
     const head = pick('head');
     const kit = pick('kit');
-    const hand = pick('hand');
+    const mug = pick('mug');
+    const mains = [pick('main0'), pick('main1')];
     if (!hip || !torso || !head || !kit) return;
 
     const motion = makeMotion(phaseOf(id));
@@ -650,10 +661,19 @@ export function Figure({
         shoulders.setAttribute('rx', (p.shoulderHalf + p.shoulderR).toFixed(2));
         shoulders.setAttribute('ry', p.shoulderR.toFixed(2));
       }
-      // L'IK ne dessine plus de membre : elle place ce que la main tient.
-      if (hand) {
+      // L'IK ne dessine aucun membre : elle place les MAINS, qui flottent
+      // détachées du corps. Le coude qu'elle calcule sert quand même —
+      // c'est lui qui donne aux mains une trajectoire d'avant-bras et
+      // non un simple va-et-vient horizontal.
+      for (let i = 0; i < mains.length; i++) {
+        const el = mains[i];
+        if (!el) continue;
+        const m = p.arms[i]!.c;
+        el.setAttribute('transform', `translate(${m.x.toFixed(2)},${m.y.toFixed(2)})`);
+      }
+      if (mug) {
         const m = p.arms[0]!.c;
-        hand.setAttribute('transform', `translate(${m.x.toFixed(2)},${m.y.toFixed(2)})`);
+        mug.setAttribute('transform', `translate(${m.x.toFixed(2)},${m.y.toFixed(2)})`);
       }
       head.setAttribute(
         'transform',
@@ -733,9 +753,25 @@ export function Figure({
         )}
       </g>
 
+      {/* LES MAINS, à la Rayman : deux boules détachées du corps.
+          Elles ne sont PAS dans le filtre de fusion — c'est tout le
+          principe. Fusionnées, elles auraient reformé des bras, et des
+          bras sur un buste de cette proportion donnent des moignons.
+          Détachées, la lecture est immédiate et le mouvement devient
+          lisible : ce sont elles qui portent la cadence de frappe.
+
+          Chacune a sa copie d'ombre décalée, comme le corps, sinon elles
+          flottent sans poids au-dessus d'un buste qui, lui, en a un. */}
+      {[0, 1].map((i) => (
+        <g key={i} data-r={`main${i}`}>
+          <circle cx="2.2" cy="0.6" r={HAND_R} fill={skinDark} />
+          <circle r={HAND_R} fill={skin} />
+        </g>
+      ))}
+
       {look.mug && (
         /* Tenue par la main gauche, dont la position vient de l'IK. */
-        <g data-r="hand">
+        <g data-r="mug">
           <rect x="-3" y="-3" width="5.4" height="5.8" fill={T.personnages.tasse} />
           <rect x="2.4" y="-1.6" width="1.9" height="2.6" fill={T.personnages.tasse} />
           <ellipse cy="-3" rx="2.7" ry="1" fill={T.personnages.tasseCafe} />

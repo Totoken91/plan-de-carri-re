@@ -80,14 +80,14 @@ export function solveIK2(
 // ── Postures : l'animation dit ce qui se trame ───────────────
 // C'est le point qui rend le système utile au jeu et pas seulement
 // joli : la silhouette trahit l'intention avant qu'on lise l'étiquette.
-export type Posture = 'travail' | 'penche' | 'bavard' | 'guet' | 'ouvert' | 'avachi';
+export type Posture = 'travail' | 'concentre' | 'bavard' | 'guet' | 'ouvert' | 'avachi';
 
 /** Traduit une intention de jeu en attitude corporelle. */
 export function postureFor(intentKind: string | undefined): Posture {
   switch (intentKind) {
     case 'plot':
     case 'scheme':
-      return 'penche';
+      return 'concentre';
     case 'gossip':
       return 'bavard';
     case 'watch':
@@ -114,13 +114,25 @@ interface PostureTuning {
 // Amplitudes. Premier réglage : la tête bougeait de 0,66 px à l'écran —
 // mesuré, invisible. Une échelle d'affichage de ~1,15 px par unité SVG
 // impose de viser 3 à 6 unités pour qu'un mouvement se VOIE.
+//
+// L'INCLINAISON A ÉTÉ RETIRÉE, et c'est un vrai renoncement : elle
+// servait à trahir l'intention par la silhouette. Sauf qu'à 4,5 px de
+// penché, le comploteur ne « se penchait » pas — il basculait vers la
+// caméra comme s'il allait tomber de sa chaise, et une posture qui fait
+// rire n'informe plus de rien. Les personnages se tiennent donc droits.
+//
+// Ce que l'intention devient : une CADENCE et un REGARD. Un comploteur
+// tape peu (typing 0,7 contre 2,6) et regarde beaucoup autour de lui
+// (headSway 3,4), tout en restant assis normalement. C'est plus discret
+// et, à l'usage, plus juste — les gens qui manigancent au bureau ne se
+// contorsionnent pas, ils lèvent la tête plus souvent que les autres.
 const TUNING: Record<Posture, PostureTuning> = {
-  travail: { lean: 1.5, typing: 2.6, headSway: 1.6, bounce: 1.4, nod: 1.0, armSpread: 0, rate: 1.35 },
-  penche: { lean: 4.5, typing: 0.7, headSway: 3.4, bounce: 0.7, nod: 0.3, armSpread: -1.4, rate: 0.65 },
-  bavard: { lean: -0.5, typing: 1.1, headSway: 4.2, bounce: 1.9, nod: 1.6, armSpread: 2.6, rate: 1.05 },
-  guet: { lean: 0.5, typing: 0.3, headSway: 5.0, bounce: 0.5, nod: 0.2, armSpread: -0.8, rate: 0.5 },
-  ouvert: { lean: -1.2, typing: 1.4, headSway: 2.4, bounce: 1.5, nod: 0.9, armSpread: 2.0, rate: 0.9 },
-  avachi: { lean: 2.2, typing: 0.9, headSway: 1.8, bounce: 0.9, nod: 0.5, armSpread: 0.4, rate: 0.7 },
+  travail: { lean: 0.5, typing: 2.6, headSway: 1.6, bounce: 1.4, nod: 1.0, armSpread: 0, rate: 1.35 },
+  concentre: { lean: 0.3, typing: 0.7, headSway: 3.4, bounce: 0.7, nod: 0.3, armSpread: -1.4, rate: 0.65 },
+  bavard: { lean: 0, typing: 1.1, headSway: 4.2, bounce: 1.9, nod: 1.6, armSpread: 2.6, rate: 1.05 },
+  guet: { lean: 0.2, typing: 0.3, headSway: 5.0, bounce: 0.5, nod: 0.2, armSpread: -0.8, rate: 0.5 },
+  ouvert: { lean: 0, typing: 1.4, headSway: 2.4, bounce: 1.5, nod: 0.9, armSpread: 2.0, rate: 0.9 },
+  avachi: { lean: 0.4, typing: 0.9, headSway: 1.8, bounce: 0.9, nod: 0.5, armSpread: 0.4, rate: 0.7 },
 };
 
 // ── Le squelette ─────────────────────────────────────────────

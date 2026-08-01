@@ -40,6 +40,7 @@ import {
   GRID_D,
   GRID_W,
   VIEW_BOX,
+  ASSISE,
   ZONES,
   iso,
   opportunityPoint,
@@ -203,14 +204,14 @@ export function IsoOffice({
   const rowB = posts.filter((p) => p.slot.gy >= 6);
 
   // Ton poste : même recul que les autres sièges (voir seatOf).
-  const me = iso(6.2 + DESK_W / 2, 10.6 - 0.95);
+  const me = iso(6.2 + DESK_W / 2, 10.6 - 0.95, ASSISE);
   const playerLook = { ...state.player.appearance };
 
   const renderRow = (row: typeof posts) => (
     <>
       {row.map(({ c, i, slot }) => {
         const seat = seatOf(i);
-        const p = iso(seat.gx, seat.gy);
+        const p = iso(seat.gx, seat.gy, ASSISE);
         return (
           <g key={`post-${i}`}>
             <OfficeChair gx={slot.gx + DESK_W / 2 - 0.36} gy={slot.gy - 1.32} />
@@ -646,7 +647,7 @@ export function IsoOffice({
         {state.colleagues.map((c, i) => {
           if (!c.alive || !c.intent) return null;
           const seat = seatOf(i);
-          const p = iso(seat.gx, seat.gy);
+          const p = iso(seat.gx, seat.gy, ASSISE);
           return <IntentBubble key={`int-${c.id}`} c={c} x={p.x} y={p.y - 66} />;
         })}
 

@@ -191,6 +191,19 @@ export const DESK_SLOTS: DeskSlot[] = [
  * est calibré pour que le buste et la tête passent au-dessus du plateau
  * du bureau : les personnages doivent rester lisibles, c'est eux le jeu.
  */
+/**
+ * Hauteur de l'assise d'une chaise, en unités d'écran.
+ *
+ * Le plateau du siège est un `IsoBox` de 4 d'épaisseur posé à z = 11 :
+ * sa face supérieure est donc à 15. Les personnages étaient dessinés à
+ * z = 0, c'est-à-dire les hanches quinze pixels SOUS le siège — d'où
+ * l'impression, juste, qu'ils ne sont pas tout à fait assis dessus.
+ *
+ * La position au sol, elle, était déjà bonne : le centre du siège tombe
+ * exactement sur `seatOf`. Il ne manquait que la hauteur.
+ */
+export const ASSISE = 15;
+
 export function seatOf(index: number): DeskSlot {
   const slot = DESK_SLOTS[index] ?? DESK_SLOTS[DESK_SLOTS.length - 1]!;
   return { gx: slot.gx + DESK_W / 2, gy: slot.gy - 0.95 };
@@ -233,8 +246,14 @@ export function opportunityPoint(place: string, seatIndex: number | undefined): 
       return zoneCenter('player');
     case 'target': {
       if (seatIndex !== undefined && seatIndex >= 0) {
+        // À CÔTÉ de la personne, pas dessus. Tant que les personnages
+        // étaient dessinés au sol, une balise posée sur leur case
+        // flottait au-dessus de leur tête ; depuis qu'ils sont assis
+        // quinze pixels plus haut, elle leur tombait en plein visage.
+        // Un décalage latéral vaut mieux qu'une hauteur à retoucher
+        // chaque fois que la pose change.
         const s = seatOf(seatIndex);
-        return iso(s.gx, s.gy - 0.4);
+        return iso(s.gx + 0.9, s.gy + 0.15);
       }
       return zoneCenter('meeting');
     }
