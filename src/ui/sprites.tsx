@@ -148,11 +148,99 @@ function discShadow(r: number, fill: string) {
   );
 }
 
+// ── Coiffures ────────────────────────────────────────────────
+//
+// Le défaut d'avant : la calotte était un arc de CERCLE de rayon R —
+// exactement le crâne — refermé par une corde presque horizontale. Deux
+// erreurs dans un seul geste.
+//
+//  · Des cheveux ont une ÉPAISSEUR. Épouser le crâne au millimètre près,
+//    c'est dessiner ce qui se moule sur un crâne : un bonnet de bain. Il
+//    faut sortir de R, et pas uniformément — la masse est plus haute sur
+//    le dessus que sur les tempes.
+//
+//  · Une naissance de cheveux n'est jamais un arc régulier. Elle a deux
+//    golfes aux tempes et redescend au milieu du front. C'est cette
+//    irrégularité, et elle seule, qui fait lire « cheveux » plutôt que
+//    « couvre-chef ».
+//
+// Tout part donc de deux courbes composables : une COQUE (le dessus, plus
+// large que le crâne) et une LISIÈRE (la naissance). Chaque style choisit
+// son épaisseur de coque et sa lisière, plus ce qui tombe derrière.
+
 /**
- * Coiffure, en DEUX couches. Une capuche, une frange ou un carré passent
- * DERRIÈRE le crâne ; seule la calotte passe devant. Tout peindre après
- * la tête revenait à masquer le visage — c'est ce qui rendait le
- * capuchonné entièrement noir.
+ * Point de raccord entre la coque et la lisière : sur le CÔTÉ du crâne,
+ * à hauteur d'oreille, et un demi-pixel EN DEHORS du disque.
+ *
+ * C'était l'autre moitié de l'erreur du bonnet de bain. En posant ce
+ * raccord à la tempe (x ±10,2 pour un crâne de rayon 11), la masse
+ * s'arrêtait à l'intérieur de la silhouette : il restait un liseré de
+ * peau tout autour, et la coiffure se lisait comme un couvre-chef posé
+ * dessus. Des cheveux DÉBORDENT du crâne et redescendent devant les
+ * oreilles.
+ */
+const COTE_X = HEAD_R + 0.6;
+const COTE_Y = 2.2;
+
+/**
+ * Bord extérieur de la masse, côté DROIT → côté GAUCHE par le dessus.
+ * `t` est l'épaisseur ajoutée au crâne : 0,8 pour des cheveux ras, 3,4
+ * pour une masse bouclée.
+ */
+function coque(t: number): string {
+  // La base part de R + 0,6 — l'épaisseur d'une coupe à la tondeuse — et
+  // `t` s'ajoute à partir de là. Avec un plancher plus haut, une coupe
+  // ras avait autant de volume qu'un carré et les treize coiffures se
+  // ressemblaient toutes.
+  const flanc = 11.9 + t * 0.85;
+  const cote = 11.6 + t;
+  const haut = 12.2 + t;
+  return (
+    `Q ${flanc} -2.6 ${cote} -7.4` +
+    ` Q ${cote - 2.4} ${-haut} 0 ${-haut}` +
+    ` Q ${-(cote - 2.4)} ${-haut} ${-cote} -7.4` +
+    ` Q ${-flanc} -2.6 ${-COTE_X} ${COTE_Y}`
+  );
+}
+
+/** Naissance des cheveux, côté GAUCHE → côté DROIT. */
+const LISIERES = {
+  /** Deux golfes et une pointe au milieu du front. */
+  classique: `Q -10.6 -3 -6.2 -4.6 Q -2.6 -5.8 0 -3.6 Q 2.6 -5.8 6.2 -4.6 Q 10.6 -3 ${COTE_X} ${COTE_Y}`,
+  /** Bas sur le front, à peine ondulée : une frange. */
+  basse: `Q -10.8 0.4 -6 -0.4 Q -2.4 -1 0 -0.2 Q 2.6 -1 6 -0.6 Q 10.8 0.2 ${COTE_X} ${COTE_Y}`,
+  /** Haute et creusée : le front a gagné du terrain. */
+  haute: `Q -10.4 -5 -5.4 -7.4 Q -2 -8.6 0 -6.6 Q 2 -8.6 5.4 -7.4 Q 10.4 -5 ${COTE_X} ${COTE_Y}`,
+  /** Raie sur le côté : la mèche traverse le front en diagonale. */
+  cote: `Q -10.8 -1.6 -7 -3.2 Q -2 -6 3.6 -6.4 Q 8.6 -6.2 ${COTE_X} ${COTE_Y}`,
+} as const;
+
+const masse = (t: number, lisiere: string) =>
+  `M ${COTE_X} ${COTE_Y} ${coque(t)} ${lisiere} Z`;
+
+/**
+ * Reflet sur la masse. Les cheveux ne sont pas mats : c'est la seule
+ * surface du personnage qui accroche vraiment la lumière, et sans ce
+ * reflet la coiffure redevient une découpe de papier. Placé en haut à
+ * GAUCHE, comme tout le reste de l'éclairage du jeu.
+ */
+function reflet(t: number, color: string) {
+  const e = t * 0.55;
+  return (
+    <path
+      d={`M ${-8.6 - e} ${-5 - e * 0.4}
+          Q ${-11 - e} ${-10.4 - e} ${-2.6} ${-12.2 - e}
+          Q ${-6.2 - e * 0.4} ${-9.2 - e * 0.6} ${-5.6 - e * 0.3} ${-4.4 - e * 0.3} Z`}
+      fill={shade(color, 1.26)}
+      opacity="0.75"
+    />
+  );
+}
+
+/**
+ * Coiffure, en DEUX couches. Ce qui tombe (capuche, nattes, carré,
+ * chignon) passe DERRIÈRE le crâne ; seule la masse du dessus passe
+ * devant. Tout peindre après la tête revenait à masquer le visage.
  */
 function Hair({
   style,
@@ -165,16 +253,7 @@ function Hair({
 }) {
   const R = HEAD_R;
   const dark = shade(color, 0.74);
-
-  /**
-   * Calotte du crâne. Sa limite basse n'est PAS une droite : une corde
-   * horizontale en travers du front se lit comme un bord de casquette,
-   * pas comme une naissance de cheveux. Une courbe qui remonte
-   * légèrement au milieu suffit à faire un front.
-   */
-  const cap = (
-    <path d={`M ${-R} -1.5 A ${R} ${R} 0 0 1 ${R} -1.5 Q 0 -6 ${-R} -1.5 Z`} fill={color} />
-  );
+  const mid = shade(color, 0.88);
 
   if (layer === 'back') {
     switch (style) {
@@ -193,41 +272,116 @@ function Hair({
           />
         );
       case 'rideau':
-        // Deux mèches tombantes, bouts arrondis.
+        // Deux mèches longues. Elles ne tombent pas droit : elles suivent
+        // la joue, s'écartent, et s'affinent en bout. Deux rectangles à
+        // bouts ronds faisaient des bandes de scotch.
+        //
+        // Elles doivent tomber EN DEHORS du disque du crâne : posées à
+        // ±12 elles passaient derrière la tête et on n'en voyait rien.
         return (
           <g fill={dark}>
             <path
-              d={`M ${-R - 1} -3 L ${-R - 1} 8.5 Q ${-R - 1} 12 ${-R + 1.5} 12
-                  Q ${-R + 4} 12 ${-R + 4} 8.5 L ${-R + 4} -3 Z`}
+              d={`M -12.6 -5 Q -15.6 3 -13.6 11 Q -12.8 15.6 -9.6 15.2
+                  Q -7 14.6 -7.8 10.4 Q -9.4 3 -8 -5 Z`}
             />
             <path
-              d={`M ${R + 1} -3 L ${R + 1} 8.5 Q ${R + 1} 12 ${R - 1.5} 12
-                  Q ${R - 4} 12 ${R - 4} 8.5 L ${R - 4} -3 Z`}
+              d={`M 12.6 -5 Q 15.6 3 13.6 11 Q 12.8 15.6 9.6 15.2
+                  Q 7 14.6 7.8 10.4 Q 9.4 3 8 -5 Z`}
             />
           </g>
         );
       case 'carre':
-        // Un carré, donc une masse franche — mais dont la nuque
-        // s'arrondit. À angles vifs, c'était une boîte derrière la tête.
+        // Un carré, donc une masse franche — mais qui se resserre sous la
+        // mâchoire avant de retomber. À bords parallèles, c'était une
+        // boîte posée derrière la tête.
         return (
           <path
-            d={`M ${-R - 1.5} -2 L ${-R - 1.5} 5.5
-                Q ${-R - 1.5} 9 ${-R + 2} 9
-                L ${R - 2} 9 Q ${R + 1.5} 9 ${R + 1.5} 5.5
-                L ${R + 1.5} -2 Z`}
+            d={`M -12.4 -3 Q -13.6 3.4 -12 8.4 Q -11.4 11 -8.4 11.2
+                L 8.4 11.2 Q 11.4 11 12 8.4 Q 13.6 3.4 12.4 -3 Z`}
             fill={dark}
           />
         );
       case 'queue':
-        // Une queue de cheval retombe : elle se galbe et son bout
-        // s'affine. Le quadrilatère d'avant faisait un éclat de verre
-        // planté dans le crâne.
+        // Une queue de cheval : l'élastique la pince, puis elle s'évase
+        // et retombe en pointe. Le quadrilatère d'avant faisait un éclat
+        // de verre planté dans le crâne.
+        return (
+          <g>
+            <path
+              d={`M ${R - 4} -5.5 Q ${R + 2} -6 ${R + 3} -3
+                  Q ${R + 8} 1 ${R + 5.5} 7.5 Q ${R + 4} 11.5 ${R + 1} 11
+                  Q ${R + 4} 5 ${R + 1.5} 0 Q ${R} -2.5 ${R - 4} -2 Z`}
+              fill={dark}
+            />
+            <ellipse cx={R - 1.4} cy="-3.4" rx="2" ry="2.6" fill={mid} />
+          </g>
+        );
+      case 'chignon':
+        // Un chignon : une boule nouée haut derrière, plus quelques
+        // cheveux ramenés qui la rejoignent.
+        return (
+          <g>
+            <ellipse cx="1" cy="-14.4" rx="5.6" ry="4.8" fill={dark} />
+            <ellipse cx="-0.6" cy="-15.4" rx="2.8" ry="2" fill={mid} opacity="0.8" />
+            <path d={`M -11 -6 Q -6 -13 2 -13.6 L 2 -8 Z`} fill={dark} opacity="0.85" />
+          </g>
+        );
+      case 'bouffante':
+        // Volume qui descend jusqu'aux épaules, en s'élargissant : c'est
+        // l'évasement qui fait la coiffure, une masse à flancs parallèles
+        // ferait un casque.
         return (
           <path
-            d={`M ${R - 3} -4
-                Q ${R + 5.5} -2.5 ${R + 5} 3
-                Q ${R + 4.5} 8.5 ${R + 0.5} 9.5
-                Q ${R + 2.5} 4 ${R - 3} 1.5 Z`}
+            d={`M -13 -5 Q -16.4 3 -14.6 10 Q -13.8 13.6 -10 13.4
+                Q -5 12.6 0 12.8 Q 5 12.6 10 13.4
+                Q 13.8 13.6 14.6 10 Q 16.4 3 13 -5 Z`}
+            fill={dark}
+          />
+        );
+      case 'tresses':
+        // Deux nattes, et pas trois : celle du milieu tombait derrière le
+        // crâne, donc n'existait pas à l'écran. Les nœuds successifs sont
+        // ce qui les distingue d'un simple boudin — sans eux, ce sont des
+        // cordes.
+        return (
+          <g fill={dark}>
+            {[-12.4, 12.4].map((x) => (
+              <g key={x} transform={`translate(${x},-3)`}>
+                <path
+                  d={`M -3 -1 Q -4 7 -2.4 14.6 Q -1.6 17.6 0 17.6 Q 1.6 17.6 2.4 14.6
+                      Q 4 7 3 -1 Z`}
+                />
+                {[3.2, 7.6, 12, 15.6].map((y) => (
+                  <ellipse key={y} cy={y} rx="3.3" ry="1.2" fill={mid} opacity="0.5" />
+                ))}
+              </g>
+            ))}
+          </g>
+        );
+      case 'boucle':
+        // Une masse bouclée se lit à son CONTOUR : festonné, jamais lisse.
+        // Une grosse ellipse bien nette ferait un ballon. Les boucles sont
+        // donc posées SUR le bord, à cheval dessus, pas à l'intérieur.
+        return (
+          <g fill={dark}>
+            <ellipse cy="-3" rx="14.2" ry="13" />
+            {[
+              [-13.6, -6.6], [-13, 1.4], [-9.4, 7.4], [-3.4, 10], [3.4, 10],
+              [9.4, 7.4], [13, 1.4], [13.6, -6.6], [-10.4, -12.6], [-3.6, -15.4],
+              [3.6, -15.4], [10.4, -12.6],
+            ].map(([x, y]) => (
+              <circle key={`${x},${y}`} cx={x} cy={y} r="3.8" />
+            ))}
+          </g>
+        );
+      case 'crete':
+        // Côtés rasés : derrière, presque rien — juste la nuque dégradée.
+        return <path d="M -9.5 -2 Q -10.5 4 -7.5 6.5 L 7.5 6.5 Q 10.5 4 9.5 -2 Z" fill={dark} opacity="0.8" />;
+      case 'frange':
+        return (
+          <path
+            d={`M -12 -4 Q -13.4 2.6 -11.8 7.6 Q -11.2 10 -8.6 10.2
+                L 8.6 10.2 Q 11.2 10 11.8 7.6 Q 13.4 2.6 12 -4 Z`}
             fill={dark}
           />
         );
@@ -238,13 +392,29 @@ function Hair({
 
   switch (style) {
     case 'capuche':
-      // Devant : le bord du capuchon sur le front, en croissant régulier.
+      // Devant : le BORD du capuchon, c'est-à-dire un anneau de tissu qui
+      // encadre le visage et redescend le long des joues. La version
+      // précédente n'était qu'un croissant posé sur le front : elle
+      // laissait un grand ovale de peau nu et le personnage avait l'air
+      // de porter une visière. Lui a le droit d'être lisse — c'est du
+      // tissu, pas des cheveux.
       return (
-        <path
-          d={`M ${-R - 0.5} -3 A ${R + 0.5} ${R + 0.5} 0 0 1 ${R + 0.5} -3 Q 0 -8.5 ${-R - 0.5} -3 Z`}
-          fill={shade(color, 1.35)}
-        />
+        <g>
+          <path
+            d={`M -14 4.5 Q -14.8 -8 -6 -13 Q 0 -15.2 6 -13 Q 14.8 -8 14 4.5
+                L 10 4.5 Q 10.6 -6.2 4.6 -9.6 Q 0 -11.4 -4.6 -9.6
+                Q -10.6 -6.2 -10 4.5 Z`}
+            fill={shade(color, 1.28)}
+          />
+          {/* Le cordon : deux embouts qui pendent. C'est le détail qui dit
+              « sweat à capuche » plutôt que « cape ». */}
+          <g fill={shade(color, 1.5)}>
+            <rect x="-8.2" y="4" width="1.5" height="4.6" rx="0.7" />
+            <rect x="6.7" y="4" width="1.5" height="3.4" rx="0.7" />
+          </g>
+        </g>
       );
+
     case 'degarni':
       // Ce qui reste sur un crâne dégarni : deux golfes qui remontent le
       // long des tempes. La bande doit rester MINCE et coller au bord du
@@ -263,16 +433,132 @@ function Hair({
           />
         </g>
       );
-    case 'plaque':
-      // Plaqués en arrière, avec la mèche qui dépasse sur la tempe.
+
+    case 'rase':
+      // Ras : la masse la plus fine du jeu (0,8), mais elle SORT quand
+      // même du crâne, et sa lisière est haute et creusée. C'est ce qui
+      // sépare une coupe courte d'un bonnet.
       return (
-        <g fill={color}>
-          {cap}
-          <path d={`M ${-R + 1.5} -5.5 Q ${-R - 3} -2.5 ${-R + 1} -0.5 Q ${-R + 1.5} -3 ${-R + 1.5} -5.5 Z`} />
+        <g>
+          <path d={masse(0.15, LISIERES.haute)} fill={color} />
+          {reflet(0.15, color)}
         </g>
       );
+
+    case 'plaque':
+      // Plaqués en arrière : masse fine, lisière haute, et les stries du
+      // peigne qui filent vers l'arrière — sans elles, « plaqué » ne se
+      // distingue pas de « ras ». Elles suivent la courbure du crâne et
+      // restent FINES : trop larges, elles se lisaient comme une tache de
+      // gel plutôt que comme un coup de peigne.
+      return (
+        <g>
+          <path d={masse(1.4, LISIERES.haute)} fill={color} />
+          <g stroke={shade(color, 1.32)} strokeWidth="0.6" strokeLinecap="round" fill="none" opacity="0.5">
+            <path d="M -8.6 -6.4 Q -4.6 -10.6 1.6 -11.4" />
+            <path d="M -9.4 -4.2 Q -5.6 -8.8 0.2 -9.8" />
+            <path d="M -9.8 -2 Q -6.8 -6.6 -1.6 -8" />
+          </g>
+        </g>
+      );
+
+    case 'crete':
+      // La crête : côtés rasés très courts, et une masse relevée qui
+      // dépasse franchement du crâne sur le dessus.
+      return (
+        <g>
+          <path d={masse(0.4, LISIERES.haute)} fill={mid} />
+          <path
+            d={`M -6.4 -8.4 Q -8 -15.6 -1.6 -18.4 Q 2.2 -20 5.4 -17.6
+                Q 2.6 -16 1.6 -12.6 Q 0.8 -9.6 1.4 -7.6 Z`}
+            fill={color}
+          />
+          <path
+            d={`M -3.4 -10.6 Q -4.2 -15.4 0.4 -17.2 Q -1.4 -14.4 -1.2 -10.4 Z`}
+            fill={shade(color, 1.3)}
+            opacity="0.7"
+          />
+        </g>
+      );
+
+    case 'frange':
+      // Une frange, c'est une lisière BASSE sur le front, découpée en
+      // mèches. Les séparations valent autant que la ligne elle-même :
+      // sans elles, c'est un bandeau.
+      return (
+        <g>
+          <path d={masse(2.2, LISIERES.basse)} fill={color} />
+          <g stroke={dark} strokeWidth="0.85" strokeLinecap="round" fill="none" opacity="0.6">
+            <path d="M -6.8 -8.8 L -5.6 -1" />
+            <path d="M -1.6 -9.6 L -1 -0.6" />
+            <path d="M 3.8 -9.2 L 4.2 -1.2" />
+          </g>
+          {reflet(2.2, color)}
+        </g>
+      );
+
+    case 'boucle':
+      // Devant : même principe, un contour festonné. Les boucles sont
+      // posées SUR la silhouette — à l'intérieur de la masse elles se
+      // fondaient dans l'aplat et on retrouvait un ballon lisse.
+      return (
+        <g fill={color}>
+          <path d={masse(2.6, LISIERES.classique)} />
+          {[
+            [-12.6, -3.4], [-10.6, -9.6], [-5.6, -13.6], [1.2, -14.8],
+            [7.6, -12.6], [11.8, -7.6], [13, -1.6], [-11.6, 1.6], [12, 1.8],
+          ].map(([x, y]) => (
+            <circle key={`${x},${y}`} cx={x} cy={y} r="3.4" />
+          ))}
+          {/* Deux boucles qui mordent sur le front : sans elles la lisière
+              redevient un arc régulier. */}
+          <circle cx="-5.4" cy="-4.6" r="2.6" />
+          <circle cx="4.6" cy="-4.8" r="2.6" />
+          <circle cx="-6.4" cy="-10" r="2.6" fill={shade(color, 1.26)} opacity="0.55" />
+        </g>
+      );
+
+    case 'chignon':
+      return (
+        <g>
+          <path d={masse(1.4, LISIERES.cote)} fill={color} />
+          {/* Les cheveux tirés vers l'arrière : des stries qui convergent
+              vers le nœud, pas un aplat. */}
+          <g stroke={shade(color, 1.28)} strokeWidth="0.85" strokeLinecap="round" fill="none" opacity="0.5">
+            <path d="M -8.6 -4.6 Q -4.4 -10.4 2.6 -12.2" />
+            <path d="M -8 -1.8 Q -3 -8.4 3 -10.4" />
+          </g>
+        </g>
+      );
+
+    case 'bouffante':
+      return (
+        <g>
+          <path d={masse(3, LISIERES.cote)} fill={color} />
+          {reflet(3, color)}
+        </g>
+      );
+
+    case 'tresses':
+      return (
+        <g>
+          <path d={masse(1.4, LISIERES.classique)} fill={color} />
+          {/* La raie du milieu : sans elle, trois nattes sortent d'un
+              casque uni. */}
+          <path d="M 0 -13.2 L 0 -4.2" stroke={dark} strokeWidth="0.9" strokeLinecap="round" opacity="0.65" />
+        </g>
+      );
+
+    case 'carre':
+    case 'queue':
+    case 'rideau':
     default:
-      return cap;
+      return (
+        <g>
+          <path d={masse(2, LISIERES.classique)} fill={color} />
+          {reflet(2, color)}
+        </g>
+      );
   }
 }
 

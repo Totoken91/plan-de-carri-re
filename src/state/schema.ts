@@ -205,7 +205,20 @@ export interface Rank {
 // Purement descriptive : le moteur ne la lit jamais, seul le rendu s'en
 // sert. Elle vit malgré tout dans l'état parce qu'elle est sauvegardée
 // avec la partie — c'est le personnage du joueur, pas un réglage.
-export type HairStyle = 'plaque' | 'queue' | 'capuche' | 'rideau' | 'degarni' | 'carre';
+export type HairStyle =
+  | 'plaque'
+  | 'queue'
+  | 'capuche'
+  | 'rideau'
+  | 'degarni'
+  | 'carre'
+  | 'rase'
+  | 'frange'
+  | 'boucle'
+  | 'chignon'
+  | 'crete'
+  | 'tresses'
+  | 'bouffante';
 
 export type Gender = 'homme' | 'femme';
 

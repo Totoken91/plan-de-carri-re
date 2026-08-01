@@ -25,28 +25,56 @@
   ],
   "hairStyles": [
     {
+      "id": "rase",
+      "label": "Ras"
+    },
+    {
       "id": "plaque",
       "label": "Plaqués"
+    },
+    {
+      "id": "frange",
+      "label": "Frange"
     },
     {
       "id": "carre",
       "label": "Carré"
     },
     {
+      "id": "bouffante",
+      "label": "Bouffante"
+    },
+    {
+      "id": "boucle",
+      "label": "Bouclés"
+    },
+    {
       "id": "queue",
       "label": "Queue de cheval"
+    },
+    {
+      "id": "chignon",
+      "label": "Chignon"
+    },
+    {
+      "id": "tresses",
+      "label": "Nattes"
+    },
+    {
+      "id": "crete",
+      "label": "Crête"
     },
     {
       "id": "rideau",
       "label": "Rideau"
     },
     {
-      "id": "capuche",
-      "label": "Capuche"
-    },
-    {
       "id": "degarni",
       "label": "Dégarni"
+    },
+    {
+      "id": "capuche",
+      "label": "Capuche"
     }
   ],
   "shirts": [

@@ -132,7 +132,7 @@
           "fayot": {
             "shirt": "#b87a1e",
             "hair": "#5a3f2c",
-            "hairStyle": "queue",
+            "hairStyle": "chignon",
             "glasses": true,
             "mug": true,
             "gender": "femme",
@@ -165,7 +165,7 @@
           "nouveau": {
             "shirt": "#5c6577",
             "hair": "#8a6440",
-            "hairStyle": "carre",
+            "hairStyle": "frange",
             "glasses": false,
             "gender": "femme",
             "build": 0.52
@@ -360,7 +360,7 @@
           "fayot": {
             "shirt": "#cf9a3c",
             "hair": "#5a3f2c",
-            "hairStyle": "queue",
+            "hairStyle": "chignon",
             "glasses": true,
             "mug": true,
             "gender": "femme",
@@ -393,7 +393,7 @@
           "nouveau": {
             "shirt": "#8b93a6",
             "hair": "#8a6440",
-            "hairStyle": "carre",
+            "hairStyle": "frange",
             "glasses": false,
             "gender": "femme",
             "build": 0.52
