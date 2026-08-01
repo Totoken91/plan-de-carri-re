@@ -200,7 +200,21 @@ modelé tourne à la bouillie ; on joue donc ce que le SVG fait le mieux —
 des formes nettes en aplat. Tête ronde volontairement grosse posée sans
 cou, buste en dôme sans bras, deux tons par forme séparés par une arête
 franche (jamais de dégradé), et un visage réduit à deux points. Ce qui
-distingue un archétype, c'est sa **silhouette** : capuche, queue de
+**Les formes n'ont pas de bord droit.** Un plan qui traverse une boule
+se lit comme une fissure, pas comme une ombre : l'ombre propre du visage
+suit un **terminateur elliptique** qui passe par les deux pôles du crâne
+et s'écarte au maximum à l'équateur. Même logique pour les cheveux — une
+corde horizontale en travers du front donne un bord de casquette, une
+nuque coupée à l'équerre donne une boîte posée derrière la tête. Toutes
+les limites de coiffure sont des courbes.
+
+Ces défauts ne se voyaient pas au premier jet parce qu'on les regardait
+dans le jeu, à 20 px. Ils sautent aux yeux dès qu'on cadre sur une tête
+— d'où la règle : **on vérifie une coiffure en gros plan ET à la taille
+où elle vit**. Une couronne de cheveux réussie au zoom peut se lire comme
+un casque audio à l'échelle de jeu, ce qui est arrivé au Vétéran.
+
+Ce qui distingue un archétype, c'est sa **silhouette** : capuche, queue de
 cheval, cheveux en rideau, crâne dégarni. Un collègue doit se reconnaître
 à 20 px, réduit à sa découpe.
 

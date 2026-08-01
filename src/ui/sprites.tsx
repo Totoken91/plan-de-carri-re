@@ -132,13 +132,30 @@ function hashOf(id: string): number {
 // charme. Le repère de la tête est LOCAL — son centre est (0, 0) — pour
 // que le groupe entier puisse être déplacé et incliné d'un coup.
 const HEAD_R = 11;
-/** Abscisse de l'arête d'ombre : décalée du centre, jamais pile au milieu. */
+/** Largeur de la zone éclairée avant que l'ombre ne commence, à l'équateur. */
 const EDGE = 3;
 
-/** Moitié droite d'un disque, coupée net à l'abscisse EDGE. */
+/**
+ * Ombre propre d'une sphère.
+ *
+ * Le terminateur d'une sphère est une ELLIPSE, pas une droite : il passe
+ * par les deux pôles et s'écarte au maximum à l'équateur. La version
+ * précédente coupait le disque par une corde verticale — à 20 px ça
+ * passait, mais dès qu'on zoome, le visage se lit comme fendu en deux
+ * par une fissure. C'est ça, le « truc chelou » : un plan qui traverse
+ * une boule.
+ *
+ * Ici l'ombre est le croissant compris entre le bord droit du disque et
+ * ce terminateur elliptique. Elle enveloppe le volume au lieu de le
+ * trancher, et disparaît naturellement en haut et en bas du crâne.
+ */
 function discShadow(r: number, fill: string) {
-  const dy = Math.sqrt(r * r - EDGE * EDGE);
-  return <path d={`M ${EDGE} ${-dy} A ${r} ${r} 0 0 1 ${EDGE} ${dy} Z`} fill={fill} />;
+  return (
+    <path
+      d={`M 0 ${-r} A ${r} ${r} 0 0 1 0 ${r} A ${EDGE} ${r} 0 0 0 0 ${-r} Z`}
+      fill={fill}
+    />
+  );
 }
 
 /**
@@ -156,38 +173,73 @@ function Hair({
   color: string;
   layer: 'back' | 'front';
 }) {
+  const R = HEAD_R;
   const dark = shade(color, 0.74);
+
+  /**
+   * Calotte du crâne. Sa limite basse n'est PAS une droite : une corde
+   * horizontale en travers du front se lit comme un bord de casquette,
+   * pas comme une naissance de cheveux. Une courbe qui remonte
+   * légèrement au milieu suffit à faire un front.
+   */
   const cap = (
-    <path d={`M ${-HEAD_R} ${-2.5} A ${HEAD_R} ${HEAD_R} 0 0 1 ${HEAD_R} ${-2.5} Z`} fill={color} />
+    <path d={`M ${-R} -1.5 A ${R} ${R} 0 0 1 ${R} -1.5 Q 0 -6 ${-R} -1.5 Z`} fill={color} />
   );
 
   if (layer === 'back') {
     switch (style) {
       case 'capuche':
         // La capuche encadre : une coque large derrière, rien devant.
+        // Sa base est arrondie — coupée net, elle donnait une cloche
+        // posée sur les épaules.
         return (
           <path
-            d={`M ${-HEAD_R - 3.5} 7 A ${HEAD_R + 3.5} ${HEAD_R + 3.5} 0 0 1 ${HEAD_R + 3.5} 7
-                L ${HEAD_R + 2} 11 L ${-HEAD_R - 2} 11 Z`}
+            d={`M ${-R - 3.5} 5
+                A ${R + 3.5} ${R + 3.5} 0 0 1 ${R + 3.5} 5
+                Q ${R + 3} 11 ${R - 2.5} 12.5
+                Q 0 14.5 ${-R + 2.5} 12.5
+                Q ${-R - 3} 11 ${-R - 3.5} 5 Z`}
             fill={color}
           />
         );
       case 'rideau':
+        // Deux mèches tombantes, bouts arrondis.
         return (
           <g fill={dark}>
-            <path d={`M ${-HEAD_R - 1} -3 L ${-HEAD_R - 1} 12 L ${-HEAD_R + 4} 12 L ${-HEAD_R + 4} -3 Z`} />
-            <path d={`M ${HEAD_R + 1} -3 L ${HEAD_R + 1} 12 L ${HEAD_R - 4} 12 L ${HEAD_R - 4} -3 Z`} />
+            <path
+              d={`M ${-R - 1} -3 L ${-R - 1} 8.5 Q ${-R - 1} 12 ${-R + 1.5} 12
+                  Q ${-R + 4} 12 ${-R + 4} 8.5 L ${-R + 4} -3 Z`}
+            />
+            <path
+              d={`M ${R + 1} -3 L ${R + 1} 8.5 Q ${R + 1} 12 ${R - 1.5} 12
+                  Q ${R - 4} 12 ${R - 4} 8.5 L ${R - 4} -3 Z`}
+            />
           </g>
         );
       case 'carre':
+        // Un carré, donc une masse franche — mais dont la nuque
+        // s'arrondit. À angles vifs, c'était une boîte derrière la tête.
         return (
-          <path d={`M ${-HEAD_R - 1.5} -2 L ${-HEAD_R - 1.5} 8 L ${HEAD_R + 1.5} 8 L ${HEAD_R + 1.5} -2 Z`}
-            fill={dark} />
+          <path
+            d={`M ${-R - 1.5} -2 L ${-R - 1.5} 5.5
+                Q ${-R - 1.5} 9 ${-R + 2} 9
+                L ${R - 2} 9 Q ${R + 1.5} 9 ${R + 1.5} 5.5
+                L ${R + 1.5} -2 Z`}
+            fill={dark}
+          />
         );
       case 'queue':
+        // Une queue de cheval retombe : elle se galbe et son bout
+        // s'affine. Le quadrilatère d'avant faisait un éclat de verre
+        // planté dans le crâne.
         return (
-          <path d={`M ${HEAD_R - 2} -4 L ${HEAD_R + 5} 1 L ${HEAD_R + 3} 9 L ${HEAD_R - 3} 2 Z`}
-            fill={dark} />
+          <path
+            d={`M ${R - 3} -4
+                Q ${R + 5.5} -2.5 ${R + 5} 3
+                Q ${R + 4.5} 8.5 ${R + 0.5} 9.5
+                Q ${R + 2.5} 4 ${R - 3} 1.5 Z`}
+            fill={dark}
+          />
         );
       default:
         return null;
@@ -196,24 +248,37 @@ function Hair({
 
   switch (style) {
     case 'capuche':
-      // Devant : juste le bord du capuchon sur le front.
+      // Devant : le bord du capuchon sur le front, en croissant régulier.
       return (
-        <path d={`M ${-HEAD_R - 0.5} -4 A ${HEAD_R + 0.5} ${HEAD_R + 0.5} 0 0 1 ${HEAD_R + 0.5} -4
-                  L ${HEAD_R - 1} -6 A ${HEAD_R} ${HEAD_R} 0 0 0 ${-HEAD_R + 1} -6 Z`}
-          fill={shade(color, 1.35)} />
+        <path
+          d={`M ${-R - 0.5} -3 A ${R + 0.5} ${R + 0.5} 0 0 1 ${R + 0.5} -3 Q 0 -8.5 ${-R - 0.5} -3 Z`}
+          fill={shade(color, 1.35)}
+        />
       );
     case 'degarni':
+      // Ce qui reste sur un crâne dégarni : deux golfes qui remontent le
+      // long des tempes. La bande doit rester MINCE et coller au bord du
+      // crâne — épaisse et posée à hauteur d'oreille, elle se lisait
+      // comme un casque audio à 20 px, ce qui est la taille où ces
+      // personnages vivent réellement.
       return (
         <g fill={color}>
-          <path d={`M ${-HEAD_R} -1 A ${HEAD_R} ${HEAD_R} 0 0 1 ${-HEAD_R + 4} -8.5 L ${-HEAD_R + 4} -1 Z`} />
-          <path d={`M ${HEAD_R} -1 A ${HEAD_R} ${HEAD_R} 0 0 0 ${HEAD_R - 4} -8.5 L ${HEAD_R - 4} -1 Z`} />
+          <path
+            d={`M ${-R + 0.4} 1.5 Q ${-R - 0.9} -5.5 ${-R + 5.4} -10
+                Q ${-R + 4.6} -6.5 ${-R + 2.8} -1.5 Q ${-R + 1.7} 1.4 ${-R + 0.4} 1.5 Z`}
+          />
+          <path
+            d={`M ${R - 0.4} 1.5 Q ${R + 0.9} -5.5 ${R - 5.4} -10
+                Q ${R - 4.6} -6.5 ${R - 2.8} -1.5 Q ${R - 1.7} 1.4 ${R - 0.4} 1.5 Z`}
+          />
         </g>
       );
     case 'plaque':
+      // Plaqués en arrière, avec la mèche qui dépasse sur la tempe.
       return (
-        <g>
+        <g fill={color}>
           {cap}
-          <path d={`M ${-HEAD_R + 1} -6 L ${-HEAD_R - 2.5} -1 L ${-HEAD_R + 2} -1.5 Z`} fill={color} />
+          <path d={`M ${-R + 1.5} -5.5 Q ${-R - 3} -2.5 ${-R + 1} -0.5 Q ${-R + 1.5} -3 ${-R + 1.5} -5.5 Z`} />
         </g>
       );
     default:
