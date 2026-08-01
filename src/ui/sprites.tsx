@@ -12,17 +12,17 @@
 // Face +gy éclairée, face +gx dans l'ombre, liseré clair sur les
 // contours tournés vers la lumière.
 // ─────────────────────────────────────────────────────────────
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { Appearance, Colleague, HairStyle } from '@state/schema';
 import { theme as T } from '@data/board';
 import { DESK_D, DESK_W, box, iso, panelAlongX, quad } from './iso';
 import {
-  DEFAULT_RIG as RIG,
   makeMotion,
   phaseOf,
   poseFigure,
   postureFor,
   registerPainter,
+  rigFor,
 } from './figure';
 
 // ── Ombrage ──────────────────────────────────────────────────
@@ -338,6 +338,11 @@ export function Figure({
   const skinDark = shade(skin, 0.76);
   const shirtDark = shade(look.shirt, 0.72);
   const bodyId = `body-${id}`;
+  // La silhouette dépend du personnage, pas d'un gabarit unique.
+  // Mémoïsé : un objet neuf à chaque rendu ferait démonter et
+  // réenregistrer le peintre en boucle, et l'animation repartirait de
+  // zéro à chaque image.
+  const RIG = useMemo(() => rigFor(look.gender, look.build), [look.gender, look.build]);
 
   useEffect(() => {
     const root = ref.current;
@@ -383,7 +388,7 @@ export function Figure({
         `translate(${p.chest.x.toFixed(2)},${p.chest.y.toFixed(2)})`,
       );
     });
-  }, [id, posture]);
+  }, [id, posture, RIG]);
 
   // Le corps : quelques primitives, une seule couleur. `currentColor`
   // permet d'en tirer la copie d'ombre par <use>, sans dupliquer ni les

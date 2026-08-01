@@ -207,6 +207,8 @@ export interface Rank {
 // avec la partie — c'est le personnage du joueur, pas un réglage.
 export type HairStyle = 'plaque' | 'queue' | 'capuche' | 'rideau' | 'degarni' | 'carre';
 
+export type Gender = 'homme' | 'femme';
+
 export interface Appearance {
   skin: string;
   hair: string;
@@ -214,6 +216,10 @@ export interface Appearance {
   shirt: string;
   tie?: string; // absent = pas de cravate
   glasses: boolean;
+  /** Équilibre épaules / hanches de la silhouette. */
+  gender: Gender;
+  /** Corpulence, 0 (mince) → 1 (corpulent). Indépendante du genre. */
+  build: number;
 }
 
 // ── Traits de personnage ─────────────────────────────────────

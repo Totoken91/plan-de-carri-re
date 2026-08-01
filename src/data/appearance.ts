@@ -4,7 +4,7 @@
 // Contenu, pas code : ajouter une teinte de chemise ou un prénom se fait
 // dans appearance.json, sans toucher au formulaire ni au rendu.
 // ─────────────────────────────────────────────────────────────
-import type { Appearance, HairStyle } from '@state/schema';
+import type { Appearance, Gender, HairStyle } from '@state/schema';
 import raw from './appearance.json';
 
 export interface AppearancePalettes {
@@ -31,6 +31,9 @@ export function randomAppearance(): Appearance {
     shirt: pick(palettes.shirts),
     ...(tie ? { tie } : {}),
     glasses: Math.random() < 0.4,
+    gender: (Math.random() < 0.5 ? 'homme' : 'femme') as Gender,
+    // Tirage centré : les silhouettes extrêmes existent mais restent rares.
+    build: Math.round(((Math.random() + Math.random()) / 2) * 100) / 100,
   };
 }
 
@@ -48,4 +51,6 @@ export const DEFAULT_APPEARANCE: Appearance = {
   hairStyle: 'carre',
   shirt: palettes.shirts[1]!,
   glasses: false,
+  gender: 'femme',
+  build: 0.5,
 };

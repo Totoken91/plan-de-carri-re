@@ -18,7 +18,7 @@
 // ─────────────────────────────────────────────────────────────
 import type { GameState } from './schema';
 
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 export const SLOT_COUNT = 3;
 
 const slotKey = (slot: number) => `plan-de-carriere/dossier/${slot}`;

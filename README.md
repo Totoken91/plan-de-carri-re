@@ -200,6 +200,26 @@ modelé tourne à la bouillie ; on joue donc ce que le SVG fait le mieux —
 des formes nettes en aplat. Tête ronde volontairement grosse posée sans
 cou, buste en dôme sans bras, deux tons par forme séparés par une arête
 franche (jamais de dégradé), et un visage réduit à deux points. Ce qui
+**La silhouette se règle sur deux axes indépendants** (`rigFor`) : le
+**genre** ne touche qu'à l'équilibre épaules / hanches, la **carrure** ne
+touche qu'à la masse générale. Les mélanger donnerait « une femme est plus
+petite », ce qui est faux et, à cette échelle, illisible de toute façon.
+La hauteur, elle, ne bouge jamais : des têtes à des altitudes différentes
+derrière une rangée de bureaux se liraient comme un défaut d'alignement,
+pas comme de la variété.
+
+L'écart de genre porte surtout sur les **épaules**, et pas par hasard : en
+jeu, le bureau masque le bas du corps. Une différence jouée sur les hanches
+serait invisible là où les personnages vivent, et ne se verrait que dans
+l'aperçu de l'embauche. Mesuré : rapport épaules/hanches de 1,45 contre
+0,98, constant à toutes les carrures, pour une largeur d'épaules qui va de
+15 à 26 selon le curseur.
+
+Les archétypes ont eux aussi une silhouette (dans le thème) : sans ça,
+l'étage entier est six clones dont seuls les cheveux changent. Écart
+d'épaules mesuré sur le plateau : 6,5 unités entre le plus large et le plus
+étroit.
+
 **Aucune primitive à dessus plat.** Les épaules étaient une capsule
 horizontale à bouts ronds : entre ses deux bouts, le dessus est
 rigoureusement plat, d'où une coupe nette au-dessus des épaules. C'est

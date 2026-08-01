@@ -1212,3 +1212,28 @@ body {
 }
 .hire__stats em i.is-up { color: var(--seal); }
 .hire__stats em i.is-down { color: var(--stamp); }
+
+/* ── Curseur : une réglette de formulaire, pas un jouet ──── */
+.slider { display: flex; align-items: center; gap: 10px; }
+.slider__end {
+  font-family: var(--font-form); font-size: 9px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-soft); white-space: nowrap;
+}
+.slider__input {
+  flex: 1; min-width: 0; height: 22px; margin: 0;
+  background: transparent; -webkit-appearance: none; appearance: none; cursor: pointer;
+}
+.slider__input::-webkit-slider-runnable-track {
+  height: 3px; background: var(--rule); border: 0;
+}
+.slider__input::-moz-range-track { height: 3px; background: var(--rule); border: 0; }
+/* Le curseur est un cartouche d'encre à angles vifs, comme les boutons. */
+.slider__input::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 12px; height: 20px; margin-top: -8.5px;
+  background: var(--ink); border: 0; border-radius: 0;
+}
+.slider__input::-moz-range-thumb {
+  width: 12px; height: 20px; background: var(--ink); border: 0; border-radius: 0;
+}
+.slider__input:focus-visible { outline: 1px solid var(--ink); outline-offset: 3px; }

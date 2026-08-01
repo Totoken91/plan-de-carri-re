@@ -12,7 +12,7 @@
 // mentir.
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from 'react';
-import type { Appearance, HairStyle, TraitDef, TraitId } from '@state/schema';
+import type { Appearance, Gender, HairStyle, TraitDef, TraitId } from '@state/schema';
 import { DEFAULT_APPEARANCE, palettes, randomAppearance, randomName } from '@data/appearance';
 import { balance } from '@data/balance';
 import {
@@ -215,6 +215,41 @@ export function CharacterCreation({
                 >
                   Autre nom
                 </button>
+              </div>
+            </Field>
+
+            <Field label="Genre">
+              <div className="chips">
+                {(['femme', 'homme'] as Gender[]).map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    className={`chip ${look.gender === g ? 'is-on' : ''}`}
+                    onClick={() => set('gender', g)}
+                  >
+                    {g === 'femme' ? 'Femme' : 'Homme'}
+                  </button>
+                ))}
+              </div>
+            </Field>
+
+            <Field label="Carrure">
+              {/* Deux axes séparés : le genre règle l'équilibre épaules /
+                  hanches, ce curseur règle la masse. Les confondre
+                  donnerait « une femme est plus mince », ce qui est faux. */}
+              <div className="slider">
+                <span className="slider__end">Mince</span>
+                <input
+                  className="slider__input"
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={Math.round(look.build * 100)}
+                  onChange={(e) => set('build', Number(e.target.value) / 100)}
+                  aria-label="Carrure"
+                />
+                <span className="slider__end">Corpulent</span>
               </div>
             </Field>
 

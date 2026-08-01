@@ -152,6 +152,44 @@ export interface FigureRig {
  *  · les mains doivent sortir du gabarit du tronc, sinon la fusion les
  *    avale et il ne reste qu'un tronc plus large — pas de bras lisibles.
  */
+/**
+ * Silhouette d'un personnage donné.
+ *
+ * DEUX AXES INDÉPENDANTS, et c'est volontaire :
+ *   · le GENRE ne touche qu'à l'équilibre épaules / hanches ;
+ *   · la CORPULENCE ne touche qu'à la masse générale.
+ * Les mélanger donnerait « une femme est plus petite », ce qui est faux
+ * et, à cette échelle, illisible de toute façon.
+ *
+ * La hauteur, elle, ne bouge JAMAIS : des têtes à des altitudes
+ * différentes derrière une rangée de bureaux se liraient comme un défaut
+ * d'alignement, pas comme de la variété.
+ */
+export function rigFor(gender: 'homme' | 'femme', build: number): FigureRig {
+  const b = Math.max(0, Math.min(1, build));
+  const masse = 0.86 + b * 0.36;
+  // Épaules et hanches penchent en sens inverse : c'est le RAPPORT entre
+  // les deux qui se lit, pas leur valeur absolue.
+  //
+  // L'écart porte surtout sur les ÉPAULES, et ce n'est pas arbitraire :
+  // en jeu, le bureau masque le bas du corps. Une différence jouée sur
+  // les hanches serait invisible là où les personnages vivent, et ne se
+  // verrait que dans l'aperçu de l'embauche.
+  const epaule = gender === 'homme' ? 1.1 : 0.9;
+  const hanche = gender === 'homme' ? 0.92 : 1.12;
+
+  const hipR = DEFAULT_RIG.hipR * masse * hanche;
+  return {
+    ...DEFAULT_RIG,
+    // Le bas du bassin doit rester au sol quelle que soit sa taille.
+    hipY: -hipR,
+    hipR,
+    bodyR: DEFAULT_RIG.bodyR * masse,
+    shoulderHalf: DEFAULT_RIG.shoulderHalf * masse * epaule,
+    shoulderR: DEFAULT_RIG.shoulderR * masse * epaule,
+  };
+}
+
 export const DEFAULT_RIG: FigureRig = {
   hipY: -8,
   chestY: -22,

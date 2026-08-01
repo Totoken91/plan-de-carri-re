@@ -124,38 +124,50 @@
             "hair": "#332a20",
             "hairStyle": "plaque",
             "tie": "#9e3428",
-            "glasses": false
+            "glasses": false,
+            "gender": "homme",
+            "build": 0.45
           },
           "fayot": {
             "shirt": "#b87a1e",
             "hair": "#5a3f2c",
             "hairStyle": "queue",
             "glasses": true,
-            "mug": true
+            "mug": true,
+            "gender": "femme",
+            "build": 0.38
           },
           "glandeur": {
             "shirt": "#2f7048",
             "hair": "#241f1c",
             "hairStyle": "capuche",
-            "glasses": false
+            "glasses": false,
+            "gender": "homme",
+            "build": 0.72
           },
           "parano": {
             "shirt": "#5a4790",
             "hair": "#4b3728",
             "hairStyle": "rideau",
-            "glasses": true
+            "glasses": true,
+            "gender": "femme",
+            "build": 0.3
           },
           "veteran": {
             "shirt": "#2f6b86",
             "hair": "#8d939a",
             "hairStyle": "degarni",
-            "glasses": false
+            "glasses": false,
+            "gender": "homme",
+            "build": 0.8
           },
           "nouveau": {
             "shirt": "#5c6577",
             "hair": "#8a6440",
             "hairStyle": "carre",
-            "glasses": false
+            "glasses": false,
+            "gender": "femme",
+            "build": 0.52
           }
         }
       },
@@ -339,38 +351,50 @@
             "hair": "#332a20",
             "hairStyle": "plaque",
             "tie": "#b4453b",
-            "glasses": false
+            "glasses": false,
+            "gender": "homme",
+            "build": 0.45
           },
           "fayot": {
             "shirt": "#cf9a3c",
             "hair": "#5a3f2c",
             "hairStyle": "queue",
             "glasses": true,
-            "mug": true
+            "mug": true,
+            "gender": "femme",
+            "build": 0.38
           },
           "glandeur": {
             "shirt": "#4e9b68",
             "hair": "#241f1c",
             "hairStyle": "capuche",
-            "glasses": false
+            "glasses": false,
+            "gender": "homme",
+            "build": 0.72
           },
           "parano": {
             "shirt": "#7d68b8",
             "hair": "#4b3728",
             "hairStyle": "rideau",
-            "glasses": true
+            "glasses": true,
+            "gender": "femme",
+            "build": 0.3
           },
           "veteran": {
             "shirt": "#4a90ab",
             "hair": "#b9bec4",
             "hairStyle": "degarni",
-            "glasses": false
+            "glasses": false,
+            "gender": "homme",
+            "build": 0.8
           },
           "nouveau": {
             "shirt": "#8b93a6",
             "hair": "#8a6440",
             "hairStyle": "carre",
-            "glasses": false
+            "glasses": false,
+            "gender": "femme",
+            "build": 0.52
           }
         }
       },
