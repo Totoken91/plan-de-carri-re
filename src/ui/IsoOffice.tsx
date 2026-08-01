@@ -613,6 +613,16 @@ export function IsoOffice({
         })}
       </svg>
 
+      {/* Le grain coûte ~3,5 ms par image (mesuré, séries alternées) :
+          c'est le mélange `overlay` sur toute la surface du plateau. À
+          zéro, on ne rend pas la couche du tout — une couche invisible
+          continuerait de se composer pour rien.
+
+          Elle vit dans le DOM, en dehors du SVG, et c'est délibéré : un
+          grain posé dans le plan du plateau grossirait au zoom. Ce ne
+          serait plus du grain, ce serait des cailloux. */}
+      {T.fond.grain > 0 && <div className="iso__grain" aria-hidden="true" />}
+
       <div className="iso__controls">
         {/* L'aide ne sert qu'avant d'avoir touché au cadrage ; ensuite
             c'est le retour au cadrage nominal qui compte. */}

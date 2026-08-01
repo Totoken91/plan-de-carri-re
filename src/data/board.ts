@@ -45,6 +45,8 @@ export interface BoardTheme {
     encreDouce: string;
     /** Débord lumineux de la pièce éclairée sur ce qui l'entoure. */
     debord: [string, string];
+    /** Force du grain de film sur le plateau, 0 = aucun. */
+    grain: number;
   };
   sol: {
     dalle: string;
@@ -261,6 +263,7 @@ export function themeVars(t: BoardTheme): Record<string, string> {
     '--iso-page-bas': t.fond.basPage,
     '--iso-cadre-encre': t.fond.encre,
     '--iso-cadre-encre-douce': t.fond.encreDouce,
+    '--iso-grain': String(t.fond.grain),
     '--iso-voile': t.fond.voile,
     '--iso-vignette': t.fond.vignette,
     '--iso-vignette-melange': t.fond.melangeVignette,

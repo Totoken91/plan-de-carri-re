@@ -104,6 +104,44 @@ Conséquence sur le budget de saturation : le plafond de 0,18 porte sur les
 l'ombre peut le dépasser, et c'est voulu — c'est là que la couleur doit
 vivre.
 
+### Le grain, et les trois pièges qui le rendaient invisible
+
+Tout est grainé : le plateau, les feuilles de papier, le sous-main. Le
+bruit est **fractal, généré par le navigateur** (`feTurbulence` dans une
+URI de données, `styles.css`) — aucun asset externe, comme le reste du
+jeu. Deux calibres : serré pour le film du plateau, plus large pour la
+fibre du papier.
+
+La couche du plateau (`.iso__grain`) vit dans le DOM, **hors du SVG**, et
+c'est délibéré : un grain posé dans le plan du plateau grossirait au
+zoom. Ce ne serait plus du grain, ce serait des cailloux.
+
+Trois pièges, tous silencieux, tous trouvés à la mesure et pas à la
+lecture :
+
+1. **Le `#` de `url(#n)` doit s'écrire `%23`.** Dans une URI de données,
+   un `#` nu ouvre un fragment : la suite est coupée, le SVG devient
+   invalide, l'image ne se décode pas. La couche s'affichait donc
+   parfaitement — en n'affichant rien du tout.
+2. **`color-interpolation-filters` vaut `linearRGB` par défaut.** Un bruit
+   symétrique autour de 0,5 en lumière linéaire ressort centré sur 0,73
+   en sRGB. Le « grain » éclaircissait l'image de 5 à 23 niveaux selon le
+   fond : ce n'était plus une texture, c'était une correction d'exposition
+   clandestine. En `sRGB`, la dérive mesurée tombe **sous 0,6 niveau**.
+3. **L'alpha sortant de `feTurbulence` est lui aussi du bruit.** On le
+   force à 1 dans la matrice, sinon l'opacité de la couche ne pilote plus
+   rien de lisible.
+
+Amplitude retenue, mesurée à l'échelle 1:1 (une capture réduite moyenne le
+bruit et ment) : **+1,5 à +2,4** d'écart-type sur le plateau, **+5,9**
+niveaux d'étendue sur le papier, pour une dérive de valeur de −0,5. Le
+grain texture, il ne réexpose pas.
+
+Il coûte **3,5 ms par image** (séries alternées, cinq paires) — c'est le
+mélange `overlay` sur toute la surface du plateau. `fond.grain` à 0 dans
+`board.json` ne rend pas la couche du tout, plutôt que de composer une
+couche invisible pour rien.
+
 ### Identité visuelle du plateau : « Plein jour »
 
 L'open space est **diurne**. Ce n'est pas un goût, c'est une conséquence :

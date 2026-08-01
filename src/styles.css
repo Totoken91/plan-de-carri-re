@@ -40,6 +40,36 @@
   --font-form: ui-monospace, 'Cascadia Mono', 'DejaVu Sans Mono', 'Courier New', monospace;
 
   --shadow-sheet: 0 1px 0 rgba(255, 255, 255, 0.28) inset, 0 10px 26px rgba(0, 0, 0, 0.5);
+
+  /* Grain procédural : du bruit fractal généré par le navigateur puis
+     mosaïqué. Aucun asset externe, comme le reste du jeu. Deux calibres —
+     serré pour le film du plateau, plus large pour le grain du papier.
+
+     Trois pièges, tous silencieux, tous mesurés plutôt que devinés :
+
+     · le `#` de `url(#n)` DOIT s'écrire `%23`. Dans une URI de données,
+       un `#` nu ouvre un fragment : la suite est coupée, le SVG devient
+       invalide, l'image ne se décode pas — et la couche de grain
+       s'affiche sans rien afficher du tout ;
+
+     · `color-interpolation-filters` vaut linearRGB PAR DÉFAUT. Un bruit
+       symétrique autour de 0,5 en lumière linéaire ressort centré sur
+       0,73 en sRGB : le « grain » éclaircissait alors l'image de 5 à 23
+       niveaux selon le fond. Ce n'était plus une texture, c'était une
+       correction d'exposition clandestine. En sRGB, la dérive mesurée
+       tombe sous 0,6 niveau ;
+
+     · l'alpha sortant de feTurbulence est LUI AUSSI du bruit. On le
+       force à 1 dans la matrice, sinon l'opacité de la couche ne pilote
+       plus rien de lisible.
+
+     La matrice fait la moyenne des trois canaux (gris) et met l'alpha à
+     1 ; le transfert linéaire règle le contraste autour de 0,5 sans
+     déplacer le centre. Le plateau a un manche à part (l'opacité de la
+     couche), le papier non : son amplitude est donc réglée ici, à la
+     pente 0,5. */
+  --grain-fin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='.33 .33 .33 0 0 .33 .33 .33 0 0 .33 .33 .33 0 0 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+  --grain-papier: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.62' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix values='.33 .33 .33 0 0 .33 .33 .33 0 0 .33 .33 .33 0 0 0 0 0 0 1'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='.5' intercept='.25'/%3E%3CfeFuncG type='linear' slope='.5' intercept='.25'/%3E%3CfeFuncB type='linear' slope='.5' intercept='.25'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 * { box-sizing: border-box; }
@@ -47,8 +77,10 @@
 body {
   margin: 0;
   background:
+    var(--grain-papier),
     radial-gradient(1200px 700px at 50% 0%, #1e1e22, var(--desk)),
     var(--desk-2);
+  background-blend-mode: overlay, normal, normal;
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 15px;
@@ -67,10 +99,16 @@ body {
 .inspector,
 .modal {
   background-color: var(--paper);
-  /* fibres du papier : deux trames très basses, jamais visibles isolément */
+  /* Le papier a deux textures superposées : ses fibres (deux trames
+     régulières) et son GRAIN (bruit irrégulier). Les fibres seules
+     donnaient une surface trop propre, comme du papier photo. */
   background-image:
+    var(--grain-papier),
     repeating-linear-gradient(0deg, rgba(90, 78, 52, 0.035) 0 1px, transparent 1px 3px),
     repeating-linear-gradient(90deg, rgba(90, 78, 52, 0.022) 0 1px, transparent 1px 4px);
+  /* `overlay` et pas `multiply` : la tuile est un gris moyen OPAQUE, la
+     multiplier reviendrait à diviser la valeur du papier par deux. */
+  background-blend-mode: overlay, normal, normal;
   border: 1px solid var(--rule);
   box-shadow: var(--shadow-sheet);
 }
@@ -298,6 +336,15 @@ body {
   content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 2;
   background: var(--iso-voile);
   mix-blend-mode: overlay;
+}
+/* Le grain du plateau vit dans le DOM, PAS dans le SVG : un grain qui
+   grossirait au zoom ne serait plus du grain, ce serait de la texture
+   peinte sur les objets. Le grain appartient à l'image, pas au monde. */
+.iso__grain {
+  position: absolute; inset: 0; pointer-events: none; z-index: 4;
+  background-image: var(--grain-fin);
+  mix-blend-mode: overlay;
+  opacity: var(--iso-grain, 0.5);
 }
 .iso::after {
   content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 3;
