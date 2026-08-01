@@ -9,6 +9,7 @@ import { IsoOffice } from './IsoOffice';
 import { Inspector } from './Inspector';
 import { Tutorial } from './Tutorial';
 import { Manual } from './Manual';
+import { PauseMenu } from './PauseMenu';
 import { tutorialSeen } from './tutorial';
 import type { Selection } from './iso';
 
@@ -21,13 +22,32 @@ const TIER_MEANING: Record<string, string> = {
   critique: 'Audit imminent. Sans alibi ni bouc émissaire, c’est le licenciement.',
 };
 
-export function DeskScreen({ onEndWeek }: { onEndWeek: () => void }) {
-  const { state } = useGame();
+export function DeskScreen({
+  onEndWeek,
+  onMenu,
+}: {
+  onEndWeek: () => void;
+  onMenu: () => void;
+}) {
+  const { state, store } = useGame();
   const [selection, setSelection] = useState<Selection>(null);
   const [toast, setToast] = useState<Toast>(null);
   // Le tuto s'ouvre tout seul à la toute première visite, jamais ensuite.
   const [tuto, setTuto] = useState(() => !tutorialSeen());
   const [manual, setManual] = useState(false);
+  const [paused, setPaused] = useState(false);
+
+  // Échap : le raccourci que tout le monde essaie en premier.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      // Le tuto et le règlement ont déjà leur propre Échap.
+      if (tuto || manual) return;
+      setPaused((p) => !p);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [tuto, manual]);
 
   useEffect(() => {
     if (!toast) return;
@@ -99,6 +119,14 @@ export function DeskScreen({ onEndWeek }: { onEndWeek: () => void }) {
           aria-label="Aide"
         >
           ?
+        </button>
+
+        <button
+          className="btn btn--small btn--menu"
+          onClick={() => setPaused(true)}
+          title="Menu · Échap"
+        >
+          Menu
         </button>
 
         <button
@@ -214,6 +242,20 @@ export function DeskScreen({ onEndWeek }: { onEndWeek: () => void }) {
 
       {tuto && (
         <Tutorial selection={selection} onSelect={setSelection} onClose={() => setTuto(false)} />
+      )}
+
+      {paused && (
+        <PauseMenu
+          slot={store.openSlot}
+          playerName={state.player.name}
+          week={state.week}
+          onClose={() => setPaused(false)}
+          onMenu={onMenu}
+          onManual={() => {
+            setPaused(false);
+            setManual(true);
+          }}
+        />
       )}
 
       {manual && (

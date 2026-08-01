@@ -28,8 +28,9 @@ import { abetScheme, assignIntents, defuseIntent, warnVictim } from '@engine/int
 import { prepareScapegoat } from '@engine/scapegoat';
 import type { ActionId } from '@engine/preview';
 
-const SAVE_KEY = 'plan-de-carriere/save/v4';
-export const SAVE_VERSION = 4;
+import { SAVE_VERSION, readSlot, writeSlot } from './saves';
+
+export { SAVE_VERSION };
 
 // ── Création d'une partie ────────────────────────────────────
 export function createInitialState(
@@ -65,44 +66,8 @@ export function createInitialState(
   };
 }
 
-// ── Persistance ──────────────────────────────────────────────
-export function saveState(state: GameState): void {
-  try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
-  } catch {
-    /* quota / mode privé : on ignore silencieusement */
-  }
-}
-
-export function loadState(): GameState | undefined {
-  try {
-    const raw = localStorage.getItem(SAVE_KEY);
-    if (!raw) return undefined;
-    const parsed = JSON.parse(raw) as GameState;
-    if (parsed.version !== SAVE_VERSION) return undefined; // migration future
-    return parsed;
-  } catch {
-    return undefined;
-  }
-}
-
-export function clearSave(): void {
-  try {
-    localStorage.removeItem(SAVE_KEY);
-  } catch {
-    /* ignore */
-  }
-}
-
-/**
- * Vrai s'il existe une partie REPRENABLE. On relit vraiment la
- * sauvegarde : une version obsolète ou un JSON abîmé donnent une partie
- * neuve, et une partie neuve doit repasser par l'embauche plutôt que
- * d'hériter d'un nom tiré au sort.
- */
-export function hasSave(): boolean {
-  return loadState() !== undefined;
-}
+// La persistance vit dans saves.ts : le store ne sait qu'une chose,
+// c'est dans QUEL dossier il écrit.
 
 // ── Store réactif ────────────────────────────────────────────
 type Listener = () => void;
@@ -116,37 +81,72 @@ export class GameStore {
   private state: GameState;
   private rng: Rng;
   private listeners = new Set<Listener>();
+  /**
+   * Dossier dans lequel ce store écrit. `undefined` = aucune partie
+   * ouverte : le store existe (l'abonnement React est posé une fois pour
+   * toutes) mais rien ne doit être enregistré. C'est l'état dans lequel
+   * on se trouve tant qu'on est au menu.
+   */
+  private slot: number | undefined;
   /** Dernier message d'action, pour un retour immédiat à l'UI. */
   lastMessage: ActionResult | undefined;
 
-  constructor(initial: GameState) {
+  constructor(initial: GameState, slot?: number) {
     this.state = initial;
+    this.slot = slot;
     this.rng = new Rng(initial.seed, initial.rngCursor);
-    // Amorçage : une nouvelle partie n'a ni opportunités ni intentions ;
-    // un save en cours de semaine conserve les siennes.
-    if (this.state.status === 'playing') {
-      let dirty = false;
-      if (this.state.opportunities.length === 0) {
-        generateOpportunities(this.state, this.rng);
-        dirty = true;
-      }
-      if (this.state.colleagues.some((c) => c.alive && !c.intent)) {
-        assignIntents(this.state, this.rng);
-        dirty = true;
-      }
-      if (dirty) this.persist();
+    this.prime();
+  }
+
+  /**
+   * Amorçage : une partie neuve n'a ni opportunités ni intentions ; un
+   * dossier repris en cours de semaine conserve les siennes.
+   */
+  private prime(): void {
+    if (this.state.status !== 'playing') return;
+    let dirty = false;
+    if (this.state.opportunities.length === 0) {
+      generateOpportunities(this.state, this.rng);
+      dirty = true;
     }
+    if (this.state.colleagues.some((c) => c.alive && !c.intent)) {
+      assignIntents(this.state, this.rng);
+      dirty = true;
+    }
+    if (dirty) this.persist();
   }
 
-  static newGame(seed?: number, name?: string, appearance?: Appearance): GameStore {
-    const store = new GameStore(createInitialState(seed, name, appearance));
-    store.persist();
-    return store;
+  /** Dossier courant, ou `undefined` si aucune partie n'est ouverte. */
+  get openSlot(): number | undefined {
+    return this.slot;
   }
 
-  static fromSaveOrNew(): GameStore {
-    const saved = loadState();
-    return saved ? new GameStore(saved) : GameStore.newGame();
+  /** Ouvre un dossier existant. Faux s'il est vide ou illisible. */
+  open(slot: number): boolean {
+    const saved = readSlot(slot);
+    if (!saved) return false;
+    this.state = saved;
+    this.slot = slot;
+    this.rng = new Rng(saved.seed, saved.rngCursor);
+    this.prime();
+    this.emit();
+    return true;
+  }
+
+  /** Démarre une carrière dans un dossier, en écrasant ce qu'il contenait. */
+  startCareer(slot: number, name: string, appearance: Appearance, seed?: number): void {
+    this.state = createInitialState(seed, name, appearance);
+    this.slot = slot;
+    this.rng = new Rng(this.state.seed, 0);
+    generateOpportunities(this.state, this.rng);
+    assignIntents(this.state, this.rng);
+    this.persist();
+    this.emit();
+  }
+
+  /** Referme le dossier courant : plus rien ne s'enregistre. */
+  close(): void {
+    this.slot = undefined;
   }
 
   getState(): GameState {
@@ -164,7 +164,9 @@ export class GameStore {
 
   private persist(): void {
     this.state.rngCursor = this.rng.cursor;
-    saveState(this.state);
+    // Aucun dossier ouvert = on est au menu : écrire ici écraserait le
+    // dossier du joueur avec une partie fantôme.
+    if (this.slot !== undefined) writeSlot(this.slot, this.state);
   }
 
   /**
@@ -382,13 +384,4 @@ export class GameStore {
     }
   }
 
-  /** Redémarre une nouvelle partie (même store). */
-  reset(seed?: number, name?: string, appearance?: Appearance): void {
-    this.state = createInitialState(seed, name, appearance);
-    this.rng = new Rng(this.state.seed, 0);
-    generateOpportunities(this.state, this.rng);
-    assignIntents(this.state, this.rng);
-    this.persist();
-    this.emit();
-  }
 }

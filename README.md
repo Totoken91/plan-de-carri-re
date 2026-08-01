@@ -347,6 +347,37 @@ te guide.
 Ce sont les deux briques réutilisées partout. Tout ce qu'un événement, un choix ou
 un plan peut exiger ou provoquer s'exprime avec elles — voir `schema.ts`.
 
+## Menu et dossiers de sauvegarde
+
+Trois **dossiers du personnel** (`src/state/saves.ts`), chacun autonome.
+Le menu les présente comme des chemises posées sur le bureau, avec la
+trombine de leur titulaire — dessinée par le même composant `Figure` que
+le plateau, donc on reconnaît son personnage avant de lire son nom.
+
+**L'enregistrement est continu** : chaque action écrit dans le dossier
+courant. Il n'y a donc volontairement aucun bouton « Sauvegarder ». Un
+bouton qui ne ferait rien de plus que ce que le jeu fait déjà est un
+mensonge rassurant, et le jour où le joueur en aurait vraiment besoin, il
+ne saurait pas qu'il ne sert à rien. Ce que le menu offre à la place,
+c'est ce que l'autosauvegarde ne sait pas faire : choisir un dossier, en
+**dupliquer** un avant une manœuvre risquée, en **détruire** un.
+
+Le store ne connaît qu'une chose de la persistance : **dans quel dossier
+il écrit**. Tant qu'on est au menu, il n'est lié à aucun (`store.close()`)
+— sinon un aller-retour par le menu écraserait un dossier avec la partie
+fantôme que le store porte au démarrage.
+
+Le résumé affiché sur une chemise est **dérivé de l'état**, jamais stocké
+à part : deux sources pour la même vérité, c'est la garantie qu'elles
+divergent.
+
+Une sauvegarde d'avant les dossiers est reprise automatiquement dans le
+premier emplacement (`migrateLegacySave`) : un changement de format ne
+doit pas coûter sa partie à quelqu'un.
+
+En partie, **Échap** (ou le bouton « Menu ») ouvre l'interruption de
+séance : reprendre, consulter le règlement, revenir aux dossiers.
+
 ## Boucle de jeu
 
 Une semaine = **5 points d'action** (Bosser, Café, Fouiner, Comploter, Glander,

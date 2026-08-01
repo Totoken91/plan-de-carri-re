@@ -10,7 +10,14 @@
 import { catalog } from '@data/content';
 import { balance } from '@data/balance';
 
-export function Manual({ onClose, onReplay }: { onClose: () => void; onReplay: () => void }) {
+export function Manual({
+  onClose,
+  onReplay,
+}: {
+  onClose: () => void;
+  /** Absent hors partie : sans plateau, il n'y a rien à rejouer. */
+  onReplay?: () => void;
+}) {
   const ranks = [...catalog.ranks].sort((a, b) => a.order - b.order);
   const ap = balance.actionPointsPerWeek;
 
@@ -142,9 +149,13 @@ export function Manual({ onClose, onReplay }: { onClose: () => void; onReplay: (
         </div>
 
         <footer className="manual__foot">
-          <button className="btn btn--small" onClick={onReplay}>
-            Refaire le tutoriel guidé
-          </button>
+          {onReplay ? (
+            <button className="btn btn--small" onClick={onReplay}>
+              Refaire le tutoriel guidé
+            </button>
+          ) : (
+            <span />
+          )}
           <button className="btn btn--small btn--primary" onClick={onClose}>
             Fermer
           </button>

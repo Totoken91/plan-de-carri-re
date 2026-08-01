@@ -123,7 +123,7 @@ body {
 /* ── En-tête de dossier ──────────────────────────────────── */
 .topbar {
   display: grid;
-  grid-template-columns: auto 1fr auto auto auto;
+  grid-template-columns: auto 1fr auto auto auto auto;
   gap: 26px;
   align-items: center;
   padding: 14px 20px;
@@ -997,3 +997,154 @@ body {
   font-family: var(--font-form); font-size: 12px; font-style: normal; color: var(--ink-2);
 }
 .hire__note { margin: 10px 0 0; font-size: 12.5px; color: var(--ink-soft); }
+
+/* ══════════════════════════════════════════════════════════
+   Menu et dossiers du personnel
+   ──────────────────────────────────────────────────────────
+   Pas une liste de boutons : trois chemises posées sur le bureau, avec
+   la trombine de leur titulaire. Le portrait vient du composant qui
+   dessine le plateau — on reconnaît son personnage avant de lire son
+   nom.
+   ══════════════════════════════════════════════════════════ */
+.app--menu { max-width: 1100px; }
+
+.menu {
+  padding: 30px 0 40px;
+  min-height: calc(100vh - 90px);
+  display: flex; flex-direction: column; justify-content: center;
+}
+
+/* Les boutons du jeu sont de l'encre sur papier kraft. Ceux du menu ne
+   sont posés sur AUCUNE feuille : sur le sous-main, ils étaient noirs
+   sur noir. Ici seulement, l'encre s'inverse. */
+.menu__resume,
+.menu__foot .btn,
+.dossier--vide .btn {
+  border-color: rgba(215, 208, 190, 0.45);
+  color: var(--paper-hi);
+  background: transparent;
+}
+.menu__resume:hover:not(:disabled),
+.menu__foot .btn:hover:not(:disabled),
+.dossier--vide .btn:hover:not(:disabled) {
+  background: var(--paper-hi);
+  color: var(--ink);
+  border-color: var(--paper-hi);
+}
+.menu__resume {
+  padding: 11px 22px; font-size: 12px;
+  border-color: var(--paper-hi);
+}
+.menu__head { text-align: center; margin-bottom: 26px; }
+.menu__eyebrow {
+  margin: 0; font-family: var(--font-form); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.24em; color: var(--ink-soft);
+}
+.menu__title {
+  margin: 8px 0 6px; font-family: var(--font-title);
+  font-size: clamp(38px, 6vw, 62px); line-height: 1; letter-spacing: -0.01em;
+  color: var(--paper-hi);
+  /* le titre est frappé sur le sous-main, pas sur une feuille */
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
+}
+.menu__sub {
+  margin: 0 auto; max-width: 46ch; color: var(--paper-shade); font-size: 14px;
+}
+.menu__resume { display: flex; margin: 0 auto 30px; }
+.menu__section {
+  color: var(--paper-shade); border-color: rgba(215, 208, 190, 0.25);
+}
+
+.dossiers {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+}
+.dossier {
+  position: relative;
+  background-color: var(--paper);
+  background-image:
+    repeating-linear-gradient(0deg, rgba(90, 78, 52, 0.035) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(90, 78, 52, 0.022) 0 1px, transparent 1px 4px);
+  border: 1px solid var(--rule);
+  box-shadow: var(--shadow-sheet);
+  padding: 14px 16px 16px;
+  display: flex; flex-direction: column;
+}
+/* une chemise close se lit au premier coup d'œil */
+.dossier--clos { opacity: 0.72; }
+.dossier--clos::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(
+    -45deg, transparent 0 12px, rgba(158, 52, 40, 0.05) 12px 24px);
+}
+.dossier--vide {
+  align-items: center; justify-content: center; text-align: center;
+  background-image: none; background-color: rgba(215, 208, 190, 0.07);
+  border-style: dashed; box-shadow: none; min-height: 260px;
+}
+.dossier--vide .dossier__num { color: var(--paper-shade); }
+.dossier__vacant {
+  margin: 10px 0 16px; font-family: var(--font-form); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.14em; color: var(--paper-shade);
+}
+.dossier__num {
+  font-family: var(--font-form); font-size: 9px;
+  text-transform: uppercase; letter-spacing: 0.18em; color: var(--ink-soft);
+}
+.dossier__portrait {
+  display: block; width: 100%; max-width: 118px; margin: 4px auto 2px;
+  aspect-ratio: 52 / 46;
+}
+.dossier__name {
+  margin: 0; font-family: var(--font-title); font-size: 19px; line-height: 1.15;
+}
+.dossier__rank {
+  margin: 2px 0 10px; font-family: var(--font-form); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-soft);
+}
+.dossier__facts { display: flex; gap: 14px; margin: 0 0 8px; }
+.dossier__facts dt {
+  font-family: var(--font-form); font-size: 9px;
+  text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-soft);
+}
+.dossier__facts dd {
+  margin: 1px 0 0; font-family: var(--font-form); font-size: 15px; color: var(--ink);
+}
+.dossier__facts dd.is-hot { color: var(--stamp); font-weight: 700; }
+.dossier__tier {
+  margin: 0 0 12px; font-size: 12px; color: var(--ink-2); font-style: italic;
+}
+.dossier__actions { margin-top: auto; display: flex; flex-wrap: wrap; gap: 6px; }
+.btn--danger { border-color: var(--stamp); color: var(--stamp); }
+.btn--danger:hover:not(:disabled) { background: var(--stamp); color: var(--paper-hi); }
+
+.menu__foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  margin-top: 22px; padding-top: 14px;
+  border-top: 1px solid rgba(215, 208, 190, 0.2);
+}
+.menu__note {
+  font-family: var(--font-form); font-size: 10px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--paper-shade) !important;
+}
+
+/* ── Menu en partie ──────────────────────────────────────── */
+.pause { max-width: 420px; }
+.pause__title { margin: 18px 0 2px; font-family: var(--font-title); font-size: 26px; }
+.pause__sub {
+  margin: 0 0 16px; font-family: var(--font-form); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-soft);
+}
+.pause__saved {
+  margin: 0 0 18px; padding: 9px 12px; font-size: 13px; color: var(--ink-2);
+  background: rgba(44, 91, 74, 0.09); border-left: 3px solid var(--seal);
+}
+.pause__actions { display: flex; flex-direction: column; gap: 8px; }
+.pause__actions .btn { justify-content: center; }
+
+.hire__footleft { display: flex; gap: 10px; align-items: center; }
+
+@media (max-width: 880px) {
+  .dossiers { grid-template-columns: 1fr; }
+  .btn--menu { grid-column: 2; }
+}

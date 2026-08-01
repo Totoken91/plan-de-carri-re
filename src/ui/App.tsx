@@ -1,9 +1,23 @@
+// ─────────────────────────────────────────────────────────────
+// App.tsx — Les trois écrans et le passage de l'un à l'autre.
+//
+//   menu     : les dossiers du personnel
+//   embauche : création du personnage, pour un dossier donné
+//   partie   : le plateau
+//
+// Le store n'est lié à un dossier qu'à partir du moment où l'on ouvre ou
+// crée une carrière ; au menu il n'écrit nulle part. C'est ce qui évite
+// qu'un aller-retour par le menu n'écrase un dossier avec une partie
+// fantôme.
+// ─────────────────────────────────────────────────────────────
 import { useState } from 'react';
 import type { GameEvent } from '@state/schema';
 import type { WeekSummary } from '@engine/week';
 import { theme as boardTheme, themeVars } from '@data/board';
-import { bootedWithoutSave, useGame } from './useGame';
+import { useGame } from './useGame';
 import { CharacterCreation } from './CharacterCreation';
+import { MainMenu } from './MainMenu';
+import { Manual } from './Manual';
 import { DeskScreen } from './DeskScreen';
 import { EventModal, SummaryLines } from './EventModal';
 import { GameOver } from './GameOver';
@@ -12,17 +26,19 @@ import { GameOver } from './GameOver';
 // d'embauche dessine la même scène que le plateau et doit y avoir accès.
 const THEME_VARS = themeVars(boardTheme) as React.CSSProperties;
 
+type Screen = { kind: 'menu' } | { kind: 'hiring'; slot: number } | { kind: 'playing' };
+
 function hasSummaryContent(s: WeekSummary): boolean {
   return s.lines.length > 0 || !!(s.audit || s.promotion || s.won || s.gameOver);
 }
 
 export function App() {
   const { state, store } = useGame();
+  const [screen, setScreen] = useState<Screen>({ kind: 'menu' });
   const [activeEvent, setActiveEvent] = useState<GameEvent | null>(null);
   const [weekSummary, setWeekSummary] = useState<WeekSummary | null>(null);
-  // Pas de sauvegarde au démarrage = première visite : on passe par
-  // l'embauche avant de montrer l'étage.
-  const [hiring, setHiring] = useState(bootedWithoutSave);
+  // Le règlement est consultable depuis le menu comme depuis la partie.
+  const [manual, setManual] = useState(false);
 
   const handleEndWeek = () => {
     const outcome = store.endWeek();
@@ -33,24 +49,51 @@ export function App() {
     }
   };
 
-  if (hiring) {
+  const backToMenu = () => {
+    store.close();
+    setActiveEvent(null);
+    setWeekSummary(null);
+    setScreen({ kind: 'menu' });
+  };
+
+  // ── Menu ───────────────────────────────────────────────────
+  if (screen.kind === 'menu') {
+    return (
+      <div className="app app--menu" style={THEME_VARS}>
+        <MainMenu
+          onResume={(slot) => {
+            if (store.open(slot)) setScreen({ kind: 'playing' });
+          }}
+          onNewCareer={(slot) => setScreen({ kind: 'hiring', slot })}
+          onManual={() => setManual(true)}
+        />
+        {manual && <Manual onClose={() => setManual(false)} />}
+      </div>
+    );
+  }
+
+  // ── Embauche ───────────────────────────────────────────────
+  if (screen.kind === 'hiring') {
+    const slot = screen.slot;
     return (
       <div className="app" style={THEME_VARS}>
         <CharacterCreation
           onHire={(name, appearance) => {
-            store.reset(undefined, name, appearance);
-            setHiring(false);
+            store.startCareer(slot, name, appearance);
+            setScreen({ kind: 'playing' });
           }}
+          onCancel={backToMenu}
         />
       </div>
     );
   }
 
+  // ── Partie ─────────────────────────────────────────────────
   const gameOverVisible = state.status !== 'playing' && !activeEvent && !weekSummary;
 
   return (
     <div className="app" style={THEME_VARS}>
-      <DeskScreen onEndWeek={handleEndWeek} />
+      <DeskScreen onEndWeek={handleEndWeek} onMenu={backToMenu} />
 
       {activeEvent && <EventModal event={activeEvent} onDone={() => setActiveEvent(null)} />}
 
@@ -66,9 +109,9 @@ export function App() {
         </div>
       )}
 
-      {/* Repostuler, c'est repasser par les RH : nouveau dossier, donc
-          nouveau personnage. */}
-      {gameOverVisible && <GameOver onRehire={() => setHiring(true)} />}
+      {/* Repostuler, c'est repasser par les RH : on revient aux dossiers
+          plutôt que d'écraser celui-ci en douce. */}
+      {gameOverVisible && <GameOver onRehire={backToMenu} />}
     </div>
   );
 }

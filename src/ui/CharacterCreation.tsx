@@ -85,8 +85,10 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 export function CharacterCreation({
   onHire,
+  onCancel,
 }: {
   onHire: (name: string, appearance: Appearance) => void;
+  onCancel: () => void;
 }) {
   const [name, setName] = useState(() => randomName());
   const [look, setLook] = useState<Appearance>(() => ({ ...DEFAULT_APPEARANCE }));
@@ -267,9 +269,14 @@ export function CharacterCreation({
         </div>
 
         <footer className="hire__foot">
-          <button type="button" className="btn" onClick={roll}>
-            Au hasard
-          </button>
+          <div className="hire__footleft">
+            <button type="button" className="btn btn--small" onClick={onCancel}>
+              Retour aux dossiers
+            </button>
+            <button type="button" className="btn" onClick={roll}>
+              Au hasard
+            </button>
+          </div>
           <button
             type="button"
             className="btn btn--primary"
