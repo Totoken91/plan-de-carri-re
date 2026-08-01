@@ -133,9 +133,13 @@ export interface FigureRig {
   hipY: number;
   chestY: number;
   headY: number;
-  bodyR: number; // rayon de la capsule du buste
+  bodyR: number; // demi-largeur du buste, à la taille
   hipR: number;
-  shoulder: number; // demi-écart des épaules
+  /** Demi-écartement de la barre d'épaules (partie droite de la capsule). */
+  shoulderHalf: number;
+  /** Rayon de la capsule d'épaules : c'est lui qui arrondit le trapèze. */
+  shoulderR: number;
+  shoulder: number; // demi-écart des points d'attache des bras
   upperArm: number;
   foreArm: number;
   armR: number;
@@ -149,11 +153,19 @@ export interface FigureRig {
  *    avale et il ne reste qu'un tronc plus large — pas de bras lisibles.
  */
 export const DEFAULT_RIG: FigureRig = {
-  hipY: -8.5,
+  hipY: -8,
   chestY: -22,
   headY: -37,
-  bodyR: 8, // demi-largeur du tronc : c'est LA référence pour les bras
-  hipR: 8.5,
+  // Le buste est plus étroit que les épaules : sans cet écart, la
+  // silhouette est un tube de largeur constante coiffé d'un dôme — un
+  // pion d'échecs, pas quelqu'un d'assis. Mais l'écart doit rester
+  // MESURÉ : un premier réglage à 6,4 contre 21 d'épaules donnait une
+  // taille de guêpe et deux lobes séparés par un étranglement.
+  // Cible : 19 aux épaules, 15 à la taille, 16 aux hanches.
+  bodyR: 7.9,
+  hipR: 8,
+  shoulderHalf: 4.1,
+  shoulderR: 5.5,
   shoulder: 6.5,
   // Segments COURTS : avec des bras longs et une cible proche, l'IK plie
   // à fond et le coude dessine une boucle sur la poitrine. En gardant la
@@ -186,6 +198,8 @@ export interface PosedFigure {
   squash: number; // 1 = neutre ; > 1 = étiré, < 1 = écrasé
   bodyR: number; // demi-largeur du buste, inverse de l'étirement
   hipR: number;
+  shoulderHalf: number;
+  shoulderR: number;
   arms: Array<{ a: Vec; b: Vec; c: Vec }>; // épaule, coude, main
 }
 
@@ -278,6 +292,9 @@ export function poseFigure(
     squash,
     bodyR: rig.bodyR / squash,
     hipR: rig.hipR / squash,
+    // Les épaules s'écrasent et s'étirent comme le reste du volume.
+    shoulderHalf: rig.shoulderHalf / squash,
+    shoulderR: rig.shoulderR / squash,
     arms,
   };
 }

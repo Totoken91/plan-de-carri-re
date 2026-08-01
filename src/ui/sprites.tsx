@@ -345,6 +345,7 @@ export function Figure({
     const pick = (role: string) => root.querySelector<SVGElement>(`[data-r="${role}"]`);
     const hip = pick('hip');
     const torso = pick('torso');
+    const shoulders = pick('shoulders');
     const head = pick('head');
     const kit = pick('kit');
     const hand = pick('hand');
@@ -362,6 +363,13 @@ export function Figure({
       torso.setAttribute('y1', p.hip.y.toFixed(2));
       torso.setAttribute('x2', p.chest.x.toFixed(2));
       torso.setAttribute('y2', p.chest.y.toFixed(2));
+      if (shoulders) {
+        shoulders.setAttribute('stroke-width', (p.shoulderR * 2).toFixed(2));
+        shoulders.setAttribute('x1', (p.chest.x - p.shoulderHalf).toFixed(2));
+        shoulders.setAttribute('y1', p.chest.y.toFixed(2));
+        shoulders.setAttribute('x2', (p.chest.x + p.shoulderHalf).toFixed(2));
+        shoulders.setAttribute('y2', p.chest.y.toFixed(2));
+      }
       // L'IK ne dessine plus de membre : elle place ce que la main tient.
       if (hand) {
         const m = p.arms[0]!.c;
@@ -389,6 +397,15 @@ export function Figure({
         x1="0" y1={RIG.hipY} x2="0" y2={RIG.chestY}
         stroke="currentColor" strokeWidth={RIG.bodyR * 2} strokeLinecap="round"
       />
+      {/* Les ÉPAULES : une capsule horizontale, donc la primitive la plus
+          large de la figure. Sans elle le tronc est un tube de largeur
+          constante et la tête se pose sur un sac. C'est le rapport
+          épaules / taille qui fait lire un corps, pas le détail. */}
+      <line
+        data-r="shoulders"
+        x1={-RIG.shoulderHalf} y1={RIG.chestY} x2={RIG.shoulderHalf} y2={RIG.chestY}
+        stroke="currentColor" strokeWidth={RIG.shoulderR * 2} strokeLinecap="round"
+      />
     </g>
   );
 
@@ -406,8 +423,31 @@ export function Figure({
 
       {/* Accessoires du buste : nets, donc hors fusion. */}
       <g data-r="kit">
-        <path d="M -3.2 -2 L 0 2.6 L 3.2 -2 Z" fill={shade(look.shirt, 1.14)} />
-        {look.tie && <path d="M 0 2 L 2.1 5.5 L 0 15 L -2.1 5.5 Z" fill={look.tie} />}
+        {/* Le col est un TRAIT, pas un aplat : un triangle plein posé sur
+            la poitrine se lisait comme une serviette de table. Tracé, il
+            devient l'ouverture d'une chemise. Il doit rester DANS la
+            masse du buste — débordant au-dessus des épaules, il devenait
+            un harnais. */}
+        <path
+          d="M -4 -1.4 L 0 3.1 L 4 -1.4"
+          fill="none"
+          stroke={shade(look.shirt, 1.2)}
+          strokeWidth="2.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {look.tie && (
+          /* Une cravate a un NŒUD puis un pan qui s'élargit avant de
+             finir en pointe. Le losange symétrique d'avant, pointu aux
+             deux bouts, donnait un poignard planté sur le torse. */
+          <g>
+            <path d="M -1.6 2.2 Q 0 1.3 1.6 2.2 L 2 4.5 Q 0 5.2 -2 4.5 Z"
+              fill={shade(look.tie, 1.14)} />
+            {/* Le pan : bords droits et pointe franche. Ici les droites
+                sont justes — c'est du tissu repassé, pas un volume rond. */}
+            <path d="M -2 4.7 L 2 4.7 L 2.5 9.3 L 0 14.2 L -2.5 9.3 Z" fill={look.tie} />
+          </g>
+        )}
       </g>
 
       {look.mug && (

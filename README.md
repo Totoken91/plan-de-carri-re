@@ -200,7 +200,26 @@ modelé tourne à la bouillie ; on joue donc ce que le SVG fait le mieux —
 des formes nettes en aplat. Tête ronde volontairement grosse posée sans
 cou, buste en dôme sans bras, deux tons par forme séparés par une arête
 franche (jamais de dégradé), et un visage réduit à deux points. Ce qui
-**Les formes n'ont pas de bord droit.** Un plan qui traverse une boule
+**Le corps se lit par ses proportions, pas par ses détails.** La
+silhouette est bâtie sur trois primitives fusionnées : bassin, buste, et
+une **capsule d'épaules horizontale** qui est la plus large de la figure.
+Sans elle, le tronc est un tube de largeur constante coiffé d'un dôme —
+un pion d'échecs. Mais l'écart doit rester mesuré : un premier réglage à
+6,4 de demi-buste contre 21 d'épaules donnait une taille de guêpe et deux
+lobes séparés par un étranglement. Cible tenue : **19 aux épaules, 15 à
+la taille, 16 aux hanches**.
+
+Deux corollaires appris à l'image : le col est un **trait** et non un
+aplat (un triangle plein sur la poitrine se lit comme une serviette de
+table), et il doit rester *dans* la masse du buste — débordant au-dessus
+des épaules, il devient un harnais. La cravate, elle, a un **nœud** puis
+un pan qui s'élargit avant de finir en pointe : le losange symétrique,
+pointu aux deux bouts, donnait un poignard planté sur le torse.
+
+**Les formes n'ont pas de bord droit** — sauf le tissu repassé (le pan de
+la cravate), où l'arête est juste.
+
+Un plan qui traverse une boule
 se lit comme une fissure, pas comme une ombre : l'ombre propre du visage
 suit un **terminateur elliptique** qui passe par les deux pôles du crâne
 et s'écarte au maximum à l'équateur. Même logique pour les cheveux — une
