@@ -47,7 +47,8 @@ src/
     argent.ts      Salaire, loyer, et l'interdiction du crédit
     romance.ts     Attachement, statuts, jalousie, ébruitement
     subordonnes.ts Périmètre hiérarchique et ordres hebdomadaires
-    marche.ts      Bourse (dérive positive) et casino (espérance négative)
+    marche.ts      Bourse (dérive positive, historique) et casino
+                   (espérance négative)
     vieprivee.ts   Résolveur commun des dépenses et des activités
     week.ts        Orchestration de la résolution du vendredi
   state/
@@ -80,7 +81,9 @@ src/
     DeskScreen.tsx     Écran principal (HUD, plateau, agenda, journal)
     ViePrivee.tsx      Blocs d'inspecteur : romance, périmètre, dépenses
     Appart.tsx         Le week-end : chez soi, logement, mobilier
-    Marche.tsx         Bourse et casino (même panneau au bureau et à la maison)
+    Marche.tsx         Bourse et casino (au poste comme à la maison)
+    Courbe.tsx         Les graphes : séries indexées, tracés par titre
+    Ecran.tsx          Le poste de travail : un écran DANS la fiction
     ...                événement, résolution hebdo, game over
 ```
 
@@ -514,6 +517,87 @@ espérance, et c'est délibéré.
   capital en une petite chance d'un gros capital, tout de suite. Joué
   depuis le poste de travail, il fait monter la suspicion, gagné ou perdu :
   c'est ce qui lui donne une place **dans** le jeu plutôt qu'à côté.
+
+### Le poste de travail : un écran DANS le jeu
+
+Produire, regarder la bourse et jouer au casino se font maintenant en
+s'asseyant à son bureau, dans une fenêtre qui imite un poste de travail.
+Trois raisons, dans l'ordre :
+
+1. **Ça donne un lieu à ces actions.** « Bosser » était un bouton dans un
+   panneau latéral, au même endroit que « prendre un café avec Marc ». Le
+   plateau redevient l'endroit où l'on décide, au lieu d'être une
+   illustration du panneau de droite.
+2. **Ça explique la règle du casino.** On est devant un écran, dans un
+   open space, sous les yeux de six personnes : la suspicion cesse d'être
+   arbitraire.
+3. **Ça sépare l'interface DU jeu de l'interface DANS le jeu.** Le reste
+   est du papier kraft, de l'encre et des angles vifs ; l'écran est du
+   verre, de la lumière et des coins arrondis. C'est le contraste qui
+   fait comprendre qu'on regarde un objet de la fiction.
+
+Un défaut est apparu à la vérification : **deux écouteurs d'Échap sur
+`window`**. Fermer l'écran ouvrait le menu pause dans la foulée, parce
+que le second écouteur n'avait aucun moyen de savoir que le premier
+venait de se servir de la touche. L'écran du bureau garde donc la même
+garde que le tutoriel et le règlement.
+
+### Les graphes de la bourse
+
+Trois décisions, toutes prises avant d'écrire le premier trait :
+
+- **Les séries sont indexées à 100, pas tracées en euros.** Kastel vaut
+  210 €, Novatek 12 €. Sur un axe commun en euros, Novatek serait une
+  ligne plate au ras du zéro et son doublement — l'événement le plus
+  intéressant du marché — serait invisible. Deux échelles sur un même
+  graphe est le mensonge classique : leur alignement est arbitraire, donc
+  le graphe invente une corrélation qui n'existe pas.
+- **Les couleurs sont validées, pas choisies à l'œil.** Les quatre
+  teintes du décor échouaient comme palette de séries : `#9e3428` contre
+  `#2f7048` donnent un **ΔE de 4,6 en deutéranopie**, c'est-à-dire la même
+  couleur pour 6 % des hommes. La palette retenue est deux teintes × deux
+  clartés — sous vision daltonienne, c'est la clarté qui reste lisible.
+  Toutes les paires passent, y compris **non adjacentes** : sur un graphe
+  à quatre courbes, elles sont toutes visibles ensemble. Le rouge du
+  tampon est écarté par principe — c'est une couleur de statut, elle ne
+  peut pas désigner « la série 4 ».
+- **Il y a une vue tableau, et ce n'est pas une politesse.** Deux des
+  quatre couleurs passent sous 3:1 de contraste avec le kraft. C'est
+  acceptable pour un trait de 2 px portant une étiquette directe, à
+  condition que la valeur soit atteignable autrement qu'à la couleur.
+
+Le tracé par titre, lui, est en euros absolus : une seule série, donc
+aucune comparaison à fausser, et c'est la seule échelle qui réponde à la
+question qui compte quand on détient une ligne — suis-je au-dessus de ce
+que j'ai payé ? D'où le prix de revient stocké dans l'état, et le trait
+horizontal qui le matérialise.
+
+### Les enjeux : quatre façons de finir
+
+L'audit RH et le burn-out existaient. S'y ajoute l'**expulsion**, après
+deux loyers impayés consécutifs. Deux, et pas un : le premier impayé doit
+être un avertissement rattrapable — en vendant des titres, en revendant
+un meuble, en reprenant plus petit. Une fin de partie qui tombe sans
+qu'on ait pu réagir n'est pas un enjeu, c'est un piège. Le compteur
+s'affiche en rouge dans la barre du haut dès le premier impayé.
+
+Le loyer du dernier étage dépasse le salaire d'un Senior. Ce n'est pas un
+oubli d'équilibrage : c'est ce qui rend le train de vie dangereux.
+
+### Cliquer sur le plateau
+
+Le mobilier interceptait les clics destinés aux pièces — les surfaces
+cliquables des zones sont posées **au sol**, donc sous tout ce qui est
+peint ensuite. Sélectionner la salle de réunion demandait de viser les
+quelques pixels de moquette qu'aucun meuble ne couvrait.
+
+La règle est donc inversée : par défaut, rien dans le plateau ne reçoit
+d'événement de pointeur, et seuls les éléments explicitement interactifs
+le réactivent. Un meuble ne peut plus voler un clic quel que soit son
+ordre de rendu, et il n'y a plus qu'un endroit à tenir à jour quand on
+ajoute du décor. Mesuré après coup : 5 zones sur 7 atteignables en visant
+leur centre exact, les deux autres étant couvertes en leur centre par une
+balise d'opportunité — qui doit précisément prendre le clic.
 
 ### Les subordonnés : déléguer met le sale boulot dans une bouche
 

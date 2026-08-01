@@ -10,8 +10,9 @@ import { Inspector } from './Inspector';
 import { Tutorial } from './Tutorial';
 import { Manual } from './Manual';
 import { PauseMenu } from './PauseMenu';
-import { Marche } from './Marche';
-import { euros } from '@engine/argent';
+import { Ecran } from './Ecran';
+import { euros, loyerDe, salaireDe } from '@engine/argent';
+import { balance } from '@data/balance';
 import { tutorialSeen } from './tutorial';
 import type { Selection } from './iso';
 
@@ -38,21 +39,25 @@ export function DeskScreen({
   const [tuto, setTuto] = useState(() => !tutorialSeen());
   const [manual, setManual] = useState(false);
   const [paused, setPaused] = useState(false);
-  // L'onglet resté ouvert derrière la feuille de calcul. Tout le monde en
-  // a un.
-  const [prive, setPrive] = useState(false);
+  // Le poste de travail : bosser, la bourse et le casino s'y font, parce
+  // que ce sont trois choses qu'on fait devant un écran.
+  const [poste, setPoste] = useState(false);
 
   // Échap : le raccourci que tout le monde essaie en premier.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
-      // Le tuto et le règlement ont déjà leur propre Échap.
-      if (tuto || manual) return;
+      // Le tuto, le règlement et le poste ont déjà leur propre Échap.
+      // Sans cette garde, fermer l'écran du poste ouvrait le menu pause
+      // dans la foulée : deux écouteurs sur `window` recevaient la même
+      // touche, et le second n'avait aucun moyen de savoir que le premier
+      // venait de s'en servir.
+      if (tuto || manual || poste) return;
       setPaused((p) => !p);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [tuto, manual]);
+  }, [tuto, manual, poste]);
 
   useEffect(() => {
     if (!toast) return;
@@ -110,13 +115,19 @@ export function DeskScreen({
 
         <div className="topbar__week">
           <span className="topbar__weeknum">Semaine {state.week}</span>
-          <button
-            className="topbar__argent"
-            onClick={() => setPrive(true)}
-            title="Bourse et casino — depuis ton poste, ça se voit"
+          <span
+            className={`topbar__argent ${state.loyersImpayes > 0 ? 'is-danger' : ''}`}
+            title={`Loyer ${euros(loyerDe(state))} · salaire ${euros(salaireDe(state))} par semaine`}
           >
             {euros(state.argent)}
-          </button>
+          </span>
+          {/* Un impayé doit se voir AVANT le vendredi suivant : une fin
+              de partie qu'on n'a pas vue venir n'est pas un enjeu. */}
+          {state.loyersImpayes > 0 && (
+            <span className="topbar__expulsion">
+              Loyer impayé {state.loyersImpayes}/{balance.expulsionApres}
+            </span>
+          )}
           <span className="topbar__ap" title="Points d'action restants">
             {'●'.repeat(state.actionPointsRemaining)}
             {'○'.repeat(Math.max(0, 5 - state.actionPointsRemaining))}
@@ -176,7 +187,17 @@ export function DeskScreen({
 
       <div className="desk__body">
         <section className="board">
-          <IsoOffice selection={selection} onSelect={setSelection} />
+          <IsoOffice
+            selection={selection}
+            onSelect={(s) => {
+              // Cliquer son propre poste, c'est s'y asseoir. C'est le
+              // seul endroit du jeu où une zone ouvre un écran plutôt que
+              // de remplir l'inspecteur — parce que c'est le seul endroit
+              // où le personnage a quelque chose devant les yeux.
+              if (s?.kind === 'zone' && s.id === 'player') setPoste(true);
+              setSelection(s);
+            }}
+          />
 
           <div className="agenda">
             <div className="agenda__col">
@@ -250,17 +271,7 @@ export function DeskScreen({
         <Inspector selection={selection} onSelect={setSelection} onResult={flash} />
       </div>
 
-      {prive && (
-        <div className="modal-backdrop" onClick={() => setPrive(false)}>
-          <div className="modal modal--marche" onClick={(e) => e.stopPropagation()}>
-            <div className="event__tag">Onglet privé · minimisé si quelqu’un passe</div>
-            <Marche onResult={flash} />
-            <button className="btn btn--primary" onClick={() => setPrive(false)}>
-              Refermer
-            </button>
-          </div>
-        </div>
-      )}
+      {poste && <Ecran onClose={() => setPoste(false)} />}
 
       {toast && <div className={`toast toast--${toast.tone}`}>{toast.text}</div>}
 

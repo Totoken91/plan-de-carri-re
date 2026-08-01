@@ -7,7 +7,7 @@
       "base": 84,
       "volatilite": 0.06,
       "derive": 0.004,
-      "couleur": "#2f6b86"
+      "couleur": "#0d5594"
     },
     {
       "id": "oxalis",
@@ -16,7 +16,7 @@
       "base": 31,
       "volatilite": 0.13,
       "derive": 0.009,
-      "couleur": "#b87a1e"
+      "couleur": "#c9932a"
     },
     {
       "id": "kastel",
@@ -25,7 +25,7 @@
       "base": 210,
       "volatilite": 0.035,
       "derive": 0.002,
-      "couleur": "#2f7048"
+      "couleur": "#4b93c9"
     },
     {
       "id": "novatek",
@@ -34,7 +34,7 @@
       "base": 12,
       "volatilite": 0.24,
       "derive": 0.014,
-      "couleur": "#9e3428"
+      "couleur": "#95580a"
     }
   ],
   "casino": [

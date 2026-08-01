@@ -40,6 +40,15 @@ export interface Balance {
   };
   /** Trésorerie de départ, avant le premier salaire. */
   argentDepart: number;
+  /**
+   * Loyers impayés consécutifs avant expulsion.
+   *
+   * Deux, et pas un : le premier impayé doit être un avertissement qu'on
+   * peut encore rattraper — en vendant des titres, en revendant un
+   * meuble, en déménageant plus petit. Une fin de partie qui tombe sans
+   * qu'on ait pu réagir n'est pas un enjeu, c'est un piège.
+   */
+  expulsionApres: number;
   romance: {
     /** Seuils d'attachement qui font passer d'un statut au suivant. */
     seuilFlirt: number;

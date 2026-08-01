@@ -1426,3 +1426,199 @@ body {
 /* Le pictogramme des toilettes : petit, mais c'est lui qui nomme la
    pièce à l'échelle de jeu. */
 .iso-wc__signe { font-size: 13px; }
+
+/* ══════════════════════════════════════════════════════════════
+   Cliquer sur le plateau
+   ──────────────────────────────────────────────────────────────
+   Le mobilier interceptait les clics destinés aux pièces. Rien
+   d'étonnant : les surfaces cliquables des zones sont posées AU SOL,
+   donc sous tout ce qui est peint ensuite — bureaux, cloisons,
+   plantes, écrans. Sélectionner « la salle de réunion » demandait de
+   viser les quelques pixels de moquette qu'aucun meuble ne couvrait.
+
+   La règle est donc inversée : par défaut, RIEN dans le plateau ne
+   reçoit d'événement de pointeur. Seuls les éléments explicitement
+   interactifs le réactivent. Un meuble ne peut plus voler un clic,
+   quel que soit son ordre de rendu — et il n'y a plus qu'un endroit
+   à tenir à jour quand on ajoute du décor.
+   ══════════════════════════════════════════════════════════════ */
+.iso__svg > g,
+.iso__svg > g * { pointer-events: none; }
+
+.iso__svg .iso-zone,
+.iso__svg .iso-zone__hit,
+.iso__svg .iso-hit,
+.iso__svg .iso-beacon:not(.is-disabled),
+.iso__svg .iso-beacon:not(.is-disabled) * { pointer-events: auto; }
+
+/* ══════════════════════════════════════════════════════════════
+   Le poste de travail
+   ──────────────────────────────────────────────────────────────
+   Règle qui gouverne tout ce bloc : cette interface-là ne doit
+   RESSEMBLER À RIEN d'autre dans le jeu. Le reste du jeu est du
+   papier kraft, de l'encre et des angles vifs — l'écran est du
+   verre, de la lumière et des coins arrondis. C'est le contraste
+   qui fait comprendre qu'on regarde un objet DANS la fiction, et
+   non l'interface DE la fiction.
+   ══════════════════════════════════════════════════════════════ */
+.poste {
+  position: relative; width: min(940px, calc(100vw - 40px));
+  max-height: calc(100vh - 48px); display: flex; flex-direction: column; gap: 8px;
+}
+.poste__cadre {
+  background: #2a2c30; padding: 14px 14px 10px;
+  border-radius: 8px; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+  display: flex; flex-direction: column; align-items: center;
+}
+.poste__ecran {
+  width: 100%; border-radius: 3px; overflow: hidden;
+  border: 1px solid #16181b;
+  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.45);
+}
+.poste__pied { width: 120px; height: 12px; background: #202226; border-radius: 0 0 5px 5px; }
+
+.poste__fond {
+  position: relative; min-height: 460px; max-height: calc(100vh - 190px);
+  display: flex; flex-direction: column;
+  background: linear-gradient(160deg, #35506b, #1e2c3d 60%, #16202c);
+  color: #e8ecf1; font-family: var(--font-body); font-size: 13.5px;
+}
+
+.poste__icones {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 12px; width: 132px; flex-shrink: 0;
+}
+.icone {
+  display: flex; align-items: center; gap: 8px;
+  background: none; border: 1px solid transparent; border-radius: 3px;
+  padding: 5px 6px; color: #e8ecf1; text-align: left; cursor: pointer;
+  font: inherit; font-size: 11.5px;
+}
+.icone:hover { background: rgba(255, 255, 255, 0.12); }
+.icone.is-on { background: rgba(120, 175, 235, 0.3); border-color: rgba(160, 200, 240, 0.5); }
+.icone__glyphe {
+  width: 24px; height: 24px; flex-shrink: 0;
+  display: grid; place-items: center; font-size: 14px;
+  background: rgba(255, 255, 255, 0.14); border-radius: 3px;
+}
+.icone__nom { line-height: 1.2; }
+
+.fenetre {
+  position: absolute; left: 140px; right: 14px; top: 14px; bottom: 40px;
+  display: flex; flex-direction: column;
+  background: #f2f4f7; color: #1a1d21;
+  border-radius: 4px; box-shadow: 0 10px 34px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+.fenetre__barre {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 8px 6px 12px; background: #dbe0e7; border-bottom: 1px solid #c2c9d2;
+}
+.fenetre__titre { font-size: 12px; font-weight: 700; }
+.fenetre__fermer {
+  margin-left: auto; width: 24px; height: 20px; border: 0; border-radius: 3px;
+  background: transparent; color: #1a1d21; cursor: pointer; font-size: 12px;
+}
+.fenetre__fermer:hover { background: #c0392b; color: #fff; }
+.fenetre__corps { flex: 1; overflow-y: auto; padding: 12px 14px; }
+
+/* Dans la fenêtre, on réutilise les composants du jeu mais sur fond
+   clair d'écran : les jetons d'encre-sur-kraft n'y ont plus cours. */
+.fenetre__corps .act { border-color: #ccd3db; }
+.fenetre__corps .act:not(:disabled):hover { background: #e4e9f0; }
+.fenetre__corps .section-title,
+.fenetre__corps .act__label { color: #1a1d21; }
+.fenetre__corps .muted { color: #5a636e; }
+.fenetre__corps .btn { background: #e8ecf1; border-color: #b9c2cd; color: #1a1d21; }
+.fenetre__corps .btn:not(:disabled):hover { background: #d7dee7; }
+.fenetre__corps .chip { border-color: #b9c2cd; color: #1a1d21; }
+.fenetre__corps .chip.is-on { background: #1a1d21; color: #f2f4f7; }
+.fenetre__corps .titre, .fenetre__corps .ordre { border-color: #d4dae2; }
+.fenetre__corps .titre__qte { background: #fff; border-color: #b9c2cd; color: #1a1d21; }
+
+.tableur__note { margin: 0 0 10px; color: #5a636e; font-size: 12.5px; }
+.messagerie { list-style: none; margin: 0; padding: 0; font-size: 12.5px; }
+.messagerie__ligne { padding: 5px 0; border-bottom: 1px solid #e2e6ec; }
+.messagerie__sem {
+  font-family: var(--font-form); font-size: 11px; color: #7b8592; margin-right: 6px;
+}
+.messagerie__ligne--good { color: #1f6b4a; }
+.messagerie__ligne--bad { color: #a3352a; }
+
+.poste__barre {
+  margin-top: auto; display: flex; align-items: center; gap: 10px;
+  padding: 5px 10px; background: rgba(10, 16, 24, 0.72);
+  font-family: var(--font-form); font-size: 11.5px;
+}
+.poste__demarrer {
+  background: rgba(255, 255, 255, 0.14); padding: 2px 8px; border-radius: 2px;
+}
+.poste__zone { margin-left: auto; font-variant-numeric: tabular-nums; }
+.poste__zone em { color: #9fb2c6; font-style: normal; }
+.poste__zone--pa { margin-left: 0; color: #9fb2c6; }
+.poste__quitter { align-self: flex-end; }
+.poste__toast { position: absolute; left: 14px; bottom: 46px; z-index: 5; }
+
+/* ── Bourse : courbes ────────────────────────────────────── */
+.bourse__entete {
+  display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap;
+  font-family: var(--font-form); font-size: 12px; margin-bottom: 10px;
+}
+.bourse__pv--haut { color: #1f6b4a; }
+.bourse__pv--bas { color: #a3352a; }
+
+.courbe { margin: 0 0 14px; }
+.courbe__tete { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+.courbe__titre {
+  margin: 0; font-family: var(--font-form); font-size: 11px;
+  letter-spacing: 0.09em; text-transform: uppercase; color: #5a636e;
+}
+.courbe__tete .btn { margin-left: auto; }
+.courbe__vide { font-size: 12.5px; }
+/* Le conteneur inclut la bande d'axe : une hauteur fixe qui l'exclut
+   provoque un mini-ascenseur vertical dans la carte. */
+.courbe__svg { display: block; width: 100%; height: auto; }
+.courbe__grille line { stroke: #d3d9e1; stroke-width: 1; }
+.courbe__base { stroke: #9aa5b2; stroke-width: 1; }
+.courbe__ticks text {
+  font-family: var(--font-form); font-variant-numeric: tabular-nums;
+  font-size: 9px; fill: #6b7581;
+}
+.courbe__bout { font-family: var(--font-form); font-size: 9.5px; font-weight: 700; }
+.courbe__viseur line { stroke: #6b7581; stroke-width: 1; }
+.courbe__bulle {
+  display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center;
+  margin-top: 4px; padding: 5px 8px; background: #e6eaf0; border: 1px solid #ccd3db;
+  font-family: var(--font-form); font-size: 11px;
+}
+.courbe__bulleligne { display: inline-flex; align-items: center; gap: 4px; }
+.courbe__pastille { width: 8px; height: 8px; flex-shrink: 0; display: inline-block; }
+.courbe__legende {
+  list-style: none; margin: 6px 0 0; padding: 0;
+  display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 11.5px;
+}
+.courbe__legende li { display: flex; align-items: center; gap: 5px; }
+.courbe__tablewrap { overflow-x: auto; max-height: 200px; overflow-y: auto; }
+.courbe__table { border-collapse: collapse; font-family: var(--font-form); font-size: 11px; }
+.courbe__table th, .courbe__table td {
+  padding: 2px 8px; border-bottom: 1px solid #e2e6ec; text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.courbe__table thead th { position: sticky; top: 0; background: #f2f4f7; }
+
+.titre__corps { display: flex; align-items: center; gap: 10px; margin: 4px 0 6px; }
+.trace { width: 104px; height: 30px; flex-shrink: 0; }
+.trace__revient { stroke: #6b7581; stroke-width: 1; }
+.titre__infos { display: flex; flex-wrap: wrap; gap: 2px 10px; font-family: var(--font-form); font-size: 11px; }
+.casino__alerte {
+  font-size: 12.5px; color: #a3352a; border-left: 3px solid #a3352a;
+  padding-left: 9px; margin: 0 0 10px;
+}
+
+/* ── Enjeu : le loyer ────────────────────────────────────── */
+.topbar__argent.is-danger { color: var(--stamp); }
+.topbar__expulsion {
+  display: block; margin-top: 2px;
+  font-family: var(--font-form); font-size: 10.5px; letter-spacing: 0.05em;
+  color: var(--paper-hi); background: var(--stamp); padding: 1px 5px;
+}

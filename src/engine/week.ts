@@ -141,10 +141,35 @@ export function finalizeWeek(state: GameState, rng: Rng): WeekSummary {
   summary.paie = paie;
   record(
     paie.decouvert
-      ? `Paie : ${euros(paie.salaire)}. Loyer : ${euros(paie.loyer)}. Le compte ne suivait pas — tu commences la semaine à zéro.`
+      ? `Paie : ${euros(paie.salaire)}. Loyer : ${euros(paie.loyer)}. Le compte ne suivait pas.`
       : `Paie : ${euros(paie.salaire)}, moins ${euros(paie.loyer)} de loyer. Net : ${euros(paie.net)}.`,
     paie.decouvert ? 'bad' : 'neutral',
   );
+
+  // Les impayés s'enchaînent, ou ils s'effacent. C'est la SUITE qui fait
+  // l'expulsion — un mois difficile ne met personne à la rue, et un
+  // avertissement qu'on ne peut pas rattraper n'est pas un enjeu, c'est
+  // un piège.
+  if (paie.decouvert) {
+    state.loyersImpayes += 1;
+    if (state.loyersImpayes >= balance.expulsionApres) {
+      record(
+        `Deuxième loyer impayé. Le bailleur ne relance plus : il fait constater. Tu dors chez un collègue, puis chez personne.`,
+        'bad',
+      );
+      state.status = 'expulse';
+      summary.gameOver = 'expulse';
+      return summary;
+    }
+    record(
+      `Loyer impayé (${state.loyersImpayes} / ${balance.expulsionApres}). Une lettre recommandée arrive samedi. Il reste une semaine pour trouver l’argent.`,
+      'bad',
+    );
+  } else if (state.loyersImpayes > 0) {
+    state.loyersImpayes = 0;
+    record('Loyer à jour. Le bailleur retire son courrier.', 'good');
+  }
+
   appliquerMobilierHebdo(state);
 
   // 3 ter) Un pas de marché. Il tourne même sans portefeuille : le cours

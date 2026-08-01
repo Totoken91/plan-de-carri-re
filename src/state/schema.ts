@@ -430,7 +430,7 @@ export interface Player {
   traits: TraitId[];
 }
 
-export type GameStatus = 'playing' | 'won' | 'fired' | 'burnout';
+export type GameStatus = 'playing' | 'won' | 'fired' | 'burnout' | 'expulse';
 
 export interface LogEntry {
   week: number;
@@ -471,8 +471,28 @@ export interface GameState {
   /** Cours courant de chaque titre. Il vit dans l'état : sans ça, la
    *  bourse repartirait de zéro à chaque rechargement. */
   cours: Record<string, number>;
+  /**
+   * Historique des cours, un point par semaine, du plus ancien au plus
+   * récent. Fenêtre glissante — une partie de cent semaines n'a pas
+   * besoin de cent points pour raconter une tendance, et une sauvegarde
+   * qui grossit sans fin finit par saturer le stockage.
+   */
+  historiqueCours: Record<string, number[]>;
+  /**
+   * Prix de revient moyen des titres détenus. Sans lui, un graphe montre
+   * ce que vaut le titre mais pas ce que TOI tu as fait : c'est la ligne
+   * d'entrée qui transforme une courbe en décision.
+   */
+  prixRevient: Record<string, number>;
   /** Usages de dépenses cette semaine, pour les plafonds. */
   depensesSemaine: Record<string, number>;
+  /**
+   * Semaines de loyer consécutives que tu n'as pas pu payer.
+   *
+   * Le compteur est remis à zéro dès qu'un loyer passe : ce sont les
+   * impayés qui s'enchaînent qui font l'expulsion, pas un mois difficile.
+   */
+  loyersImpayes: number;
   player: Player;
   colleagues: Colleague[];
   suspicion: number; // 0–100 globale

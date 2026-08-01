@@ -119,18 +119,20 @@ export interface IsoZone {
 
 export const ZONES: IsoZone[] = [
   { id: 'manager', label: 'Bureau du manager', gx: 0, gy: 0, w: 4.5, d: 3.5 },
-  // Adossées au mur de gauche, dans l'allée qui sépare les salles du fond
-  // de la première rangée de postes.
+  // Une PORTE dans le mur de gauche, et rien de plus : les toilettes
+  // sont hors du rectangle de l'étage, comme dans n'importe quel plan de
+  // bureau réel. Leur emprise au sol est donc nulle.
   //
-  // Le premier emplacement — entre ton poste et le coin détente — était
-  // faux sur deux points, et les deux se démontrent :
-  //  · sa profondeur (gx+gy de 18,3 à 22) dépassait celle du joueur
-  //    (16,95), donc le peintre posait le cabinet PAR-DESSUS lui ;
-  //  · sa porte tombait à gy 11,9 pour un plateau qui s'arrête à 12 :
-  //    elle ouvrait sur le vide, au bord de la découpe isométrique.
-  // Ici, la profondeur va de 3,55 à 6,45 — devant les salles du fond,
-  // derrière tout le monde — et la porte donne sur l'allée.
-  { id: 'toilettes', label: 'Toilettes', gx: 0, gy: 3.55, w: 1.2, d: 1.7 },
+  // Les deux emplacements précédents étaient des volumes POSÉS DANS la
+  // pièce, et chacun coûtait quelque chose de mesurable : le premier
+  // (entre ton poste et le coin détente) avait une profondeur de 18,3 à
+  // 22 contre 16,95 pour le joueur assis — le peintre le posait donc
+  // par-dessus lui — et sa porte tombait au ras du bord du plateau, donc
+  // ouvrait sur le vide. Le second mangeait l'allée.
+  //
+  // La zone garde une emprise quasi nulle : c'est un panneau sur le mur,
+  // pas une pièce. Ce qu'on clique, c'est la porte.
+  { id: 'toilettes', label: 'Toilettes', gx: 0, gy: 3.9, w: 0.02, d: 1.1 },
   { id: 'cafe', label: 'Machine à café', gx: 4.8, gy: 0, w: 4.4, d: 3.5 },
   { id: 'meeting', label: 'Salle de réunion', gx: 9.5, gy: 0, w: 4.5, d: 3.5 },
   { id: 'archive', label: 'Archives', gx: 0, gy: 9.6, w: 4, d: 2.4 },
@@ -206,10 +208,9 @@ export function seatOf(index: number): DeskSlot {
  */
 export function zoneLabelPoint(id: ZoneId): IsoPoint {
   const z = zoneById(id);
-  // Les toilettes sont un bloc plein de 62 de haut : leur pancarte se
-  // pose au-dessus du bloc, pas au sol (invisible) ni sur une cloison
-  // vitrée (il n'y en a pas).
-  if (id === 'toilettes') return iso(z.gx + z.w / 2, z.gy + z.d / 2, 78);
+  // Les toilettes n'ont pas d'emprise au sol : leur pancarte se visse
+  // au-dessus de la porte, sur le mur.
+  if (id === 'toilettes') return iso(0, z.gy + z.d / 2, 62);
   // Posée juste au-dessus de la traverse haute du vitrage (z = 70), là où
   // une vraie signalétique se visse — et hors de portée des bulles.
   if (z.gy < 5) return iso(z.gx + z.w / 2, z.gy + z.d, 76);

@@ -488,54 +488,40 @@ export function IsoOffice({
         <GlassRun along="y" from={0} to={3.5} at={9.5} />
 
         {/* ── Toilettes ──
-            Le seul volume OPAQUE d'un étage entièrement vitré, et c'est
-            tout ce qu'il faut dire pour expliquer pourquoi les gens y
-            vont : c'est la seule porte qui ferme.
+            Une PORTE dans le mur, et rien de plus.
 
-            Adossées au mur de gauche, dans l'allée. Le premier
-            emplacement — entre ton poste et le coin détente — était faux
-            sur deux points démontrables :
+            Les deux versions précédentes étaient des volumes posés DANS
+            la pièce, et chacune coûtait quelque chose de mesurable : la
+            première avait une profondeur de 18,3 à 22 contre 16,95 pour
+            le joueur assis — le peintre la posait donc littéralement
+            par-dessus lui — et sa porte tombait au ras du bord du
+            plateau, donc ouvrait sur le vide. La seconde mangeait toute
+            l'allée pour une pièce où l'on passe sept minutes.
 
-             · sa profondeur (gx+gy de 18,3 à 22) dépassait celle du
-               joueur assis (16,95). Le peintre travaillant par
-               profondeur croissante, le cabinet se posait littéralement
-               par-dessus lui ;
-             · sa porte tombait à gy 11,9 pour un plateau qui s'arrête à
-               12. Elle ouvrait donc sur le vide, au ras de la découpe.
-
-            Ici la profondeur va de 3,55 à 6,45 : devant les salles du
-            fond, derrière la première rangée de postes (6,75). D'où sa
-            place dans l'ordre de rendu — juste avant `rowA`. */}
+            Des toilettes sont hors du plateau, comme dans n'importe quel
+            plan de bureau : ce qui doit être visible, c'est la porte. */}
         <g className="iso-wc">
-          {/* Un BLOC PLEIN, et pas quatre cloisons minces.
-              Dessiné en parois séparées, le cabinet se lisait comme un
-              panneau posé de champ : sans dessus, la caméra isométrique
-              plonge dedans et le volume disparaît. Un bloc opaque, lui,
-              dit d'un seul coup ce qu'il est — la seule chose fermée de
-              l'étage. */}
-          <IsoBox gx={0} gy={3.55} w={1.3} d={1.9} h={62} color={T.structure.cloisonPleine} />
-          {/* La porte, encastrée dans la face tournée vers l'allée. */}
-          <IsoBox gx={1.3} gy={3.95} w={0.06} d={1.05} h={46} color={T.structure.boisFonce} />
+          <polygon points={panelAlongY(3.82, 5.08, 0.01, 0, 52)} fill={T.structure.cloisonPleine} />
+          <polygon points={panelAlongY(3.94, 4.96, 0.02, 2, 47)} fill={T.structure.boisFonce} />
+          {/* Le jour sous la porte : c'est ce détail qui dit « il y a une
+              pièce derrière » plutôt que « il y a un panneau collé ». */}
+          <polygon points={panelAlongY(3.94, 4.96, 0.03, 0, 2)} fill={T.structure.metalClair} opacity="0.5" />
           {(() => {
-            const poignee = iso(1.38, 4.86, 24);
-            const signe = iso(1.38, 4.48, 38);
-            const cible = iso(1.38, 4.48, 22);
+            const poignee = iso(0.02, 4.86, 24);
+            const signe = iso(0.02, 4.45, 36);
             return (
               <>
                 <circle cx={poignee.x} cy={poignee.y} r="1.5" fill={T.structure.metalClair} />
                 <text className="iso-wc__signe" x={signe.x} y={signe.y} textAnchor="middle">
                   🚻
                 </text>
-                {/* On clique la PORTE, pas la pièce : en projection
-                    isométrique, un volume fermé recouvre intégralement
-                    son propre sol, donc la surface cliquable générique
-                    des zones y est rigoureusement inatteignable. Une
-                    zone qu'on ne peut pas sélectionner n'existe pas. */}
+                {/* La porte EST la zone : l'emprise au sol étant nulle, la
+                    surface cliquable générique n'existe pas ici. */}
                 <rect
-                  x={cible.x - 18}
-                  y={cible.y - 44}
-                  width="36"
-                  height="52"
+                  x={poignee.x - 22}
+                  y={poignee.y - 52}
+                  width="44"
+                  height="62"
                   fill="transparent"
                   className="iso-hit"
                   onClick={() => onSelect({ kind: 'zone', id: 'toilettes' })}
@@ -545,11 +531,11 @@ export function IsoOffice({
           })()}
         </g>
         {isSelectedZone('toilettes') && (
-          /* Le liseré se pose sur le TOIT du bloc : au sol il serait
-             entièrement caché par le bloc lui-même. */
-          <g transform="translate(0,-62)">
-            <polygon points={quad(0, 3.55, 1.3, 1.9)} className="iso-zone-ring" filter="url(#glowSelect)" />
-          </g>
+          <polygon
+            points={panelAlongY(3.82, 5.08, 0.04, 0, 52)}
+            className="iso-zone-ring"
+            filter="url(#glowSelect)"
+          />
         )}
 
         {/* ── Open space ── */}

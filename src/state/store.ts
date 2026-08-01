@@ -28,7 +28,7 @@ import { abetScheme, assignIntents, defuseIntent, warnVictim } from '@engine/int
 import { prepareScapegoat } from '@engine/scapegoat';
 import { applyTraitsAtStart } from '@engine/traits';
 import { appartDeDepart, getDepense } from '@data/vieprivee';
-import { coursInitiaux, acheter, vendre, jouer } from '@engine/marche';
+import { coursInitiaux, historiqueInitial, acheter, vendre, jouer } from '@engine/marche';
 import {
   acheterMeuble,
   demenager,
@@ -73,7 +73,10 @@ export function createInitialState(
     appart: { niveau: appartDeDepart().id, meubles: [] },
     portefeuille: {},
     cours: coursInitiaux(),
+    historiqueCours: historiqueInitial(),
+    prixRevient: {},
     depensesSemaine: {},
+    loyersImpayes: 0,
     player,
     colleagues: structuredClone(startingColleagues),
     suspicion: balance.startSuspicion,

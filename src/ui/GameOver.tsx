@@ -14,6 +14,10 @@ const ENDINGS: Record<Exclude<GameState['status'], 'playing'>, { title: string; 
     title: 'Indisponibilité définitive',
     sub: 'Tes Nerfs ont cédé trop longtemps. Placard, lumière blafarde, fougère en plastique. On ne t’attend plus en réunion.',
   },
+  expulse: {
+    title: 'Expulsion',
+    sub: 'Deux loyers de suite, et le bailleur cesse de relancer pour faire constater. Tu gardes ton poste — tu n’as juste plus d’adresse à mettre dessus.',
+  },
 };
 
 export function GameOver({ onRehire }: { onRehire: () => void }) {

@@ -230,6 +230,47 @@ export function Manual({
           </section>
 
           <section>
+            <h3 className="section-title">Ton poste</h3>
+            <p>
+              Clique sur <b>ton bureau</b> pour t’y asseoir : un écran s’ouvre, avec
+              son bureau et ses icônes. Trois choses s’y font, parce que ce sont
+              trois choses qu’on fait devant un écran — produire (le tableur),
+              regarder le marché, et l’onglet qu’on referme vite.
+            </p>
+            <p>
+              Jouer au casino <b>depuis ce poste</b> fait monter la suspicion, gagné
+              ou perdu. Tu es dans un open space, sous les yeux de six personnes.
+              Chez toi le week-end, la même table ne coûte rien de plus que la mise.
+            </p>
+          </section>
+
+          <section>
+            <h3 className="section-title">Ce qui met fin à une carrière</h3>
+            <p>Quatre choses, toutes annoncées avant de tomber :</p>
+            <ul className="manual__list">
+              <li>
+                <b>L’audit RH</b>, si la suspicion dépasse{' '}
+                {balance.suspicionAuditThreshold} sans couverture.
+              </li>
+              <li>
+                <b>Le burn-out</b>, après {balance.burnoutGraceWeeks} semaines de
+                Nerfs à zéro.
+              </li>
+              <li>
+                <b>L’expulsion</b>, après {balance.expulsionApres} loyers impayés
+                consécutifs. Le premier impayé s’affiche en rouge dans la barre du
+                haut : il reste une semaine pour vendre des titres, revendre un
+                meuble, ou reprendre un logement plus petit.
+              </li>
+              <li>
+                <b>Un loyer qui dépasse ton salaire</b> n’est pas interdit — c’est
+                juste la façon la plus rapide de perdre. Le dernier étage coûte plus
+                cher qu’un salaire de Senior.
+              </li>
+            </ul>
+          </section>
+
+          <section>
             <h3 className="section-title">Bourse et casino</h3>
             <p>
               Deux façons opposées de faire travailler ton salaire.{' '}

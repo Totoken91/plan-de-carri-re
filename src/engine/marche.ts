@@ -37,6 +37,38 @@ export function coursInitiaux(): Record<string, number> {
   return out;
 }
 
+/**
+ * Fenêtre d'historique conservée, en semaines.
+ *
+ * Bornée délibérément : une partie de cent semaines n'a pas besoin de
+ * cent points pour raconter une tendance, et une sauvegarde qui grossit
+ * sans fin finit par heurter le quota de localStorage — là où elle
+ * échoue en silence, ce qui est la pire façon de perdre une partie.
+ */
+export const FENETRE = 26;
+
+export function historiqueInitial(): Record<string, number[]> {
+  const out: Record<string, number[]> = {};
+  for (const t of titres) out[t.id] = [t.base];
+  return out;
+}
+
+/** La série d'un titre, du plus ancien au plus récent. */
+export const serieDe = (state: GameState, id: string): number[] =>
+  state.historiqueCours?.[id] ?? [coursDe(state, id)];
+
+/**
+ * Numéro de semaine du i-ème point d'une série.
+ *
+ * Le dernier point a été écrit à la clôture de la semaine précédente —
+ * `tickMarche` tourne avant l'incrément de `state.week`. Se tromper d'un
+ * cran ici décalerait tout l'axe des abscisses, et personne ne le
+ * remarquerait avant de comparer avec le journal.
+ */
+export function semaineDuPoint(state: GameState, i: number, n: number): number {
+  return state.week - 1 - (n - 1 - i);
+}
+
 export const coursDe = (state: GameState, id: string): number =>
   state.cours[id] ?? getTitre(id)?.base ?? 0;
 
@@ -56,6 +88,7 @@ export function valeurPortefeuille(state: GameState): number {
  * 210 € dans deux mondes différents.
  */
 export function tickMarche(state: GameState, rng: Rng): void {
+  state.historiqueCours ??= historiqueInitial();
   for (const t of titres) {
     const cours = coursDe(state, t.id);
     // Somme de deux tirages : une cloche grossière, plutôt qu'un uniforme
@@ -65,6 +98,10 @@ export function tickMarche(state: GameState, rng: Rng): void {
     // Plancher : un titre qui touche zéro ne remonte jamais dans un
     // modèle multiplicatif, et il resterait dans la liste pour rien.
     state.cours[t.id] = Math.max(t.base * 0.12, Math.round(suivant * 100) / 100);
+
+    const serie = (state.historiqueCours[t.id] ??= [t.base]);
+    serie.push(state.cours[t.id]!);
+    if (serie.length > FENETRE) serie.splice(0, serie.length - FENETRE);
   }
 }
 
@@ -84,7 +121,15 @@ export function acheter(state: GameState, id: string, quantite: number): OpMarch
   if (!payer(state, total)) {
     return { ok: false, text: `Il te manque ${euros(total - state.argent)}.`, tone: 'neutral' };
   }
-  state.portefeuille[id] = (state.portefeuille[id] ?? 0) + quantite;
+  // Prix de revient : moyenne pondérée. On ne compte QUE le cours, pas
+  // les frais — le prix de revient sert à lire la courbe, et une ligne
+  // d'entrée qui inclut le courtage ne correspondrait à aucun point de
+  // cette courbe.
+  const avant = state.portefeuille[id] ?? 0;
+  const revient = state.prixRevient?.[id] ?? 0;
+  state.prixRevient ??= {};
+  state.prixRevient[id] = (revient * avant + coursDe(state, id) * quantite) / (avant + quantite);
+  state.portefeuille[id] = avant + quantite;
   return {
     ok: true,
     text: `${quantite} ${t.symbole} à ${euros(coursDe(state, id))} — ${euros(total)} frais compris.`,
@@ -100,7 +145,10 @@ export function vendre(state: GameState, id: string, quantite: number): OpMarche
   const prix = coursDe(state, id) * quantite;
   const net = prix - frais(prix);
   state.portefeuille[id] = detenu - quantite;
-  if (state.portefeuille[id] === 0) delete state.portefeuille[id];
+  if (state.portefeuille[id] === 0) {
+    delete state.portefeuille[id];
+    delete state.prixRevient?.[id];
+  }
   crediter(state, net);
   return { ok: true, text: `${quantite} ${t.symbole} vendus. ${euros(net)} encaissés.`, tone: 'neutral' };
 }
@@ -144,6 +192,13 @@ export function jouer(
     tone: 'bad',
     suspicion,
   };
+}
+
+/** Plus-value latente d'une ligne, en euros. */
+export function plusValue(state: GameState, id: string): number {
+  const n = state.portefeuille[id] ?? 0;
+  if (!n) return 0;
+  return n * (coursDe(state, id) - (state.prixRevient?.[id] ?? coursDe(state, id)));
 }
 
 /** Espérance d'une table, en % de la mise. Affichée sans fard au joueur. */

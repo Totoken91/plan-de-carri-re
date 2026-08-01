@@ -18,7 +18,7 @@ import { blocageActivite } from '@engine/vieprivee';
 import { euros } from '@engine/argent';
 import { romanceDe } from '@engine/romance';
 import { useGame } from './useGame';
-import { Marche } from './Marche';
+import { Bourse, Casino } from './Marche';
 import { BlocDepenses } from './ViePrivee';
 import { Figure } from './sprites';
 import { Tutorial } from './Tutorial';
@@ -303,7 +303,18 @@ export function Appart({ onLundi }: { onLundi: () => void }) {
             </>
           )}
 
-          {onglet === 'marche' && <Marche onResult={flash} />}
+          {onglet === 'marche' && (
+            <>
+              <section className="sheet inspector__block">
+                <h3 className="section-title">Portefeuille</h3>
+                <Bourse onResult={flash} />
+              </section>
+              <section className="sheet inspector__block">
+                <h3 className="section-title">Casino en ligne</h3>
+                <Casino onResult={flash} />
+              </section>
+            </>
+          )}
         </div>
       </div>
 

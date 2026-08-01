@@ -93,5 +93,6 @@
   "marche": {
     "fraisTransaction": 0.6,
     "tuyauBonus": 0.16
-  }
+  },
+  "expulsionApres": 2
 }

@@ -19,9 +19,9 @@
 import type { GameState } from './schema';
 import { balance } from '@data/balance';
 import { appartDeDepart } from '@data/vieprivee';
-import { coursInitiaux } from '@engine/marche';
+import { coursInitiaux, historiqueInitial } from '@engine/marche';
 
-export const SAVE_VERSION = 8;
+export const SAVE_VERSION = 9;
 export const SLOT_COUNT = 3;
 
 const slotKey = (slot: number) => `plan-de-carriere/dossier/${slot}`;
@@ -152,7 +152,10 @@ function completerSchema(state: GameState): GameState {
   s.appart ??= { niveau: appartDeDepart().id, meubles: [] };
   s.portefeuille ??= {};
   s.cours ??= coursInitiaux();
+  s.historiqueCours ??= historiqueInitial();
+  s.prixRevient ??= {};
   s.depensesSemaine ??= {};
+  s.loyersImpayes ??= 0;
   return s;
 }
 
