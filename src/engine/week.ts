@@ -21,6 +21,11 @@ import { tickScapegoat } from './scapegoat';
 import { runAudit, checkBurnout } from './suspicion';
 import { checkPromotion, isAtTop } from './promotion';
 import { generateOpportunities } from './opportunities';
+import { euros, verserSalaire, type LigneDePaie } from './argent';
+import { appliquerMobilierHebdo, pointsWeekend } from './vieprivee';
+import { tickRomance } from './romance';
+import { resolveOrdres } from './subordonnes';
+import { tickMarche } from './marche';
 import type { Rng } from './rng';
 
 const log = (state: GameState, text: string, tone: LogEntry['tone'] = 'neutral') =>
@@ -62,6 +67,7 @@ export interface WeekSummary {
   promotion?: string;
   gameOver?: GameState['status'];
   won?: boolean;
+  paie?: LigneDePaie;
 }
 
 /**
@@ -90,6 +96,14 @@ export function finalizeWeek(state: GameState, rng: Rng): WeekSummary {
     );
   }
 
+  // 1 bis) Ce que tes subordonnés ont fait de leur semaine. AVANT les
+  // intentions : un ordre qui fait tomber quelqu'un doit le faire tomber
+  // avant que celui-ci ne résolve son propre coup, sinon on encaisse un
+  // complot venu d'un absent.
+  for (const note of resolveOrdres(state, rng)) {
+    record(note.text, note.tone);
+  }
+
   // 2) Ce que les collègues fabriquaient de leur côté.
   for (const outcome of resolveIntents(state, rng)) {
     record(outcome.text, outcome.tone);
@@ -112,8 +126,30 @@ export function finalizeWeek(state: GameState, rng: Rng): WeekSummary {
     }
   }
 
+  // 2 quinquies) Les histoires en cours. Elles peuvent s'éteindre toutes
+  // seules — c'est ce qui empêche d'accumuler des conquêtes en réserve.
+  for (const note of tickRomance(state)) {
+    record(note.text, note.tone);
+  }
+
   // 3) Dérive d'opinion (silencieuse : lente et diffuse).
   applyOpinionDrift(state);
+
+  // 3 bis) La paie, puis le loyer. Dans cet ordre : personne ne doit se
+  // faire expulser le jour d'une promotion.
+  const paie = verserSalaire(state);
+  summary.paie = paie;
+  record(
+    paie.decouvert
+      ? `Paie : ${euros(paie.salaire)}. Loyer : ${euros(paie.loyer)}. Le compte ne suivait pas — tu commences la semaine à zéro.`
+      : `Paie : ${euros(paie.salaire)}, moins ${euros(paie.loyer)} de loyer. Net : ${euros(paie.net)}.`,
+    paie.decouvert ? 'bad' : 'neutral',
+  );
+  appliquerMobilierHebdo(state);
+
+  // 3 ter) Un pas de marché. Il tourne même sans portefeuille : le cours
+  // doit exister avant qu'on décide d'y entrer.
+  tickMarche(state, rng);
 
   // 4) Audit de conformité RH.
   const audit = runAudit(state);
@@ -162,8 +198,15 @@ export function finalizeWeek(state: GameState, rng: Rng): WeekSummary {
   state.pendingEvent = undefined;
   state.pendingTargetId = undefined;
   state.weeklyActionCounts = {}; // reset anti-spam
+  state.depensesSemaine = {};
   generateOpportunities(state, rng); // nouvelles opportunités
   assignIntents(state, rng); // nouvelles intentions des collègues
+
+  // 9) Le week-end. Il appartient à la semaine qui commence, pas à celle
+  // qui finit : on rentre chez soi avec les opportunités de lundi déjà
+  // tirées, et ce qu'on fait à la maison peut les préparer.
+  state.phase = 'weekend';
+  state.weekendPointsRemaining = pointsWeekend(state);
 
   return summary;
 }

@@ -15,6 +15,7 @@ import { getOpportunity } from '@data/content';
 import { useGame } from './useGame';
 import { StatBar, OpinionPip } from './Bits';
 import { archetypeName, planViews } from './selectors';
+import { BlocDepenses, BlocRomance, BlocSubordonne } from './ViePrivee';
 import { zoneById, type Selection, type ZoneId } from './iso';
 
 const ZONE_TEXT: Record<ZoneId, string> = {
@@ -210,6 +211,10 @@ export function Inspector({
             ))}
           </ul>
         </section>
+
+        <BlocRomance c={c} onResult={run} />
+        <BlocSubordonne c={c} onResult={run} />
+        <BlocDepenses cible={c} lieu="bureau" onResult={run} />
 
         <section className="inspector__block">
           <h3 className="section-title">Comploter contre {c.name.split(' ')[0]}</h3>

@@ -35,6 +35,8 @@ export interface Condition {
 // ── Effect — mutation déclarative générique ──────────────────
 // Utilisée par : résolution d'un choix d'événement, résolution d'un plan.
 export interface Effect {
+  argent?: number; // delta en euros (peut être négatif)
+  romance?: number; // delta d'attachement envers la cible
   stats?: Partial<Stats>; // deltas stats joueur (peut être négatif)
   suspicion?: number; // delta suspicion globale
   reputation?: number; // delta vers la prochaine promotion
@@ -47,6 +49,7 @@ export interface Effect {
   startPlan?: PlanDefId; // démarre un plan (cible = cible de l'événement)
   actionPoints?: number; // +/- PA exceptionnels (bonus ou coût)
   removeTarget?: boolean; // la cible quitte l'entreprise (« départ non planifié »)
+  revealSecret?: boolean; // découvre un secret encore caché de la cible
 }
 
 // ── Collègues (état) & Archétypes (données) ──────────────────
@@ -81,6 +84,42 @@ export interface Intent {
   boost?: number; // bonus de réussite si tu as alimenté le coup
 }
 
+// ── Vie privée ───────────────────────────────────────────────
+// L'opinion dit ce qu'un collègue pense de toi au travail. L'attachement
+// dit tout autre chose, et les deux ne bougent pas ensemble : on peut
+// coucher avec quelqu'un qui vous méprise professionnellement, et c'est
+// même une bonne partie du sujet.
+export type RomanceStatut = 'rien' | 'flirt' | 'liaison' | 'couple' | 'ex';
+
+export interface Romance {
+  /** Attachement, 0–100. Ce n'est PAS l'opinion. */
+  niveau: number;
+  statut: RomanceStatut;
+  /** Semaines écoulées depuis le dernier changement de statut. */
+  semaines: number;
+  /** L'open space est au courant. Change tout : jalousie, RH, réputation. */
+  connu: boolean;
+}
+
+// ── Subordonnés ──────────────────────────────────────────────
+// À partir d'un certain rang, certains collègues te sont rattachés. Un
+// subordonné n'exécute pas parce qu'il t'aime : il exécute parce que tu
+// notes son entretien annuel. Sa loyauté (opinion) décide seulement s'il
+// le fait BIEN, ou s'il te balance.
+export type OrdreKind =
+  | 'rapporter' // te ramène des informations sur quelqu'un
+  | 'abattre' // fait le sale boulot à ta place sur une cible
+  | 'couvrir' // endosse ta suspicion
+  | 'produire' // bosse pour ta réputation
+  | 'charmer'; // travaille l'opinion d'un tiers en ta faveur
+
+export interface Ordre {
+  kind: OrdreKind;
+  targetId?: ColleagueId;
+  /** Semaines restantes avant que l'ordre ne produise son effet. */
+  semaines: number;
+}
+
 export interface Colleague {
   id: ColleagueId;
   name: string;
@@ -92,6 +131,9 @@ export interface Colleague {
   alive: boolean; // false = « départ non planifié » (V2)
   flags: string[]; // état par-collègue (isolé, préparé comme bouc, …)
   intent?: Intent; // ce qu'il fabrique cette semaine (visible sur la carte)
+  romance?: Romance; // ce qui se passe en dehors des heures de bureau
+  subordonne?: boolean; // rattaché à ton périmètre
+  ordre?: Ordre; // ce que tu lui as demandé de faire (s'il t'est rattaché)
 }
 
 export interface Archetype {
@@ -199,6 +241,95 @@ export interface Rank {
   reputationRequired: number; // réputation cumulée pour l'atteindre
   unlocksActions?: string[]; // ex. ['fire_directly', 'access_files']
   backstabMultiplier: number; // plus tu montes, plus on te cible
+  /** Salaire hebdomadaire net, versé le vendredi. */
+  salaire: number;
+  /** Combien de collègues peuvent t'être rattachés à ce rang. */
+  subordonnes: number;
+}
+
+// ── Argent et vie privée : définitions (données) ─────────────
+/**
+ * Une dépense : de l'argent contre un effet, avec parfois un jet.
+ *
+ * C'est le pendant payant des actions gratuites. Le moteur ne connaît
+ * aucune dépense par son nom — il lit un prix, une `Condition`, un
+ * `Effect`, exactement comme pour une opportunité.
+ */
+export interface DepenseDef {
+  id: string;
+  nom: string;
+  description: string;
+  icone: string;
+  prix: number;
+  /** Coût en points d'action ; 0 = gratuit en temps. */
+  cout?: number;
+  /** `bureau`, `appart`, ou les deux si absent. */
+  lieu?: 'bureau' | 'appart';
+  /** Se rattache à un collègue choisi par le joueur. */
+  cible?: 'colleague' | 'none';
+  requires?: Condition;
+  minRank?: RankId;
+  effects: Effect;
+  outcomeText: string;
+  successChance?: number;
+  failureEffects?: Effect;
+  failureText?: string;
+  /** Nombre maximal d'usages par semaine. */
+  maxParSemaine?: number;
+}
+
+export interface AppartDef {
+  id: string;
+  nom: string;
+  description: string;
+  prix: number; // 0 = celui où l'on commence
+  loyer: number; // prélevé chaque vendredi
+  /** Nombre de meubles qu'on peut y installer. */
+  places: number;
+  /** Points d'action du week-end offerts par le logement. */
+  pointsWeekend: number;
+  /** Ce qu'il vaut aux yeux de quelqu'un qu'on y invite. */
+  standing: number;
+}
+
+export interface MeubleDef {
+  id: string;
+  nom: string;
+  description: string;
+  icone: string;
+  prix: number;
+  /** Effets appliqués chaque vendredi, tant qu'il est installé. */
+  hebdo?: Effect;
+  /** Bonus permanent aux actions du week-end, par identifiant d'action. */
+  bonus?: Record<string, number>;
+}
+
+export interface TitreDef {
+  id: string;
+  nom: string;
+  symbole: string;
+  /** Cours de départ, en euros. */
+  base: number;
+  /** Amplitude typique d'une variation hebdomadaire, en fraction. */
+  volatilite: number;
+  /** Dérive moyenne par semaine, en fraction. */
+  derive: number;
+  couleur: string;
+}
+
+export interface JeuCasinoDef {
+  id: string;
+  nom: string;
+  description: string;
+  icone: string;
+  /** Mise minimale. */
+  mise: number;
+  /** Probabilité de gain, en points de %. */
+  chance: number;
+  /** Multiplicateur de la mise en cas de gain (mise comprise). */
+  gain: number;
+  /** Suspicion prise si l'on joue depuis le bureau. */
+  suspicionAuBureau: number;
 }
 
 // ── Apparence ────────────────────────────────────────────────
@@ -285,12 +416,41 @@ export interface LogEntry {
   tone: 'neutral' | 'good' | 'bad';
 }
 
+/**
+ * Où l'on se trouve dans la semaine.
+ *
+ * `bureau` du lundi au vendredi ; `weekend` chez soi, avec ses propres
+ * points d'action. Ce n'est pas un écran de plus posé à côté : le
+ * week-end consomme un temps qui lui est propre et rend ce qu'on n'a pas
+ * le droit de faire au bureau.
+ */
+export type Phase = 'bureau' | 'weekend';
+
+export interface Appart {
+  /** Identifiant du logement occupé, réf. appart.json. */
+  niveau: string;
+  /** Meubles installés, réf. appart.json → meubles. */
+  meubles: string[];
+}
+
 export interface GameState {
   version: number; // pour migrations de save
   seed: number; // graine RNG d'origine
   rngCursor: number; // curseur PRNG (reproductibilité)
   week: number;
+  phase: Phase;
   actionPointsRemaining: number; // 0–5
+  /** Points d'action du week-end, chez soi. */
+  weekendPointsRemaining: number;
+  argent: number; // en euros
+  appart: Appart;
+  /** Titres détenus, par identifiant. */
+  portefeuille: Record<string, number>;
+  /** Cours courant de chaque titre. Il vit dans l'état : sans ça, la
+   *  bourse repartirait de zéro à chaque rechargement. */
+  cours: Record<string, number>;
+  /** Usages de dépenses cette semaine, pour les plafonds. */
+  depensesSemaine: Record<string, number>;
   player: Player;
   colleagues: Colleague[];
   suspicion: number; // 0–100 globale
@@ -312,4 +472,9 @@ export interface ContentCatalog {
   ranks: Rank[];
   events: GameEvent[];
   opportunities: Opportunity[];
+  depenses: DepenseDef[];
+  apparts: AppartDef[];
+  meubles: MeubleDef[];
+  titres: TitreDef[];
+  casino: JeuCasinoDef[];
 }

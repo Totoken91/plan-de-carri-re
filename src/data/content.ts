@@ -12,6 +12,7 @@ import type {
   PlanDef,
   Rank,
 } from '@state/schema';
+import { apparts, casino, depenses, meubles, titres } from './vieprivee';
 
 import archetypesRaw from './archetypes.json';
 import plansRaw from './plans.json';
@@ -26,6 +27,11 @@ export const catalog: ContentCatalog = {
   ranks: (ranksRaw as Rank[]).slice().sort((a, b) => a.order - b.order),
   events: eventsRaw as GameEvent[],
   opportunities: opportunitiesRaw as Opportunity[],
+  depenses,
+  apparts,
+  meubles,
+  titres,
+  casino,
 };
 
 /** Roster de collègues au démarrage d'une partie (deep-cloné à l'usage). */

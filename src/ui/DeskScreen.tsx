@@ -10,6 +10,8 @@ import { Inspector } from './Inspector';
 import { Tutorial } from './Tutorial';
 import { Manual } from './Manual';
 import { PauseMenu } from './PauseMenu';
+import { Marche } from './Marche';
+import { euros } from '@engine/argent';
 import { tutorialSeen } from './tutorial';
 import type { Selection } from './iso';
 
@@ -36,6 +38,9 @@ export function DeskScreen({
   const [tuto, setTuto] = useState(() => !tutorialSeen());
   const [manual, setManual] = useState(false);
   const [paused, setPaused] = useState(false);
+  // L'onglet resté ouvert derrière la feuille de calcul. Tout le monde en
+  // a un.
+  const [prive, setPrive] = useState(false);
 
   // Échap : le raccourci que tout le monde essaie en premier.
   useEffect(() => {
@@ -105,6 +110,13 @@ export function DeskScreen({
 
         <div className="topbar__week">
           <span className="topbar__weeknum">Semaine {state.week}</span>
+          <button
+            className="topbar__argent"
+            onClick={() => setPrive(true)}
+            title="Bourse et casino — depuis ton poste, ça se voit"
+          >
+            {euros(state.argent)}
+          </button>
           <span className="topbar__ap" title="Points d'action restants">
             {'●'.repeat(state.actionPointsRemaining)}
             {'○'.repeat(Math.max(0, 5 - state.actionPointsRemaining))}
@@ -237,6 +249,18 @@ export function DeskScreen({
 
         <Inspector selection={selection} onSelect={setSelection} onResult={flash} />
       </div>
+
+      {prive && (
+        <div className="modal-backdrop" onClick={() => setPrive(false)}>
+          <div className="modal modal--marche" onClick={(e) => e.stopPropagation()}>
+            <div className="event__tag">Onglet privé · minimisé si quelqu’un passe</div>
+            <Marche onResult={flash} />
+            <button className="btn btn--primary" onClick={() => setPrive(false)}>
+              Refermer
+            </button>
+          </div>
+        </div>
+      )}
 
       {toast && <div className={`toast toast--${toast.tone}`}>{toast.text}</div>}
 

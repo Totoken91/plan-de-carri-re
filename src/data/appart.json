@@ -1,0 +1,141 @@
+{
+  "apparts": [
+    {
+      "id": "coloc",
+      "nom": "Chambre en coloc",
+      "description": "Trois personnes, une salle de bain, et un frigo à étiquettes. Tu n'y invites personne.",
+      "prix": 0,
+      "loyer": 320,
+      "places": 1,
+      "pointsWeekend": 2,
+      "standing": 0
+    },
+    {
+      "id": "studio",
+      "nom": "Studio",
+      "description": "Vingt-deux mètres carrés à toi. Le lit est aussi le canapé, mais il est à toi.",
+      "prix": 4500,
+      "loyer": 620,
+      "places": 3,
+      "pointsWeekend": 3,
+      "standing": 20
+    },
+    {
+      "id": "deux_pieces",
+      "nom": "Deux-pièces",
+      "description": "Une porte entre le lit et le reste. C'est la première chose qui ressemble à une vie.",
+      "prix": 16000,
+      "loyer": 1050,
+      "places": 5,
+      "pointsWeekend": 3,
+      "standing": 45
+    },
+    {
+      "id": "loft",
+      "nom": "Loft",
+      "description": "Poutres apparentes, cuisine ouverte, et de quoi recevoir douze personnes qui te doivent quelque chose.",
+      "prix": 48000,
+      "loyer": 1900,
+      "places": 7,
+      "pointsWeekend": 4,
+      "standing": 70
+    },
+    {
+      "id": "penthouse",
+      "nom": "Dernier étage",
+      "description": "On voit la tour depuis la terrasse. Le matin, tu regardes ton bureau d'en haut.",
+      "prix": 130000,
+      "loyer": 3400,
+      "places": 9,
+      "pointsWeekend": 4,
+      "standing": 100
+    }
+  ],
+  "meubles": [
+    {
+      "id": "lit",
+      "nom": "Vrai lit",
+      "description": "Le sommeil cesse d'être une pause technique.",
+      "icone": "🛏",
+      "prix": 900,
+      "hebdo": { "stats": { "nerfs": 6 } },
+      "bonus": { "repos": 6 }
+    },
+    {
+      "id": "bureau_perso",
+      "nom": "Bureau et double écran",
+      "description": "Tu peux enfin bosser chez toi. Ce n'est pas une bonne nouvelle.",
+      "icone": "🖥",
+      "prix": 1400,
+      "bonus": { "dossiers": 8, "bourse": 4 }
+    },
+    {
+      "id": "machine_cafe",
+      "nom": "Machine à café à grains",
+      "description": "Celle du troisième étage devient officiellement insupportable.",
+      "icone": "☕",
+      "prix": 700,
+      "hebdo": { "stats": { "nerfs": 3 } },
+      "bonus": { "recevoir": 4 }
+    },
+    {
+      "id": "canape",
+      "nom": "Canapé d'angle",
+      "description": "On y reste plus longtemps qu'on ne comptait. C'est tout l'intérêt.",
+      "icone": "🛋",
+      "prix": 1600,
+      "bonus": { "recevoir": 10 }
+    },
+    {
+      "id": "sport",
+      "nom": "Vélo d'appartement",
+      "description": "Il servira trois semaines. Ces trois semaines comptent.",
+      "icone": "🚴",
+      "prix": 800,
+      "hebdo": { "stats": { "nerfs": 4 } },
+      "bonus": { "sport": 8 }
+    },
+    {
+      "id": "biblio",
+      "nom": "Bibliothèque",
+      "description": "Des livres que tu as lus, et d'autres qui disent aux invités qui tu voudrais être.",
+      "icone": "📚",
+      "prix": 1100,
+      "hebdo": { "stats": { "combine": 2 } },
+      "bonus": { "reseaux": 6 }
+    },
+    {
+      "id": "cave",
+      "nom": "Cave à vin",
+      "description": "Douze bouteilles et un vocabulaire. Les deux servent à table.",
+      "icone": "🍷",
+      "prix": 2600,
+      "bonus": { "recevoir": 14, "diner": 12 }
+    },
+    {
+      "id": "home_cinema",
+      "nom": "Home cinéma",
+      "description": "Une soirée chez toi devient un endroit où l'on veut être.",
+      "icone": "📽",
+      "prix": 3800,
+      "bonus": { "recevoir": 16 }
+    },
+    {
+      "id": "art",
+      "nom": "Une œuvre au mur",
+      "description": "Personne ne sait si c'est bien. Tout le monde sait que c'était cher.",
+      "icone": "🖼",
+      "prix": 9000,
+      "hebdo": { "stats": { "aura": 2 } },
+      "bonus": { "recevoir": 12 }
+    },
+    {
+      "id": "coffre",
+      "nom": "Coffre",
+      "description": "Il y a des documents qu'on ne laisse pas dans un tiroir de bureau.",
+      "icone": "🔐",
+      "prix": 2200,
+      "hebdo": { "suspicion": -3 }
+    }
+  ]
+}

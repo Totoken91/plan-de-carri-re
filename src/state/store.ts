@@ -27,6 +27,19 @@ import { useHook, type HookMode } from '@engine/hooks';
 import { abetScheme, assignIntents, defuseIntent, warnVictim } from '@engine/intents';
 import { prepareScapegoat } from '@engine/scapegoat';
 import { applyTraitsAtStart } from '@engine/traits';
+import { appartDeDepart, getDepense } from '@data/vieprivee';
+import { coursInitiaux, acheter, vendre, jouer } from '@engine/marche';
+import {
+  acheterMeuble,
+  demenager,
+  resolveActivite,
+  resolveDepense,
+  revendreMeuble,
+} from '@engine/vieprivee';
+import { draguer, officialiser, rompre, toilettes } from '@engine/romance';
+import { detacher, donnerOrdre, rattacher } from '@engine/subordonnes';
+import { raiseSuspicion } from '@engine/suspicion';
+import type { OrdreKind } from './schema';
 import type { ActionId } from '@engine/preview';
 
 import { SAVE_VERSION, readSlot, writeSlot } from './saves';
@@ -53,7 +66,14 @@ export function createInitialState(
     seed,
     rngCursor: 0,
     week: 1,
+    phase: 'bureau',
     actionPointsRemaining: balance.actionPointsPerWeek,
+    weekendPointsRemaining: 0,
+    argent: balance.argentDepart,
+    appart: { niveau: appartDeDepart().id, meubles: [] },
+    portefeuille: {},
+    cours: coursInitiaux(),
+    depensesSemaine: {},
     player,
     colleagues: structuredClone(startingColleagues),
     suspicion: balance.startSuspicion,
@@ -367,6 +387,157 @@ export class GameStore {
         draft.log.push({ week: draft.week, text: result.text, tone: result.tone });
       }
     });
+    return result;
+  }
+
+  // ── Vie privée : argent, romance, périmètre ────────────────
+  /**
+   * Une dépense au bureau. Le coût en PA est débité ICI et nulle part
+   * ailleurs — le résolveur, lui, ne touche qu'à l'argent et aux effets.
+   */
+  performDepense(id: string, targetId?: string): ActionResult {
+    if (this.state.status !== 'playing' || this.state.pendingEvent) {
+      return { ok: false, text: 'Impossible pour le moment.', tone: 'neutral' };
+    }
+    let result: ActionResult = { ok: false, text: '', tone: 'neutral' };
+    this.commit((draft) => {
+      result = resolveDepense(draft, id, targetId, this.rng);
+      if (result.ok) {
+        draft.actionPointsRemaining = Math.max(
+          0,
+          draft.actionPointsRemaining - (getDepense(id)?.cout ?? 1),
+        );
+        this.tally(draft, `depense:${id}`);
+        draft.log.push({ week: draft.week, text: result.text, tone: result.tone });
+      }
+    });
+    this.lastMessage = result;
+    return result;
+  }
+
+  /** Une action de romance au bureau. Coûte 1 PA, comme le reste. */
+  private performRomance(
+    key: string,
+    fn: (draft: GameState) => ActionResult,
+    gratuite = false,
+  ): ActionResult {
+    if (!this.canAct() && !gratuite) {
+      return { ok: false, text: 'Aucune action possible pour le moment.', tone: 'neutral' };
+    }
+    let result: ActionResult = { ok: false, text: '', tone: 'neutral' };
+    this.commit((draft) => {
+      result = fn(draft);
+      if (result.ok) {
+        if (!gratuite) draft.actionPointsRemaining -= 1;
+        this.tally(draft, key);
+        draft.log.push({ week: draft.week, text: result.text, tone: result.tone });
+      }
+    });
+    this.lastMessage = result;
+    return result;
+  }
+
+  performDraguer(id: string): ActionResult {
+    return this.performRomance('draguer', (d) => draguer(d, id, this.rng));
+  }
+
+  performToilettes(id: string): ActionResult {
+    return this.performRomance('toilettes', (d) => toilettes(d, id, this.rng));
+  }
+
+  /** Officialiser et rompre ne coûtent pas de temps : ce sont des décisions. */
+  performOfficialiser(id: string): ActionResult {
+    return this.performRomance('officialiser', (d) => officialiser(d, id), true);
+  }
+
+  performRompre(id: string): ActionResult {
+    return this.performRomance('rompre', (d) => rompre(d, id), true);
+  }
+
+  /** Rattacher, détacher, ordonner : du management, donc gratuit en temps. */
+  performRattacher(id: string): ActionResult {
+    return this.performRomance('rattacher', (d) => rattacher(d, id), true);
+  }
+
+  performDetacher(id: string): ActionResult {
+    return this.performRomance('detacher', (d) => detacher(d, id), true);
+  }
+
+  performOrdre(id: string, kind: OrdreKind, targetId?: string): ActionResult {
+    return this.performRomance('ordre', (d) => donnerOrdre(d, id, kind, targetId), true);
+  }
+
+  // ── Le week-end, chez soi ──────────────────────────────────
+  /** Une activité du week-end. Elle consomme des points de week-end. */
+  performActivite(id: string, targetId?: string): ActionResult {
+    if (this.state.phase !== 'weekend') {
+      return { ok: false, text: 'C’est un truc de week-end.', tone: 'neutral' };
+    }
+    let result: ActionResult = { ok: false, text: '', tone: 'neutral' };
+    this.commit((draft) => {
+      result = resolveActivite(draft, id, targetId, this.rng);
+      if (result.ok) draft.log.push({ week: draft.week, text: result.text, tone: result.tone });
+    });
+    this.lastMessage = result;
+    return result;
+  }
+
+  /** Lundi matin : on referme le week-end et on retourne au troisième étage. */
+  startWeek(): void {
+    this.commit((draft) => {
+      draft.phase = 'bureau';
+      draft.weekendPointsRemaining = 0;
+    });
+  }
+
+  // ── Achats ─────────────────────────────────────────────────
+  private achat(fn: (draft: GameState) => ActionResult): ActionResult {
+    let result: ActionResult = { ok: false, text: '', tone: 'neutral' };
+    this.commit((draft) => {
+      result = fn(draft);
+      if (result.ok) draft.log.push({ week: draft.week, text: result.text, tone: result.tone });
+    });
+    this.lastMessage = result;
+    return result;
+  }
+
+  performDemenager(): ActionResult {
+    return this.achat((d) => demenager(d));
+  }
+
+  performAcheterMeuble(id: string): ActionResult {
+    return this.achat((d) => acheterMeuble(d, id));
+  }
+
+  performRevendreMeuble(id: string): ActionResult {
+    return this.achat((d) => revendreMeuble(d, id));
+  }
+
+  // ── Marché et casino ───────────────────────────────────────
+  performAcheterTitre(id: string, quantite: number): ActionResult {
+    return this.achat((d) => acheter(d, id, quantite));
+  }
+
+  performVendreTitre(id: string, quantite: number): ActionResult {
+    return this.achat((d) => vendre(d, id, quantite));
+  }
+
+  /**
+   * Une mise. Jouer depuis le bureau fait monter la suspicion : c'est ce
+   * qui empêche le casino d'être un onglet neutre posé à côté du jeu.
+   */
+  performMiser(jeuId: string, multiple: number): ActionResult {
+    let result: ActionResult = { ok: false, text: '', tone: 'neutral' };
+    this.commit((draft) => {
+      const auBureau = draft.phase === 'bureau';
+      const r = jouer(draft, jeuId, multiple, auBureau, this.rng);
+      result = { ok: r.ok, text: r.text, tone: r.tone };
+      if (r.ok) {
+        if (r.suspicion > 0) raiseSuspicion(draft, r.suspicion);
+        draft.log.push({ week: draft.week, text: result.text, tone: result.tone });
+      }
+    });
+    this.lastMessage = result;
     return result;
   }
 

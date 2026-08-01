@@ -1,16 +1,37 @@
 {
   "actionPointsPerWeek": 5,
-  "startStats": { "aura": 15, "rendement": 15, "combine": 12, "nerfs": 100 },
+  "startStats": {
+    "aura": 15,
+    "rendement": 15,
+    "combine": 12,
+    "nerfs": 100
+  },
   "startSuspicion": 0,
   "suspicionAuditThreshold": 70,
   "burnoutGraceWeeks": 2,
   "winSurviveWeeks": 4,
   "actions": {
-    "bosser": { "rendement": 4, "reputation": 6, "nerfs": -12 },
-    "cafe": { "opinion": 10, "nerfs": -2 },
-    "fouiner": { "suspicionRisk": 25, "suspicionOnCaught": 8 },
-    "comploter": { "preparationGain": 25, "suspicionPerPrep": 3 },
-    "glander": { "nerfs": 20, "fayotSuspicion": 5 }
+    "bosser": {
+      "rendement": 4,
+      "reputation": 6,
+      "nerfs": -12
+    },
+    "cafe": {
+      "opinion": 10,
+      "nerfs": -2
+    },
+    "fouiner": {
+      "suspicionRisk": 25,
+      "suspicionOnCaught": 8
+    },
+    "comploter": {
+      "preparationGain": 25,
+      "suspicionPerPrep": 3
+    },
+    "glander": {
+      "nerfs": 20,
+      "fayotSuspicion": 5
+    }
   },
   "scapegoat": {
     "combineRequired": 25,
@@ -32,5 +53,45 @@
     "suspicionVigilanceFactor": 0.3,
     "minSuccess": 5,
     "maxSuccess": 95
+  },
+  "argentDepart": 1200,
+  "romance": {
+    "seuilFlirt": 20,
+    "seuilLiaison": 45,
+    "seuilCouple": 75,
+    "draguerGain": 12,
+    "draguerNerfs": -3,
+    "draguerOpinionMin": 0,
+    "toilettesGain": 26,
+    "toilettesSuspicion": 12,
+    "toilettesRisque": 38,
+    "toilettesScandaleSuspicion": 22,
+    "toilettesScandaleOpinion": -16,
+    "jalousieOpinion": -12,
+    "officialiserOpinion": 14,
+    "officialiserSuspicion": 8,
+    "derivePasEntretenue": -4,
+    "conjointOpinionPlancher": 25,
+    "conjointNerfs": 3,
+    "rupture": {
+      "opinion": -30,
+      "suspicion": 6
+    }
+  },
+  "subordonnes": {
+    "opinionMinimum": 10,
+    "rapporterChance": 62,
+    "abattreChance": 46,
+    "abattreSuspicion": 8,
+    "couvrirSuspicion": -14,
+    "couvrirOpinion": -10,
+    "produireReputation": 11,
+    "charmerOpinion": 14,
+    "trahisonSousOpinion": -20,
+    "trahisonSuspicion": 14
+  },
+  "marche": {
+    "fraisTransaction": 0.6,
+    "tuyauBonus": 0.16
   }
 }

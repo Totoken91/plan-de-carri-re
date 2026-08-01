@@ -38,6 +38,51 @@ export interface Balance {
     minSuccess: number;
     maxSuccess: number;
   };
+  /** Trésorerie de départ, avant le premier salaire. */
+  argentDepart: number;
+  romance: {
+    /** Seuils d'attachement qui font passer d'un statut au suivant. */
+    seuilFlirt: number;
+    seuilLiaison: number;
+    seuilCouple: number;
+    draguerGain: number;
+    draguerNerfs: number;
+    draguerOpinionMin: number;
+    toilettesGain: number;
+    toilettesSuspicion: number;
+    /** Probabilité, en %, de se faire surprendre. */
+    toilettesRisque: number;
+    toilettesScandaleSuspicion: number;
+    toilettesScandaleOpinion: number;
+    /** Ce que perd l'opinion d'une autre liaison quand une histoire s'ébruite. */
+    jalousieOpinion: number;
+    officialiserOpinion: number;
+    officialiserSuspicion: number;
+    /** Attachement perdu par semaine sans rien faire. */
+    derivePasEntretenue: number;
+    conjointOpinionPlancher: number;
+    conjointNerfs: number;
+    rupture: { opinion: number; suspicion: number };
+  };
+  subordonnes: {
+    opinionMinimum: number;
+    rapporterChance: number;
+    abattreChance: number;
+    abattreSuspicion: number;
+    couvrirSuspicion: number;
+    couvrirOpinion: number;
+    produireReputation: number;
+    charmerOpinion: number;
+    /** En dessous de cette opinion, un subordonné peut te trahir. */
+    trahisonSousOpinion: number;
+    trahisonSuspicion: number;
+  };
+  marche: {
+    /** Frais de courtage, en % du montant. */
+    fraisTransaction: number;
+    /** Biais ajouté au tirage d'un titre quand on a un tuyau. */
+    tuyauBonus: number;
+  };
 }
 
 export const balance: Balance = raw as Balance;

@@ -1,0 +1,65 @@
+[
+  {
+    "id": "repos",
+    "nom": "Ne rien faire",
+    "description": "Deux jours sans ouvrir la messagerie. C'est plus dur que ça n'en a l'air.",
+    "icone": "🛏",
+    "cout": 1,
+    "cible": "none",
+    "effects": { "stats": { "nerfs": 18 } },
+    "outcomeText": "Tu as dormi jusqu'à onze heures et tu n'as honte de rien."
+  },
+  {
+    "id": "sport",
+    "nom": "Faire du sport",
+    "description": "Le corps encaisse mieux ce que la semaine lui fera.",
+    "icone": "🚴",
+    "cout": 1,
+    "cible": "none",
+    "effects": { "stats": { "nerfs": 10, "aura": 3 } },
+    "outcomeText": "Courbatures, et cette assurance idiote qu'elles donnent le lundi."
+  },
+  {
+    "id": "dossiers",
+    "nom": "Avancer des dossiers",
+    "description": "Travailler le dimanche ne se voit pas dans le salaire. Ça se voit ailleurs.",
+    "icone": "🖥",
+    "cout": 1,
+    "cible": "none",
+    "effects": { "reputation": 9, "stats": { "rendement": 3, "nerfs": -10 } },
+    "outcomeText": "Lundi matin, tu envoies à 8 h 04 un document daté du dimanche. On le remarquera."
+  },
+  {
+    "id": "reseaux",
+    "nom": "Fouiller les réseaux",
+    "description": "Les gens racontent leur vie à des inconnus. Tu n'es qu'un inconnu de plus.",
+    "icone": "📱",
+    "cout": 1,
+    "cible": "colleague",
+    "successChance": 55,
+    "effects": {},
+    "outcomeText": "Une photo mal cadrée, une date qui ne colle pas. Tu tiens quelque chose.",
+    "failureEffects": { "stats": { "nerfs": -4 } },
+    "failureText": "Trois heures de défilement pour un compte parfaitement lisse. Tu te sens sale."
+  },
+  {
+    "id": "recevoir",
+    "nom": "Recevoir quelqu'un",
+    "description": "Chez toi, la hiérarchie ne tient plus tout à fait. C'est exactement pour ça.",
+    "icone": "🛋",
+    "cout": 1,
+    "cible": "colleague",
+    "effects": { "targetOpinion": 16, "romance": 10, "stats": { "nerfs": -3 } },
+    "outcomeText": "On repart tard. Quelque chose a changé de nature."
+  },
+  {
+    "id": "diner",
+    "nom": "Dîner en tête-à-tête",
+    "description": "Nappe, deuxième bouteille, et personne du service à trois cents mètres.",
+    "icone": "🍷",
+    "cout": 2,
+    "cible": "colleague",
+    "effects": { "romance": 24, "targetOpinion": 8, "stats": { "nerfs": 4 } },
+    "outcomeText": "Vous rentrez à pied. Personne ne parle du troisième étage."
+  }
+]

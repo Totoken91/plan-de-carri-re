@@ -1284,3 +1284,141 @@ body {
   width: 12px; height: 20px; background: var(--ink); border: 0; border-radius: 0;
 }
 .slider__input:focus-visible { outline: 1px solid var(--ink); outline-offset: 3px; }
+
+/* ══════════════════════════════════════════════════════════════
+   Vie privée — argent, attachements, périmètre, week-end
+   ──────────────────────────────────────────────────────────────
+   Une seule règle nouvelle : l'argent s'écrit TOUJOURS en chiffres
+   tabulaires, alignés à droite. Un prix qui saute d'un pixel entre
+   deux lignes est illisible dans une liste, et ces listes sont
+   longues.
+   ══════════════════════════════════════════════════════════════ */
+.act__cost--euros,
+.appart__argent,
+.topbar__argent,
+.titre__cours {
+  font-family: var(--font-form);
+  font-variant-numeric: tabular-nums;
+}
+
+.topbar__argent {
+  display: block; margin-top: 3px;
+  background: none; border: 0; padding: 0;
+  color: var(--note); font-size: 13px; font-weight: 700;
+  cursor: pointer; text-decoration: underline dotted var(--rule); text-underline-offset: 3px;
+}
+.topbar__argent:hover { color: var(--ink); }
+
+.actlist--tight .act { padding: 9px 11px; }
+.act--possede { background: rgba(44, 91, 74, 0.07); }
+
+/* ── Attachement ─────────────────────────────────────────── */
+.romance__head { display: flex; align-items: baseline; gap: 8px; margin: 6px 0 4px; }
+.romance__statut {
+  font-family: var(--font-form); font-size: 11px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink-2);
+}
+.romance__statut em { text-transform: none; letter-spacing: 0; color: var(--stamp); }
+.romance__statut--liaison, .romance__statut--couple { color: var(--stamp-ink); font-weight: 700; }
+.romance__note { font-size: 12px; margin: 4px 0 8px; }
+
+.attach { display: flex; align-items: center; gap: 9px; }
+.attach__track {
+  position: relative; flex: 1; height: 7px;
+  background: var(--paper-shade); border: 1px solid var(--rule);
+}
+.attach__fill { height: 100%; background: var(--stamp); }
+/* Les trois paliers : flirt, liaison, couple. Sans eux, la jauge ne dit
+   pas où l'on va. */
+.attach__mark {
+  position: absolute; top: -3px; width: 1px; height: 11px;
+  background: var(--ink-2);
+}
+.attach__num {
+  font-family: var(--font-form); font-variant-numeric: tabular-nums;
+  font-size: 12px; min-width: 22px; text-align: right;
+}
+
+/* ── Périmètre et ordres ─────────────────────────────────── */
+.ordres { display: grid; gap: 8px; margin-top: 6px; }
+.ordre { border: 1px solid var(--rule-soft); padding: 8px 10px; }
+.ordre__head { display: flex; align-items: baseline; gap: 7px; }
+.ordre__icone { font-size: 15px; }
+.ordre__head em { margin-left: auto; font-family: var(--font-form); font-size: 11px; }
+.ordre__desc { font-size: 12.5px; margin: 3px 0 6px; }
+.ordre__cible, .appart__col select {
+  font-family: var(--font-form); font-size: 12px;
+  background: var(--paper-hi); border: 1px solid var(--rule);
+  padding: 4px 6px; color: var(--ink); width: 100%;
+}
+.ordre__encours {
+  font-family: var(--font-form); font-size: 12.5px;
+  border-left: 3px solid var(--note); padding-left: 9px; margin: 6px 0;
+}
+.ordre__avert { font-size: 12px; margin: 9px 0 7px; }
+
+/* ── Week-end ────────────────────────────────────────────── */
+.appart { max-width: 1560px; margin: 0 auto; padding: 20px 18px 70px; }
+.topbar--appart { grid-template-columns: auto 1fr auto auto; }
+.appart__compteurs { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.appart__argent { font-size: 15px; font-weight: 700; color: var(--note); }
+.appart__onglets { display: flex; gap: 6px; }
+
+/* La vignette à gauche est étroite : c'est un rappel de contexte, pas
+   une scène. Le contenu jouable a la place. */
+.appart__body {
+  display: grid; grid-template-columns: minmax(280px, 420px) minmax(360px, 1fr);
+  gap: 14px; align-items: start; margin-top: 14px;
+}
+.appart__scene { padding: 14px 16px; position: sticky; top: 14px; }
+.appart__vue { width: 100%; display: block; margin: 10px 0; }
+.appart__mur { fill: var(--iso-cloison, #cdd3dc); }
+.appart__sol { fill: var(--iso-sol-dalle, #b6ab93); }
+.appart__plinthe { stroke: var(--iso-sol-joint, rgba(0, 0, 0, 0.18)); stroke-width: 1.5; }
+.appart__fenetre path, .appart__fenetre rect { stroke: var(--iso-structure-metal, #9aa3ae); }
+.appart__fenetre path { stroke-width: 1.6; }
+.appart__pose { fill: rgba(0, 0, 0, 0.13); }
+.appart__meuble { font-size: 22px; }
+.appart__places {
+  font-family: var(--font-form); font-size: 11.5px;
+  letter-spacing: 0.04em; color: var(--ink-soft); margin: 0;
+}
+.appart__col { display: grid; gap: 12px; }
+.appart__col .sheet { padding: 12px 14px; }
+
+.echelle { list-style: none; margin: 10px 0 0; padding: 0; }
+.echelle__pas {
+  display: flex; justify-content: space-between; gap: 10px;
+  padding: 4px 0; border-bottom: 1px solid var(--rule-soft);
+  font-size: 13px;
+}
+.echelle__pas em { font-family: var(--font-form); font-size: 11px; }
+.echelle__pas.is-on { color: var(--stamp-ink); font-weight: 700; }
+.echelle__pas.is-on::before { content: '▸ '; }
+
+/* ── Marché ──────────────────────────────────────────────── */
+.titres { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 9px; }
+.titre { border: 1px solid var(--rule-soft); padding: 8px 10px; }
+.titre__head { display: flex; align-items: baseline; gap: 7px; }
+.titre__pastille { width: 8px; height: 8px; flex-shrink: 0; }
+.titre__nom { font-family: var(--font-title); font-size: 14px; }
+.titre__sym { font-family: var(--font-form); font-size: 11px; color: var(--ink-soft); }
+.titre__cours { margin-left: auto; font-size: 13px; font-weight: 700; }
+.titre__var { font-family: var(--font-form); font-size: 11.5px; min-width: 54px; text-align: right; }
+.titre__var--haut { color: var(--seal); }
+.titre__var--bas { color: var(--stamp); }
+.titre__ligne { font-size: 11.5px; margin: 2px 0 6px; font-family: var(--font-form); }
+.titre__ordres { display: flex; gap: 6px; align-items: center; }
+.titre__qte {
+  width: 54px; font-family: var(--font-form); font-variant-numeric: tabular-nums;
+  background: var(--paper-hi); border: 1px solid var(--rule); padding: 3px 5px; color: var(--ink);
+}
+.mise { display: flex; align-items: center; gap: 6px; margin: 8px 0; }
+
+.modal--marche { max-width: 620px; max-height: calc(100vh - 60px); overflow-y: auto; }
+.modal--marche .sheet { box-shadow: none; border: 0; padding: 0 0 10px; }
+
+@media (max-width: 1080px) {
+  .appart__body { grid-template-columns: 1fr; }
+  .appart__scene { position: static; }
+}

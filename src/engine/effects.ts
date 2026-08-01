@@ -8,6 +8,7 @@ import { clamp } from './util';
 import { findRival } from './util';
 import { startPlan } from './plans';
 import { raiseSuspicion } from './suspicion';
+import { ajusterAttachement } from './romance';
 
 const STAT_MIN = 0;
 const STAT_MAX = 100;
@@ -27,6 +28,24 @@ function applyOpinion(state: GameState, id: string | undefined, delta: number): 
  * @param targetId cible contextuelle (pour targetOpinion / startPlan).
  */
 export function applyEffect(state: GameState, effect: Effect, targetId?: string): void {
+  // L'argent d'abord : un effet qui donne ET dépense doit encaisser avant
+  // de débiter, sinon une prime de 500 € suivie d'une amende de 400 €
+  // échouerait sur un solde de 100 €.
+  if (effect.argent !== undefined) {
+    state.argent = Math.max(0, state.argent + effect.argent);
+  }
+
+  if (effect.romance !== undefined && targetId) {
+    const c = state.colleagues.find((x) => x.id === targetId);
+    if (c) ajusterAttachement(c, effect.romance);
+  }
+
+  if (effect.revealSecret && targetId) {
+    const c = state.colleagues.find((x) => x.id === targetId);
+    const cache = c?.secrets.find((s) => !s.discovered);
+    if (cache) cache.discovered = true;
+  }
+
   if (effect.stats) {
     for (const key of Object.keys(effect.stats) as StatKey[]) {
       const delta = effect.stats[key];

@@ -1,0 +1,82 @@
+{
+  "titres": [
+    {
+      "id": "verdanis",
+      "nom": "Verdanis Group",
+      "symbole": "VRD",
+      "base": 84,
+      "volatilite": 0.06,
+      "derive": 0.004,
+      "couleur": "#2f6b86"
+    },
+    {
+      "id": "oxalis",
+      "nom": "Oxalis Industries",
+      "symbole": "OXL",
+      "base": 31,
+      "volatilite": 0.13,
+      "derive": 0.009,
+      "couleur": "#b87a1e"
+    },
+    {
+      "id": "kastel",
+      "nom": "Kastel & Fils",
+      "symbole": "KST",
+      "base": 210,
+      "volatilite": 0.035,
+      "derive": 0.002,
+      "couleur": "#2f7048"
+    },
+    {
+      "id": "novatek",
+      "nom": "Novatek Holding",
+      "symbole": "NVT",
+      "base": 12,
+      "volatilite": 0.24,
+      "derive": 0.014,
+      "couleur": "#9e3428"
+    }
+  ],
+  "casino": [
+    {
+      "id": "rouge_noir",
+      "nom": "Rouge ou noir",
+      "description": "Le pari le plus honnête de la salle, ce qui n'est pas un compliment.",
+      "icone": "🔴",
+      "mise": 50,
+      "chance": 48,
+      "gain": 2,
+      "suspicionAuBureau": 3
+    },
+    {
+      "id": "colonne",
+      "nom": "Une colonne",
+      "description": "Un tiers du tapis. Le triple, ou rien.",
+      "icone": "🎲",
+      "mise": 100,
+      "chance": 32,
+      "gain": 3,
+      "suspicionAuBureau": 4
+    },
+    {
+      "id": "plein",
+      "nom": "Un numéro plein",
+      "description": "Trente-six contre un, et une conviction personnelle.",
+      "icone": "🎯",
+      "mise": 200,
+      "chance": 2.7,
+      "gain": 36,
+      "suspicionAuBureau": 6
+    },
+    {
+      "id": "machine",
+      "nom": "Machine à sous",
+      "description": "Elle est conçue pour que tu restes. Elle est très bien conçue.",
+      "icone": "🎰",
+      "mise": 25,
+      "chance": 21,
+      "gain": 4,
+      "suspicionAuBureau": 5
+    }
+  ]
+}

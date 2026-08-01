@@ -19,6 +19,7 @@ import { CharacterCreation } from './CharacterCreation';
 import { MainMenu } from './MainMenu';
 import { Manual } from './Manual';
 import { DeskScreen } from './DeskScreen';
+import { Appart } from './Appart';
 import { EventModal, SummaryLines } from './EventModal';
 import { GameOver } from './GameOver';
 
@@ -84,6 +85,18 @@ export function App() {
           }}
           onCancel={backToMenu}
         />
+      </div>
+    );
+  }
+
+  // ── Le week-end ────────────────────────────────────────────
+  // Il passe APRÈS le bilan : le joueur lit ce que la semaine a produit,
+  // ferme, et se retrouve chez lui. L'inverse donnerait un bilan qui
+  // s'ouvre par-dessus son propre salon.
+  if (state.phase === 'weekend' && state.status === 'playing' && !activeEvent && !weekSummary) {
+    return (
+      <div className="app" style={THEME_VARS}>
+        <Appart onLundi={() => store.startWeek()} />
       </div>
     );
   }
