@@ -21,6 +21,8 @@ import { useGame } from './useGame';
 import { Marche } from './Marche';
 import { BlocDepenses } from './ViePrivee';
 import { Figure } from './sprites';
+import { Tutorial } from './Tutorial';
+import { tutorialSeen } from './tutorial';
 import { GooFilter } from './sprites';
 
 type Onglet = 'week-end' | 'logement' | 'marche';
@@ -29,6 +31,9 @@ export function Appart({ onLundi }: { onLundi: () => void }) {
   const { state, store } = useGame();
   const [onglet, setOnglet] = useState<Onglet>('week-end');
   const [toast, setToast] = useState<ActionResult | null>(null);
+  // L'accueil guidé continue ici : il a une note à donner sur le week-end,
+  // et sans cette instance il n'aurait aucun moyen de la donner.
+  const [tuto, setTuto] = useState(() => !tutorialSeen());
   // La cible des activités : une seule liste déroulante pour toutes,
   // plutôt qu'un sélecteur par carte. On choisit qui, puis quoi.
   const [cibleId, setCibleId] = useState<string>('');
@@ -307,6 +312,8 @@ export function Appart({ onLundi }: { onLundi: () => void }) {
           {toast.text}
         </div>
       )}
+
+      {tuto && <Tutorial selection={null} onSelect={() => {}} onClose={() => setTuto(false)} />}
     </div>
   );
 }

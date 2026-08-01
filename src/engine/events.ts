@@ -9,10 +9,45 @@ import { findRival, aliveColleagues, fillNames } from './util';
 import type { Rng } from './rng';
 
 /** Résout la cible concrète d'un événement selon son mode. */
-export function resolveEventTarget(event: GameEvent, state: GameState, rng: Rng): string | undefined {
+/**
+ * Cible DÉDUCTIBLE sans tirage.
+ *
+ * Elle existe pour une raison précise : le filtrage d'éligibilité tourne
+ * avant tout tirage, donc sans cible. Une condition portant sur la cible
+ * (« il faut une liaison ») y aurait été évaluée contre `undefined` et
+ * aurait échoué systématiquement — l'événement n'aurait jamais pu se
+ * déclencher, silencieusement.
+ *
+ * Ces trois modes n'ont pas besoin du RNG, on peut donc les résoudre
+ * pendant le filtrage sans déplacer le curseur et casser la
+ * reproductibilité d'une graine.
+ */
+export function staticTarget(event: GameEvent, state: GameState): string | undefined {
   switch (event.target) {
     case 'rival':
       return findRival(state);
+    case 'romance':
+      return partenairePrincipal(state)?.id;
+    case 'subordonne':
+      return state.colleagues.find((c) => c.alive && c.subordonne)?.id;
+    default:
+      return undefined;
+  }
+}
+
+/** L'histoire la plus avancée en cours — ni « rien », ni terminée. */
+function partenairePrincipal(state: GameState) {
+  return state.colleagues
+    .filter(
+      (c) => c.alive && c.romance && c.romance.statut !== 'rien' && c.romance.statut !== 'ex',
+    )
+    .sort((a, b) => (b.romance!.niveau ?? 0) - (a.romance!.niveau ?? 0))[0];
+}
+
+export function resolveEventTarget(event: GameEvent, state: GameState, rng: Rng): string | undefined {
+  const fixe = staticTarget(event, state);
+  if (fixe !== undefined) return fixe;
+  switch (event.target) {
     case 'archetype': {
       const pool = aliveColleagues(state).filter((c) => c.archetype === event.targetArchetype);
       return rng.pick(pool)?.id;
@@ -28,7 +63,9 @@ export function resolveEventTarget(event: GameEvent, state: GameState, rng: Rng)
 export function isEventEligible(event: GameEvent, state: GameState): boolean {
   const t = event.trigger;
   if (t.minRank && !checkCondition({ minRank: t.minRank }, state)) return false;
-  if (!checkCondition(t.conditions, state)) return false;
+  // La cible déductible est passée au filtre : sans elle, toute condition
+  // portant sur la cible refuserait l'événement pour toujours.
+  if (!checkCondition(t.conditions, state, staticTarget(event, state))) return false;
 
   const past = state.eventHistory.filter((h) => h.id === event.id);
   if (t.once && past.length > 0) return false;

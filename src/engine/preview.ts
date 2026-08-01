@@ -15,6 +15,7 @@ import { activeScheme, canDefuse, defuseChance, schemeChance } from './intents';
 import { SCAPEGOAT_FLAG, prepareChance, scapegoatOf, scapegoatWeeksLeft } from './scapegoat';
 import { availableHooks } from './hooks';
 import { STAT_KEYS } from './util';
+import { euros } from './argent';
 
 export interface PreviewLine {
   label: string;
@@ -338,6 +339,14 @@ export function describeEffect(effect: Effect, targetName = 'la cible'): Preview
     if (v) push(`${sign(v)} opinion (${id})`, v > 0);
   }
   if (effect.actionPoints) push(`${sign(effect.actionPoints)} PA`, effect.actionPoints > 0);
+  // L'argent et l'attachement doivent s'annoncer comme le reste : un
+  // choix qui coûte trois cents euros sans le dire n'est pas un choix.
+  if (effect.argent)
+    push(`${effect.argent > 0 ? '+' : '−'} ${euros(Math.abs(effect.argent))}`, effect.argent > 0);
+  if (effect.romance)
+    push(`${sign(effect.romance)} attachement de ${targetName}`, effect.romance > 0);
+  if (effect.revealSecret) lines.push(flat(`Découvre un secret de ${targetName}`));
+  if (effect.removeTarget) lines.push(flat(`${targetName} quitte l’entreprise`));
   if (effect.startPlan) {
     const def = getPlanDef(effect.startPlan);
     lines.push(flat(`Lance le plan « ${def?.name ?? effect.startPlan} »`));

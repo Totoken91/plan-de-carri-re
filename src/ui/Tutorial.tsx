@@ -13,7 +13,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useGame } from './useGame';
 import type { Selection } from './iso';
-import { TUTORIAL, markTutorialSeen, type TutoCtx } from './tutorial';
+import { TUTORIAL, markTutorialSeen, rememberStep, resumeIndex, type TutoCtx } from './tutorial';
 
 interface Rect {
   x: number;
@@ -65,7 +65,9 @@ export function Tutorial({
   onClose: () => void;
 }) {
   const { state } = useGame();
-  const [index, setIndex] = useState(0);
+  // Reprise à l'étape mémorisée : le week-end est un autre écran, donc
+  // ce composant se démonte à chaque vendredi soir.
+  const [index, setIndex] = useState(resumeIndex);
   const [holes, setHoles] = useState<Rect[]>([]);
   const [cardH, setCardH] = useState(260);
   const [, forceRender] = useState(0);
@@ -102,6 +104,7 @@ export function Tutorial({
   useEffect(() => {
     startRef.current = ctxRef.current;
     firedRef.current = false;
+    rememberStep(step.id);
     step.onEnter?.({ select: onSelect });
     const el = step.anchor?.map((s) => document.querySelector(s)).find(Boolean);
     el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });

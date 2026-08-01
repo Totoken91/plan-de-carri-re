@@ -3,31 +3,59 @@
     "id": "reorg_service",
     "title": "Réorganisation de service",
     "body": "Le DAF annonce une « rationalisation des effectifs ». Un poste saute. Toi et {rival} êtes les deux candidats au maintien. Le comité veut une décision d'ici vendredi.",
-    "trigger": { "weight": 10, "minRank": "junior", "cooldownWeeks": 4 },
+    "trigger": {
+      "weight": 10,
+      "minRank": "junior",
+      "cooldownWeeks": 4
+    },
     "target": "rival",
     "choices": [
       {
         "label": "Prendre les devants",
-        "requires": { "stats": { "combine": 20 } },
-        "effects": { "suspicion": 15, "rivalOpinion": -20, "reputation": 12 },
+        "requires": {
+          "stats": {
+            "combine": 20
+          }
+        },
+        "effects": {
+          "suspicion": 15,
+          "rivalOpinion": -20,
+          "reputation": 12
+        },
         "outcomeText": "Le dossier tombe au bon moment. {target} transpire pendant tout le comité."
       },
       {
         "label": "Jouer franc-jeu",
-        "effects": { "stats": { "rendement": 6, "nerfs": -15 }, "reputation": 10 },
+        "effects": {
+          "stats": {
+            "rendement": 6,
+            "nerfs": -15
+          },
+          "reputation": 10
+        },
         "outcomeText": "Tu abats deux fois plus de travail. Épuisant, mais personne ne peut rien te reprocher."
       },
       {
         "label": "Sacrifier un tiers",
-        "effects": { "globalOpinion": -8, "reputation": 6 },
+        "effects": {
+          "globalOpinion": -8,
+          "reputation": 6
+        },
         "outcomeText": "Tu suggères qu'un profil plus junior serait « plus dispensable ». Ça passe. On te regarde différemment."
       },
       {
         "label": "Ne rien faire",
         "successChance": 50,
-        "effects": { "reputation": 8 },
+        "effects": {
+          "reputation": 8
+        },
         "outcomeText": "Le hasard te garde. {target} encaisse la réorganisation à ta place.",
-        "failureEffects": { "reputation": -6, "stats": { "nerfs": -10 } },
+        "failureEffects": {
+          "reputation": -6,
+          "stats": {
+            "nerfs": -10
+          }
+        },
         "failureText": "Le hasard ne t'a pas choisi. Tu passes la semaine à justifier ton existence."
       }
     ]
@@ -36,22 +64,38 @@
     "id": "cafe_machine_confidence",
     "title": "Confidence à la machine à café",
     "body": "{target} te retient près de la machine à café. Visiblement, cette personne a besoin de vider son sac sur la direction.",
-    "trigger": { "weight": 12 },
+    "trigger": {
+      "weight": 12
+    },
     "target": "random",
     "choices": [
       {
         "label": "Écouter avec compassion",
-        "effects": { "targetOpinion": 12, "stats": { "aura": 2, "nerfs": -3 } },
+        "effects": {
+          "targetOpinion": 12,
+          "stats": {
+            "aura": 2,
+            "nerfs": -3
+          }
+        },
         "outcomeText": "Vingt minutes de doléances plus tard, {target} te considère comme un allié."
       },
       {
         "label": "Relancer pour en apprendre plus",
-        "effects": { "targetOpinion": 6, "suspicion": 3 },
+        "effects": {
+          "targetOpinion": 6,
+          "suspicion": 3
+        },
         "outcomeText": "Tu poses les bonnes questions. {target} en dit un peu trop — et le remarque à retardement."
       },
       {
         "label": "Couper court, tu as du travail",
-        "effects": { "targetOpinion": -8, "stats": { "rendement": 3 } },
+        "effects": {
+          "targetOpinion": -8,
+          "stats": {
+            "rendement": 3
+          }
+        },
         "outcomeText": "Tu retournes bosser. {target} note que tu n'es « pas très solidaire »."
       }
     ]
@@ -60,22 +104,43 @@
     "id": "audit_conformite_annonce",
     "title": "Note de service : audit de conformité",
     "body": "Un mail de la DRH annonce « une revue de conformité des pratiques internes » dans les prochaines semaines. Le ton est neutre. Trop neutre.",
-    "trigger": { "weight": 8, "conditions": { "minSuspicion": 30 } },
+    "trigger": {
+      "weight": 8,
+      "conditions": {
+        "minSuspicion": 30
+      }
+    },
     "choices": [
       {
         "label": "Faire profil bas cette semaine",
-        "effects": { "suspicion": -10, "stats": { "rendement": 2 } },
+        "effects": {
+          "suspicion": -10,
+          "stats": {
+            "rendement": 2
+          }
+        },
         "outcomeText": "Tu deviens invisible et irréprochable. La rumeur retombe d'un cran."
       },
       {
         "label": "Préparer un alibi solide",
-        "requires": { "stats": { "combine": 25 } },
-        "effects": { "suspicion": -6, "setFlags": ["alibi_pret"] },
+        "requires": {
+          "stats": {
+            "combine": 25
+          }
+        },
+        "effects": {
+          "suspicion": -6,
+          "setFlags": [
+            "alibi_pret"
+          ]
+        },
         "outcomeText": "Tu documentes tes semaines heure par heure. Si on t'interroge, tout est carré."
       },
       {
         "label": "Ignorer, c'est du théâtre RH",
-        "effects": { "suspicion": 4 },
+        "effects": {
+          "suspicion": 4
+        },
         "outcomeText": "Tu hausses les épaules. La DRH, elle, prend des notes."
       }
     ]
@@ -84,18 +149,34 @@
     "id": "nouveau_arrive",
     "title": "Arrivée d'un nouveau",
     "body": "Un nouveau profil débarque dans l'open space, badge encore tout neuf. {rival} tourne déjà autour pour se l'attacher.",
-    "trigger": { "weight": 9, "cooldownWeeks": 6 },
+    "trigger": {
+      "weight": 9,
+      "cooldownWeeks": 6
+    },
     "target": "rival",
     "choices": [
       {
         "label": "L'accueillir chaleureusement",
-        "effects": { "globalOpinion": 4, "stats": { "aura": 3, "nerfs": -3 } },
+        "effects": {
+          "globalOpinion": 4,
+          "stats": {
+            "aura": 3,
+            "nerfs": -3
+          }
+        },
         "outcomeText": "Tu joues les mentors. Le nouveau te voit comme un repère bienveillant."
       },
       {
         "label": "Le briefer sur qui éviter (surtout {target})",
-        "requires": { "stats": { "aura": 20 } },
-        "effects": { "rivalOpinion": -12, "suspicion": 5 },
+        "requires": {
+          "stats": {
+            "aura": 20
+          }
+        },
+        "effects": {
+          "rivalOpinion": -12,
+          "suspicion": 5
+        },
         "outcomeText": "Tu distilles quelques avertissements bien placés. {target} sent le terrain se dérober."
       },
       {
@@ -109,21 +190,40 @@
     "id": "pot_depart",
     "title": "Pot de départ obligatoire",
     "body": "Quelqu'un s'en va « pour de nouveaux défis ». Pot dans la salle de réunion à 17h. La présence est théoriquement facultative.",
-    "trigger": { "weight": 10, "cooldownWeeks": 3 },
+    "trigger": {
+      "weight": 10,
+      "cooldownWeeks": 3
+    },
     "choices": [
       {
         "label": "Y aller et réseauter",
-        "effects": { "globalOpinion": 5, "stats": { "aura": 2, "nerfs": -5 } },
+        "effects": {
+          "globalOpinion": 5,
+          "stats": {
+            "aura": 2,
+            "nerfs": -5
+          }
+        },
         "outcomeText": "Tu serres des mains, tu ris aux blagues. Ton capital sympathie remonte."
       },
       {
         "label": "Passer cinq minutes, puis filer bosser",
-        "effects": { "stats": { "rendement": 3, "nerfs": -2 } },
+        "effects": {
+          "stats": {
+            "rendement": 3,
+            "nerfs": -2
+          }
+        },
         "outcomeText": "Tu fais acte de présence et tu retournes produire. Compromis raisonnable."
       },
       {
         "label": "Ne pas y aller du tout",
-        "effects": { "globalOpinion": -4, "stats": { "nerfs": 4 } },
+        "effects": {
+          "globalOpinion": -4,
+          "stats": {
+            "nerfs": 4
+          }
+        },
         "outcomeText": "Tu profites du calme de l'open space désert. On remarque ton absence."
       }
     ]
@@ -132,24 +232,47 @@
     "id": "mail_ambigu",
     "title": "Un mail au double sens",
     "body": "{target} t'envoie un mail en copie du manager, formulé de façon à te faire porter le retard d'un projet commun. C'est subtil. C'est vicieux.",
-    "trigger": { "weight": 9, "minRank": "junior" },
+    "trigger": {
+      "weight": 9,
+      "minRank": "junior"
+    },
     "target": "rival",
     "choices": [
       {
         "label": "Répondre à tous, factuel et daté",
-        "requires": { "stats": { "rendement": 25 } },
-        "effects": { "rivalOpinion": -8, "reputation": 6, "stats": { "aura": 2 } },
+        "requires": {
+          "stats": {
+            "rendement": 25
+          }
+        },
+        "effects": {
+          "rivalOpinion": -8,
+          "reputation": 6,
+          "stats": {
+            "aura": 2
+          }
+        },
         "outcomeText": "Ta réponse chirurgicale remet les responsabilités à leur place. {target} recule."
       },
       {
         "label": "Régler ça en privé, discrètement",
-        "effects": { "targetOpinion": 5, "suspicion": 2 },
+        "effects": {
+          "targetOpinion": 5,
+          "suspicion": 2
+        },
         "outcomeText": "Tu proposes un café. Trêve fragile, mais le manager n'a rien vu."
       },
       {
         "label": "Contre-attaquer par un mail encore plus vicieux",
-        "requires": { "stats": { "combine": 30 } },
-        "effects": { "rivalOpinion": -18, "suspicion": 10 },
+        "requires": {
+          "stats": {
+            "combine": 30
+          }
+        },
+        "effects": {
+          "rivalOpinion": -18,
+          "suspicion": 10
+        },
         "outcomeText": "Tu retournes l'arme contre son propriétaire. Élégant. Et pas passé inaperçu."
       }
     ]
@@ -158,17 +281,27 @@
     "id": "poubelle_indice",
     "title": "Un document dans la mauvaise corbeille",
     "body": "En passant près de l'imprimante, tu repères un document oublié qui n'aurait jamais dû traîner là. Il concerne {target}.",
-    "trigger": { "weight": 7, "cooldownWeeks": 5 },
+    "trigger": {
+      "weight": 7,
+      "cooldownWeeks": 5
+    },
     "target": "random",
     "choices": [
       {
         "label": "Le lire discrètement puis le remettre",
-        "effects": { "suspicion": 4, "setFlags": ["fouine_active"] },
+        "effects": {
+          "suspicion": 4,
+          "setFlags": [
+            "fouine_active"
+          ]
+        },
         "outcomeText": "Tu mémorises l'essentiel. Une pièce de plus dans ta collection."
       },
       {
         "label": "Le rapporter à {target}, en toute honnêteté",
-        "effects": { "targetOpinion": 15 },
+        "effects": {
+          "targetOpinion": 15
+        },
         "outcomeText": "{target} te remercie, soulagé. Un service rendu qui se rappellera au bon moment."
       },
       {
@@ -182,22 +315,47 @@
     "id": "burnout_warning",
     "title": "La lampe témoin s'allume",
     "body": "Tu fixes ton écran depuis dix minutes sans lire une ligne. Les mots glissent. Ton corps t'envoie un pré-avis de grève.",
-    "trigger": { "weight": 11, "conditions": { "maxSuspicion": 100 } },
+    "trigger": {
+      "weight": 11,
+      "conditions": {
+        "maxSuspicion": 100
+      }
+    },
     "choices": [
       {
         "label": "Poser un jour de RTT",
-        "effects": { "stats": { "nerfs": 25 }, "reputation": -3 },
+        "effects": {
+          "stats": {
+            "nerfs": 25
+          },
+          "reputation": -3
+        },
         "outcomeText": "Une journée loin de l'open space. Tu reviens presque humain."
       },
       {
         "label": "Serrer les dents, il y a un deadline",
-        "effects": { "stats": { "nerfs": -12, "rendement": 4 }, "reputation": 5 },
+        "effects": {
+          "stats": {
+            "nerfs": -12,
+            "rendement": 4
+          },
+          "reputation": 5
+        },
         "outcomeText": "Tu tiens la ligne. Le projet avance. Ton système nerveux, moins."
       },
       {
         "label": "Faire semblant de travailler tout en récupérant",
-        "requires": { "stats": { "combine": 15 } },
-        "effects": { "stats": { "nerfs": 12 }, "suspicion": 3 },
+        "requires": {
+          "stats": {
+            "combine": 15
+          }
+        },
+        "effects": {
+          "stats": {
+            "nerfs": 12
+          },
+          "suspicion": 3
+        },
         "outcomeText": "L'art de paraître occupé. Reposant, tant que personne ne regarde de trop près."
       }
     ]
@@ -206,21 +364,43 @@
     "id": "veteran_propose",
     "title": "Le vétéran te fait signe",
     "body": "Gérard, qui n'adresse la parole à presque personne, te propose un café. « J'ai à te parler, petit. » Ce genre d'invitation ne se refuse pas — ou alors on le regrette.",
-    "trigger": { "weight": 6, "conditions": { "requiresArchetypeAlive": "veteran" }, "cooldownWeeks": 6 },
+    "trigger": {
+      "weight": 6,
+      "conditions": {
+        "requiresArchetypeAlive": "veteran"
+      },
+      "cooldownWeeks": 6
+    },
     "choices": [
       {
         "label": "Accepter et écouter",
-        "effects": { "colleagueOpinions": { "gerard": 18 }, "stats": { "combine": 2 } },
+        "effects": {
+          "colleagueOpinions": {
+            "gerard": 18
+          },
+          "stats": {
+            "combine": 2
+          }
+        },
         "outcomeText": "Gérard te livre un fragment de l'histoire secrète de la boîte. Tu es sur sa liste des gens fréquentables."
       },
       {
         "label": "Accepter mais rester méfiant",
-        "effects": { "colleagueOpinions": { "gerard": 6 }, "suspicion": -2 },
+        "effects": {
+          "colleagueOpinions": {
+            "gerard": 6
+          },
+          "suspicion": -2
+        },
         "outcomeText": "Tu écoutes sans t'engager. Gérard apprécie la prudence — un peu."
       },
       {
         "label": "Décliner poliment",
-        "effects": { "colleagueOpinions": { "gerard": -20 } },
+        "effects": {
+          "colleagueOpinions": {
+            "gerard": -20
+          }
+        },
         "outcomeText": "« Comme tu veux. » Le regard qu'il te lance te suit jusqu'à ton bureau."
       }
     ]
@@ -229,23 +409,40 @@
     "id": "credit_projet_flottant",
     "title": "Un projet sans propriétaire",
     "body": "Un livrable bien noté par la direction n'a été formellement attribué à personne. La fenêtre pour se l'approprier est étroite.",
-    "trigger": { "weight": 8, "minRank": "junior", "cooldownWeeks": 4 },
+    "trigger": {
+      "weight": 8,
+      "minRank": "junior",
+      "cooldownWeeks": 4
+    },
     "target": "random",
     "choices": [
       {
         "label": "T'en attribuer le mérite maintenant",
-        "requires": { "stats": { "combine": 18 } },
-        "effects": { "reputation": 15, "suspicion": 8, "targetOpinion": -10 },
+        "requires": {
+          "stats": {
+            "combine": 18
+          }
+        },
+        "effects": {
+          "reputation": 15,
+          "suspicion": 8,
+          "targetOpinion": -10
+        },
         "outcomeText": "Tu poses ton nom dessus avant tout le monde. Efficace, un peu voyant."
       },
       {
         "label": "Proposer un partage du mérite",
-        "effects": { "reputation": 7, "globalOpinion": 3 },
+        "effects": {
+          "reputation": 7,
+          "globalOpinion": 3
+        },
         "outcomeText": "Tu suggères une co-signature. Moins de gloire, mais des alliés reconnaissants."
       },
       {
         "label": "Laisser filer, ça sent le piège",
-        "effects": { "suspicion": -3 },
+        "effects": {
+          "suspicion": -3
+        },
         "outcomeText": "Trop beau pour être vrai. Tu préfères ne pas laisser d'empreintes."
       }
     ]
@@ -254,23 +451,52 @@
     "id": "parano_accusation",
     "title": "Une accusation à voix basse",
     "body": "Nadia t'arrête dans le couloir. « Je sais ce que tu fabriques. » Elle ne précise rien. Elle n'a peut-être rien. Ou peut-être tout.",
-    "trigger": { "weight": 7, "conditions": { "requiresArchetypeAlive": "parano", "minSuspicion": 25 } },
+    "trigger": {
+      "weight": 7,
+      "conditions": {
+        "requiresArchetypeAlive": "parano",
+        "minSuspicion": 25
+      }
+    },
     "choices": [
       {
         "label": "Nier calmement",
-        "requires": { "stats": { "aura": 25 } },
-        "effects": { "colleagueOpinions": { "nadia": 5 }, "suspicion": -4 },
+        "requires": {
+          "stats": {
+            "aura": 25
+          }
+        },
+        "effects": {
+          "colleagueOpinions": {
+            "nadia": 5
+          },
+          "suspicion": -4
+        },
         "outcomeText": "Ton calme la déstabilise. Elle repart en doutant de ses propres soupçons."
       },
       {
         "label": "Retourner l'accusation",
-        "requires": { "stats": { "combine": 30 } },
-        "effects": { "colleagueOpinions": { "nadia": -15 }, "suspicion": 6 },
+        "requires": {
+          "stats": {
+            "combine": 30
+          }
+        },
+        "effects": {
+          "colleagueOpinions": {
+            "nadia": -15
+          },
+          "suspicion": 6
+        },
         "outcomeText": "« Et toi, tu enregistres tout le monde, non ? » Elle blêmit. Mais la tension monte."
       },
       {
         "label": "L'ignorer et t'éloigner",
-        "effects": { "colleagueOpinions": { "nadia": -8 }, "suspicion": 8 },
+        "effects": {
+          "colleagueOpinions": {
+            "nadia": -8
+          },
+          "suspicion": 8
+        },
         "outcomeText": "Tu tournes les talons. Son regard te vrille le dos. Elle va creuser."
       }
     ]
@@ -279,24 +505,49 @@
     "id": "manager_favoritisme",
     "title": "Le manager cherche un chouchou",
     "body": "Le manager laisse entendre qu'il « repère les hauts potentiels ». Une place se libère dans son cercle rapproché. {rival} se positionne déjà.",
-    "trigger": { "weight": 8, "minRank": "junior", "cooldownWeeks": 5 },
+    "trigger": {
+      "weight": 8,
+      "minRank": "junior",
+      "cooldownWeeks": 5
+    },
     "target": "rival",
     "choices": [
       {
         "label": "Te rendre indispensable par le travail",
-        "effects": { "stats": { "rendement": 5, "nerfs": -8 }, "reputation": 12 },
+        "effects": {
+          "stats": {
+            "rendement": 5,
+            "nerfs": -8
+          },
+          "reputation": 12
+        },
         "outcomeText": "Tu deviens la personne qu'on appelle quand ça brûle. Le manager le remarque."
       },
       {
         "label": "Flatter le manager habilement",
-        "requires": { "stats": { "aura": 30 } },
-        "effects": { "reputation": 8, "suspicion": 4, "rivalOpinion": -6 },
+        "requires": {
+          "stats": {
+            "aura": 30
+          }
+        },
+        "effects": {
+          "reputation": 8,
+          "suspicion": 4,
+          "rivalOpinion": -6
+        },
         "outcomeText": "Tu maîtrises l'art du compliment stratégique. {rival} grince des dents."
       },
       {
         "label": "Discréditer {rival} en douce",
-        "requires": { "stats": { "combine": 25 } },
-        "effects": { "rivalOpinion": -16, "suspicion": 12 },
+        "requires": {
+          "stats": {
+            "combine": 25
+          }
+        },
+        "effects": {
+          "rivalOpinion": -16,
+          "suspicion": 12
+        },
         "outcomeText": "Une remarque au bon endroit sur les « limites » de {target}. Risqué, mais ça marque."
       }
     ]
@@ -305,22 +556,45 @@
     "id": "team_building_impose",
     "title": "Team building imposé",
     "body": "La direction organise une « journée de cohésion » avec activités en extérieur. Personne n'a le choix. Tout le monde fait semblant d'être ravi.",
-    "trigger": { "weight": 7, "cooldownWeeks": 8 },
+    "trigger": {
+      "weight": 7,
+      "cooldownWeeks": 8
+    },
     "choices": [
       {
         "label": "Jouer le jeu à fond",
-        "effects": { "globalOpinion": 8, "stats": { "aura": 3, "nerfs": -6 } },
+        "effects": {
+          "globalOpinion": 8,
+          "stats": {
+            "aura": 3,
+            "nerfs": -6
+          }
+        },
         "outcomeText": "Tu remportes le tournoi de babyfoot inter-services. On t'aime un peu plus."
       },
       {
         "label": "Observer et collecter des ragots",
-        "requires": { "stats": { "combine": 20 } },
-        "effects": { "setFlags": ["fouine_active"], "suspicion": 2 },
+        "requires": {
+          "stats": {
+            "combine": 20
+          }
+        },
+        "effects": {
+          "setFlags": [
+            "fouine_active"
+          ],
+          "suspicion": 2
+        },
         "outcomeText": "L'alcool délie les langues. Tu rentres avec un carnet mental bien rempli."
       },
       {
         "label": "Simuler une gastro pour t'échapper",
-        "effects": { "stats": { "nerfs": 10 }, "globalOpinion": -3 },
+        "effects": {
+          "stats": {
+            "nerfs": 10
+          },
+          "globalOpinion": -3
+        },
         "outcomeText": "Journée sauvée, réputation légèrement écornée. Ça valait le coup."
       }
     ]
@@ -329,24 +603,55 @@
     "id": "promotion_rumeur",
     "title": "Une promotion se murmure",
     "body": "Les couloirs bruissent : un poste au-dessus du tien va s'ouvrir. Plusieurs noms circulent. Le tien pourrait en être — si tu pousses un peu.",
-    "trigger": { "weight": 8, "minRank": "junior", "conditions": { "minWeek": 3 }, "cooldownWeeks": 5 },
+    "trigger": {
+      "weight": 8,
+      "minRank": "junior",
+      "conditions": {
+        "minWeek": 3
+      },
+      "cooldownWeeks": 5
+    },
     "choices": [
       {
         "label": "Faire valoir tes résultats",
-        "requires": { "stats": { "rendement": 30 } },
-        "effects": { "reputation": 18, "stats": { "nerfs": -5 } },
+        "requires": {
+          "stats": {
+            "rendement": 30
+          }
+        },
+        "effects": {
+          "reputation": 18,
+          "stats": {
+            "nerfs": -5
+          }
+        },
         "outcomeText": "Tu présentes un bilan imparable. Ton nom monte dans la short-list."
       },
       {
         "label": "Lobbying auprès des décideurs",
-        "requires": { "stats": { "aura": 25 } },
-        "effects": { "reputation": 12, "suspicion": 5 },
+        "requires": {
+          "stats": {
+            "aura": 25
+          }
+        },
+        "effects": {
+          "reputation": 12,
+          "suspicion": 5
+        },
         "outcomeText": "Tu places les bons mots aux bonnes oreilles. Efficace et discret. À peu près."
       },
       {
         "label": "Éliminer la concurrence par un plan",
-        "requires": { "stats": { "combine": 28 } },
-        "effects": { "suspicion": 14, "rivalOpinion": -20, "reputation": 8 },
+        "requires": {
+          "stats": {
+            "combine": 28
+          }
+        },
+        "effects": {
+          "suspicion": 14,
+          "rivalOpinion": -20,
+          "reputation": 8
+        },
         "outcomeText": "Tu t'assures qu'un concurrent ait un mois compliqué. La voie se dégage — pas les soupçons."
       }
     ]
@@ -355,22 +660,586 @@
     "id": "glandeur_ragot",
     "title": "Kevin a une info",
     "body": "Kevin te fait signe depuis son bureau, l'air surexcité. « Tu sais pas ce que j'ai entendu ? » Le Glandeur sait toujours quelque chose.",
-    "trigger": { "weight": 9, "conditions": { "requiresArchetypeAlive": "glandeur" }, "cooldownWeeks": 3 },
+    "trigger": {
+      "weight": 9,
+      "conditions": {
+        "requiresArchetypeAlive": "glandeur"
+      },
+      "cooldownWeeks": 3
+    },
     "choices": [
       {
         "label": "L'écouter attentivement",
-        "effects": { "colleagueOpinions": { "kevin": 10 }, "setFlags": ["fouine_active"], "stats": { "combine": 1 } },
+        "effects": {
+          "colleagueOpinions": {
+            "kevin": 10
+          },
+          "setFlags": [
+            "fouine_active"
+          ],
+          "stats": {
+            "combine": 1
+          }
+        },
         "outcomeText": "Kevin déballe un ragot juteux sur un cadre. Information stockée, amitié consolidée."
       },
       {
         "label": "L'écouter mais rester discret sur toi",
-        "effects": { "colleagueOpinions": { "kevin": 4 }, "suspicion": -2 },
+        "effects": {
+          "colleagueOpinions": {
+            "kevin": 4
+          },
+          "suspicion": -2
+        },
         "outcomeText": "Tu prends sans donner. Kevin ne s'en rend même pas compte."
       },
       {
         "label": "« Pas le temps, Kevin. »",
-        "effects": { "colleagueOpinions": { "kevin": -6 }, "stats": { "rendement": 2 } },
+        "effects": {
+          "colleagueOpinions": {
+            "kevin": -6
+          },
+          "stats": {
+            "rendement": 2
+          }
+        },
         "outcomeText": "Tu le coupes. Il hausse les épaules et va raconter son histoire à quelqu'un d'autre."
+      }
+    ]
+  },
+  {
+    "id": "seminaire_hotel",
+    "title": "Séminaire annuel",
+    "body": "Deux jours de « co-construction » dans un hôtel d'aéroport. Le bar ferme à deux heures et les chambres sont au même étage. {target} n'a pas encore commandé son dernier verre.",
+    "trigger": {
+      "weight": 9,
+      "minWeek": 3,
+      "cooldownWeeks": 6,
+      "conditions": {
+        "minRomance": "flirt"
+      }
+    },
+    "target": "romance",
+    "choices": [
+      {
+        "label": "Monter les escaliers, pas l'ascenseur",
+        "successChance": 68,
+        "effects": {
+          "romance": 22,
+          "targetOpinion": 6,
+          "stats": {
+            "nerfs": 5
+          }
+        },
+        "outcomeText": "Personne ne vous a vus. C'est la seule chose que vous vous soyez dite au petit-déjeuner.",
+        "failureEffects": {
+          "romance": 14,
+          "suspicion": 14,
+          "globalOpinion": -6
+        },
+        "failureText": "Le DAF prenait l'air sur le parking. Il n'a rien dit. Il n'a pas eu besoin."
+      },
+      {
+        "label": "Rentrer par le premier train",
+        "effects": {
+          "romance": -8,
+          "stats": {
+            "nerfs": 6
+          },
+          "reputation": 4
+        },
+        "outcomeText": "Tu es à ton poste à 8 h. {target} ne t'a pas écrit de la journée."
+      },
+      {
+        "label": "Rester au bar avec le reste du service",
+        "effects": {
+          "globalOpinion": 8,
+          "romance": -4,
+          "stats": {
+            "nerfs": -6
+          }
+        },
+        "outcomeText": "Tu as tenu jusqu'au bout. Tout le service t'aime, et {target} est montée seule."
+      }
+    ]
+  },
+  {
+    "id": "rh_convocation_couple",
+    "title": "Charte des relations internes",
+    "body": "Les RH ont « constaté une situation » et te reçoivent avec un document de trois pages. Le mot « asymétrie hiérarchique » revient deux fois.",
+    "trigger": {
+      "weight": 12,
+      "cooldownWeeks": 5,
+      "conditions": {
+        "requiresRomanceConnue": true
+      }
+    },
+    "target": "romance",
+    "choices": [
+      {
+        "label": "Signer la déclaration de conflit d'intérêts",
+        "effects": {
+          "suspicion": -12,
+          "reputation": -6,
+          "romance": 5
+        },
+        "outcomeText": "Tout est déclaré, donc plus rien n'est reprochable. Ta candidature à la prochaine promotion, elle, porte une note de bas de page."
+      },
+      {
+        "label": "Nier qu'il se passe quoi que ce soit",
+        "successChance": 55,
+        "requires": {
+          "stats": {
+            "combine": 25
+          }
+        },
+        "effects": {
+          "suspicion": 4
+        },
+        "outcomeText": "« Un malentendu. » Le dossier se referme sans être détruit.",
+        "failureEffects": {
+          "suspicion": 24,
+          "globalOpinion": -10,
+          "romance": -12
+        },
+        "failureText": "Ils avaient les badges d'accès. Mentir aux RH coûte toujours plus cher que le fait lui-même."
+      },
+      {
+        "label": "Demander la mutation de l'autre",
+        "effects": {
+          "suspicion": -16,
+          "romance": -40,
+          "targetOpinion": -35,
+          "globalOpinion": -12
+        },
+        "outcomeText": "Le problème est réglé administrativement. {target} a compris exactement ce que tu as choisi."
+      }
+    ]
+  },
+  {
+    "id": "ex_qui_parle",
+    "title": "Quelqu'un a parlé à la machine",
+    "body": "Une phrase circule depuis mardi, et elle est assez précise pour ne pas être inventée. Elle ne vient pas de {target}.",
+    "trigger": {
+      "weight": 8,
+      "minWeek": 5,
+      "cooldownWeeks": 6,
+      "conditions": {
+        "minRomance": "liaison"
+      }
+    },
+    "target": "romance",
+    "choices": [
+      {
+        "label": "Prendre les devants et officialiser",
+        "effects": {
+          "romance": 14,
+          "targetOpinion": 12,
+          "suspicion": 6,
+          "globalOpinion": -4
+        },
+        "outcomeText": "Vous arrivez ensemble le lendemain. Une rumeur assumée cesse d'être une rumeur."
+      },
+      {
+        "label": "Faire taire la source",
+        "successChance": 60,
+        "requires": {
+          "stats": {
+            "combine": 30
+          }
+        },
+        "effects": {
+          "globalOpinion": -3,
+          "suspicion": 5
+        },
+        "outcomeText": "La phrase disparaît en deux jours. On ne saura jamais ce que tu as échangé contre ça.",
+        "failureEffects": {
+          "suspicion": 15,
+          "globalOpinion": -12,
+          "romance": -10
+        },
+        "failureText": "Tu t'y es pris trop franchement. Maintenant on parle de la rumeur ET de ta réaction."
+      },
+      {
+        "label": "Laisser courir",
+        "effects": {
+          "romance": -10,
+          "stats": {
+            "nerfs": -8
+          }
+        },
+        "outcomeText": "Ça s'éteindra tout seul. En attendant, {target} lit les silences aussi bien que toi."
+      }
+    ]
+  },
+  {
+    "id": "cadeau_anniversaire",
+    "title": "C'est son anniversaire",
+    "body": "Le calendrier partagé le rappelle à tout l'étage à 9 h 02. Le service fait une cagnotte de douze euros. Toi, tu es dans une autre catégorie.",
+    "trigger": {
+      "weight": 10,
+      "cooldownWeeks": 8,
+      "conditions": {
+        "minRomance": "flirt",
+        "minArgent": 200
+      }
+    },
+    "target": "romance",
+    "choices": [
+      {
+        "label": "Quelque chose de cher, et discret",
+        "requires": {
+          "minArgent": 300
+        },
+        "effects": {
+          "argent": -300,
+          "romance": 20,
+          "targetOpinion": 10
+        },
+        "outcomeText": "Ni carte, ni témoin. {target} l'a rangé dans son sac avant que quelqu'un ne demande."
+      },
+      {
+        "label": "Mettre vingt euros dans la cagnotte, comme tout le monde",
+        "effects": {
+          "argent": -20,
+          "romance": -6,
+          "globalOpinion": 4
+        },
+        "outcomeText": "Personne ne remarque rien. C'est exactement le problème."
+      },
+      {
+        "label": "Organiser le pot, et le payer",
+        "requires": {
+          "minArgent": 480
+        },
+        "effects": {
+          "argent": -480,
+          "globalOpinion": 12,
+          "romance": 8,
+          "stats": {
+            "aura": 3
+          }
+        },
+        "outcomeText": "Tu offres le crémant à tout l'étage pour dire une chose à une seule personne. Ça marche des deux côtés."
+      }
+    ]
+  },
+  {
+    "id": "note_de_frais",
+    "title": "Contrôle des notes de frais",
+    "body": "La comptabilité reprend six mois de justificatifs. Trois de tes déjeuners n'ont pas de nom en face, et un taxi part d'une adresse qui n'est pas la tienne.",
+    "trigger": {
+      "weight": 11,
+      "minWeek": 4,
+      "cooldownWeeks": 5
+    },
+    "target": "none",
+    "choices": [
+      {
+        "label": "Rembourser sans discuter",
+        "requires": {
+          "minArgent": 600
+        },
+        "effects": {
+          "argent": -600,
+          "suspicion": -8,
+          "reputation": 3
+        },
+        "outcomeText": "Six cents euros et une phrase aimable. Le dossier se ferme le jour même."
+      },
+      {
+        "label": "Contester ligne par ligne",
+        "successChance": 52,
+        "effects": {
+          "suspicion": -4,
+          "stats": {
+            "nerfs": -8
+          }
+        },
+        "outcomeText": "Deux heures de tableur et tu as gagné. Ils ne reviendront pas de sitôt.",
+        "failureEffects": {
+          "suspicion": 18,
+          "argent": -900
+        },
+        "failureText": "Contester attire l'attention sur le reste. Tu paies plus, et on te regarde."
+      },
+      {
+        "label": "Faire porter le taxi à quelqu'un d'autre",
+        "requires": {
+          "stats": {
+            "combine": 30
+          }
+        },
+        "successChance": 58,
+        "effects": {
+          "suspicion": -6,
+          "globalOpinion": -6
+        },
+        "outcomeText": "L'adresse devient celle d'un autre service. Personne ne creuse.",
+        "failureEffects": {
+          "suspicion": 22,
+          "globalOpinion": -14
+        },
+        "failureText": "Le taxi t'appartenait, et la comptabilité a des horodatages de badge."
+      }
+    ]
+  },
+  {
+    "id": "tuyau_boursier",
+    "title": "Un tuyau à la machine à café",
+    "body": "{target} parle un peu trop fort d'un dossier client qui n'est pas censé sortir de la salle de réunion. Un nom de société revient. Il est coté.",
+    "trigger": {
+      "weight": 9,
+      "minWeek": 4,
+      "cooldownWeeks": 6,
+      "conditions": {
+        "minArgent": 400
+      }
+    },
+    "target": "random",
+    "choices": [
+      {
+        "label": "Miser gros dessus",
+        "requires": {
+          "minArgent": 1500
+        },
+        "successChance": 62,
+        "effects": {
+          "argent": 2600,
+          "suspicion": 12
+        },
+        "outcomeText": "Le titre décolle le jeudi. Personne ne fait le lien. Pas encore.",
+        "failureEffects": {
+          "argent": -1500,
+          "suspicion": 8
+        },
+        "failureText": "Le dossier capote. Tu as payé quinze cents euros pour une conversation de couloir."
+      },
+      {
+        "label": "Mettre une somme raisonnable",
+        "requires": {
+          "minArgent": 400
+        },
+        "successChance": 62,
+        "effects": {
+          "argent": 620,
+          "suspicion": 3
+        },
+        "outcomeText": "Un gain modeste, invisible dans un relevé. C'est le but."
+      },
+      {
+        "label": "Ne rien faire, et s'en souvenir",
+        "effects": {
+          "stats": {
+            "combine": 3
+          }
+        },
+        "outcomeText": "Tu notes le nom. Tu notes surtout que {target} ne sait pas se taire."
+      }
+    ]
+  },
+  {
+    "id": "loyer_augmente",
+    "title": "Révision annuelle du loyer",
+    "body": "Le courrier tient en une phrase et un chiffre. Le chiffre a monté plus vite que ton salaire.",
+    "trigger": {
+      "weight": 8,
+      "minWeek": 6,
+      "cooldownWeeks": 10,
+      "conditions": {
+        "minLogement": 1
+      }
+    },
+    "target": "none",
+    "choices": [
+      {
+        "label": "Payer et se taire",
+        "effects": {
+          "argent": -700,
+          "stats": {
+            "nerfs": -6
+          }
+        },
+        "outcomeText": "Sept cents euros de plus, et la certitude que ça recommencera."
+      },
+      {
+        "label": "Négocier",
+        "successChance": 45,
+        "effects": {
+          "stats": {
+            "aura": 2
+          }
+        },
+        "outcomeText": "Tu obtiens un gel de douze mois. Personne ne t'avait dit que c'était possible.",
+        "failureEffects": {
+          "argent": -900,
+          "stats": {
+            "nerfs": -8
+          }
+        },
+        "failureText": "L'agence a d'autres dossiers. Tu paies la révision et les frais de dossier."
+      },
+      {
+        "label": "Prendre un dossier à faire le week-end pour compenser",
+        "effects": {
+          "argent": -700,
+          "reputation": 8,
+          "stats": {
+            "nerfs": -14
+          }
+        },
+        "outcomeText": "Tu paies, et tu rattrapes en heures. C'est comme ça que ça commence."
+      }
+    ]
+  },
+  {
+    "id": "collegue_emprunte",
+    "title": "Il te demande de l'argent",
+    "body": "{target} t'attend près de l'ascenseur, et met quatre minutes à en venir au fait. La somme est précise, ce qui veut dire qu'elle a été calculée plusieurs fois.",
+    "trigger": {
+      "weight": 10,
+      "minWeek": 3,
+      "cooldownWeeks": 5,
+      "conditions": {
+        "minArgent": 900
+      }
+    },
+    "target": "random",
+    "choices": [
+      {
+        "label": "Prêter, sans rien demander",
+        "requires": {
+          "minArgent": 800
+        },
+        "effects": {
+          "argent": -800,
+          "targetOpinion": 30
+        },
+        "outcomeText": "Il te remboursera peut-être. Ce qui est acquis, c'est autre chose."
+      },
+      {
+        "label": "Prêter, et le rappeler de temps en temps",
+        "requires": {
+          "minArgent": 800
+        },
+        "effects": {
+          "argent": -800,
+          "targetOpinion": 14,
+          "stats": {
+            "combine": 3
+          }
+        },
+        "outcomeText": "Une dette qu'on n'oublie pas vaut mieux qu'un ami. Il le sait aussi."
+      },
+      {
+        "label": "Refuser",
+        "effects": {
+          "targetOpinion": -18
+        },
+        "outcomeText": "Tu invoques un crédit en cours. Il hoche la tête et ne t'en reparlera jamais."
+      }
+    ]
+  },
+  {
+    "id": "prime_exceptionnelle",
+    "title": "Prime exceptionnelle",
+    "body": "Une enveloppe « au mérite » est distribuée à trois personnes de l'étage. Tu en fais partie. Les deux autres aussi le savent.",
+    "trigger": {
+      "weight": 9,
+      "minRank": "junior",
+      "cooldownWeeks": 8
+    },
+    "target": "rival",
+    "choices": [
+      {
+        "label": "L'encaisser et ne rien dire",
+        "effects": {
+          "argent": 1400
+        },
+        "outcomeText": "Mille quatre cents euros. Le silence est la partie la moins chère."
+      },
+      {
+        "label": "Payer un pot avec",
+        "effects": {
+          "argent": 900,
+          "globalOpinion": 12,
+          "stats": {
+            "aura": 3
+          }
+        },
+        "outcomeText": "Tu gardes la moitié et tu offres le reste. Tout le monde trouve ça élégant, et tu as quand même la moitié."
+      },
+      {
+        "label": "Laisser croire que {rival} n'en a pas eu",
+        "requires": {
+          "stats": {
+            "combine": 25
+          }
+        },
+        "successChance": 60,
+        "effects": {
+          "argent": 1400,
+          "rivalOpinion": -20,
+          "suspicion": 8
+        },
+        "outcomeText": "Une phrase bien placée, et {target} passe la semaine à se demander pourquoi lui.",
+        "failureEffects": {
+          "argent": 1400,
+          "rivalOpinion": -8,
+          "globalOpinion": -10,
+          "suspicion": 14
+        },
+        "failureText": "{target} avait déjà vu la liste. Il sait maintenant à quoi tu occupes tes journées."
+      }
+    ]
+  },
+  {
+    "id": "subordonne_augmentation",
+    "title": "Il demande une augmentation",
+    "body": "{target} a préparé un document. Il est bon. C'est même le problème : refuser demandera un argument, et tu n'en as pas.",
+    "trigger": {
+      "weight": 10,
+      "minWeek": 5,
+      "cooldownWeeks": 6,
+      "conditions": {
+        "requiresSubordonne": true
+      }
+    },
+    "target": "subordonne",
+    "choices": [
+      {
+        "label": "La lui obtenir",
+        "effects": {
+          "targetOpinion": 35,
+          "reputation": -6
+        },
+        "outcomeText": "Tu la défends en comité et tu l'obtiens. Ça te coûte du capital, et il le sait."
+      },
+      {
+        "label": "Promettre pour l'an prochain",
+        "effects": {
+          "targetOpinion": -12
+        },
+        "outcomeText": "« On en reparle au prochain cycle. » Il connaît la phrase, il l'a déjà entendue."
+      },
+      {
+        "label": "La refuser en la lui faisant porter",
+        "requires": {
+          "stats": {
+            "combine": 30
+          }
+        },
+        "successChance": 55,
+        "effects": {
+          "targetOpinion": -5,
+          "reputation": 5
+        },
+        "outcomeText": "Tu lui expliques que c'est la direction qui bloque. Il repart en voulant du mal à quelqu'un d'autre.",
+        "failureEffects": {
+          "targetOpinion": -30,
+          "suspicion": 10
+        },
+        "failureText": "Il a vérifié auprès des RH. La direction n'avait rien bloqué du tout."
       }
     ]
   }

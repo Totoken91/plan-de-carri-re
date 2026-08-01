@@ -3,9 +3,26 @@
 // Utilisé pour : triggers d'événements, prérequis de choix, prérequis de plans.
 // Pure : ne mute jamais l'état.
 // ─────────────────────────────────────────────────────────────
-import type { Condition, GameState, StatKey } from '@state/schema';
+import type { Condition, GameState, RomanceStatut, StatKey } from '@state/schema';
 import { rankOrder } from '@data/content';
+import { appartRang } from '@data/vieprivee';
 import { getColleague } from './util';
+
+/**
+ * Ordre des statuts de relation, pour `minRomance`.
+ *
+ * `ex` vaut −1 et non 0 : une histoire terminée n'est pas « moins
+ * qu'un flirt », elle est disqualifiante. Sans ce choix, un événement
+ * exigeant `flirt` se serait déclenché sur quelqu'un qu'on a quitté.
+ */
+const ECHELLE: Record<RomanceStatut, number> = {
+  ex: -1,
+  rien: 0,
+  flirt: 1,
+  liaison: 2,
+  couple: 3,
+};
+const rangRomance = (s: RomanceStatut | undefined): number => (s ? ECHELLE[s] : 0);
 
 /**
  * `targetId` = cible contextuelle (collègue visé par l'événement/le plan).
@@ -51,6 +68,27 @@ export function checkCondition(
     const target = getColleague(state, targetId);
     const hasSecret = target?.secrets.some((s) => s.discovered) ?? false;
     if (!hasSecret) return false;
+  }
+
+  if (cond.minArgent !== undefined && state.argent < cond.minArgent) return false;
+  if (cond.maxArgent !== undefined && state.argent > cond.maxArgent) return false;
+
+  if (cond.minRomance !== undefined) {
+    const target = getColleague(state, targetId);
+    if (rangRomance(target?.romance?.statut) < rangRomance(cond.minRomance)) return false;
+  }
+
+  if (cond.requiresRomanceConnue) {
+    const publique = state.colleagues.some((c) => c.alive && c.romance?.connu);
+    if (!publique) return false;
+  }
+
+  if (cond.requiresSubordonne) {
+    if (!state.colleagues.some((c) => c.alive && c.subordonne)) return false;
+  }
+
+  if (cond.minLogement !== undefined) {
+    if (appartRang(state.appart.niveau) < cond.minLogement) return false;
   }
 
   return true;

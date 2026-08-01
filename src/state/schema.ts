@@ -30,6 +30,21 @@ export interface Condition {
   notFlags?: string[]; // drapeaux interdits (absents)
   requiresArchetypeAlive?: ArchetypeId; // un collègue vivant de cet archétype existe
   requiresSecretDiscovered?: boolean; // au moins un secret découvert sur la cible
+  /** Trésorerie minimale / maximale, en euros. */
+  minArgent?: number;
+  maxArgent?: number;
+  /**
+   * Statut minimal de la relation avec la CIBLE, dans l'ordre
+   * flirt → liaison → couple. `ex` n'est jamais « au-dessus » de rien :
+   * une histoire finie ne remplit aucun prérequis.
+   */
+  minRomance?: RomanceStatut;
+  /** Une histoire, quelle qu'elle soit, est publique. */
+  requiresRomanceConnue?: boolean;
+  /** Au moins un collègue est rattaché à ton périmètre. */
+  requiresSubordonne?: boolean;
+  /** Rang minimal du logement occupé (0 = la coloc). */
+  minLogement?: number;
 }
 
 // ── Effect — mutation déclarative générique ──────────────────
@@ -221,7 +236,14 @@ export interface EventChoice {
   failureText?: string;
 }
 
-export type EventTargetMode = 'rival' | 'random' | 'archetype';
+export type EventTargetMode =
+  | 'rival'
+  | 'random'
+  | 'archetype'
+  /** La personne avec qui tu as l'histoire la plus avancée. */
+  | 'romance'
+  /** Un de tes subordonnés. */
+  | 'subordonne';
 
 export interface GameEvent {
   id: EventId;

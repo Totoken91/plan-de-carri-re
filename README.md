@@ -540,6 +540,44 @@ puis on applique. Payer après l'effet laisserait passer une dépense
 insolvable ; appliquer avant de vérifier la cible laisserait un effet
 orphelin.
 
+### L'accueil guidé, et la note qui n'arrivait jamais
+
+Le script (`ui/tutorial.ts`) compte dix-huit notes de service, dont la
+moitié ne passent à la suivante que lorsque le geste a été fait — pas
+quand on a cliqué « Suivant ».
+
+Deux pièges tenaient au fait que le week-end est un **autre écran** :
+
+1. Le composant du tuto vit dans l'écran du bureau. Passer vendredi soir
+   le démonte, donc l'accueil repartait de la note 00 — juste après avoir
+   demandé de terminer la semaine, c'est-à-dire exactement au moment où
+   il devient utile. L'étape en cours est donc mémorisée, **par
+   identifiant et non par numéro** : insérer une note au milieu du script
+   ne doit pas renvoyer les parties en cours au mauvais endroit.
+2. La consigne « termine la semaine » n'était jamais validée : React
+   démonte le composant avant que l'effet qui la surveille n'ait pu
+   tourner. Elle accepte donc aussi « on est passé en week-end ».
+
+### Conditionner un événement sur ce qui ne se voyait pas
+
+`Condition` sait désormais lire un solde (`minArgent`), un statut de
+relation avec la cible (`minRomance`), une histoire devenue publique, un
+périmètre non vide, et le rang du logement.
+
+Un piège s'y cachait, silencieux : le filtrage d'éligibilité tourne
+**avant tout tirage**, donc sans cible. Une condition portant sur la
+cible y aurait été évaluée contre `undefined` et aurait échoué
+systématiquement — l'événement n'aurait jamais pu se déclencher, sans que
+rien ne le signale. Les modes de ciblage déductibles sans hasard (`rival`,
+`romance`, `subordonne`) sont donc résolus **pendant** le filtrage, ce
+qui est possible précisément parce qu'ils ne consomment pas le RNG et ne
+déplacent donc pas le curseur d'une graine.
+
+Dans l'échelle des statuts, `ex` vaut −1 et non 0 : une histoire terminée
+n'est pas « moins qu'un flirt », elle est disqualifiante. Sans ce choix,
+un événement exigeant `flirt` se serait déclenché sur quelqu'un qu'on
+vient de quitter.
+
 ## Ajouter du contenu
 
 ### Un événement

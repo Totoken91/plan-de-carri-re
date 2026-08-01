@@ -176,8 +176,52 @@ export const TUTORIAL: TutorialStep[] = [
     anchor: ['.inspector'],
   },
   {
-    id: 'semaine',
+    id: 'argent',
     tag: 'Note de service 11',
+    title: 'Ton salaire',
+    body: [
+      'Tu es payé chaque vendredi, et ton loyer part dans la foulée. Monter en grade, ce n’est pas qu’un titre : c’est un salaire.',
+      'L’argent achète ce que les points d’action n’achètent pas — un café, un dîner, un avocat qui fait baisser la suspicion, un détective, et plus tard un cabinet de conseil qui trouvera qu’un poste est « redondant ».',
+      'Rien ne se paie à crédit. Si la somme n’y est pas, l’action est refusée.',
+    ],
+    anchor: ['.topbar__argent'],
+  },
+  {
+    id: 'marche',
+    tag: 'Note de service 12',
+    title: 'L’onglet privé',
+    body: [
+      'Clique sur ton solde : la bourse et le casino s’ouvrent. Depuis ton poste — ce qui n’est pas sans conséquence.',
+      'La bourse monte lentement et immobilise ton argent. Le casino a une espérance négative, écrite sur chaque table : il ne sert pas à s’enrichir, il sert à tenter un gros coup tout de suite.',
+      'Jouer depuis le bureau fait monter la suspicion, que tu gagnes ou non. Chez toi le week-end, personne ne regarde ton écran.',
+    ],
+    anchor: ['.topbar__argent'],
+  },
+  {
+    id: 'romance',
+    tag: 'Note de service 13',
+    title: 'Ce qui ne concerne pas les RH',
+    body: [
+      'Sur la fiche de n’importe qui, sous les secrets : l’attachement. Ce n’est pas l’opinion. On peut plaire à quelqu’un qui vous méprise professionnellement.',
+      'Tant que ça reste discret, rien de public ne bouge. Le jour où ça se sait — surpris, ou parce que tu as officialisé —, tes autres histoires s’arrêtent net, l’étage a un avis, et les RH ouvrent un dossier.',
+      'Les toilettes sont la seule porte qui ferme au troisième. C’est le plus gros gain d’attachement du jeu, et le seul risque qui peut rendre une histoire publique contre ta volonté.',
+    ],
+    anchor: ['.inspector', '.iso'],
+  },
+  {
+    id: 'perimetre',
+    tag: 'Note de service 14',
+    title: 'Les gens sous toi',
+    body: [
+      'À partir de Junior, des collègues d’un rang inférieur peuvent être rattachés à ton périmètre. Tu leur donnes un ordre par semaine : produire pour toi, rapporter sur quelqu’un, endosser ta suspicion, plaider ta cause, ou faire le nécessaire.',
+      'Un subordonné n’obéit pas parce qu’il t’aime : il obéit parce que tu notes son évaluation. Son opinion ne décide pas s’il exécute — elle décide ce qu’il raconte ensuite.',
+      'Déléguer le sale boulot, c’est le mettre dans la bouche de quelqu’un.',
+    ],
+    anchor: ['.inspector'],
+  },
+  {
+    id: 'semaine',
+    tag: 'Note de service 15',
     title: 'Vendredi soir',
     body: [
       'Terminer la semaine résout tout d’un coup : tes plans, leurs intentions, les opportunités que tu n’as pas saisies (elles disparaissent), la suspicion, et parfois un événement qui te demande de choisir.',
@@ -185,11 +229,26 @@ export const TUTORIAL: TutorialStep[] = [
     ],
     anchor: ['.btn--endweek'],
     task: 'Termine la semaine.',
-    done: (now, start) => now.state.week > start.state.week,
+    // Le passage au week-end démonte l'écran du bureau AVANT que l'effet
+    // qui surveille cette consigne n'ait pu tourner. Sans la seconde
+    // condition, l'accueil se réveillait chez le joueur en lui demandant
+    // encore de terminer une semaine déjà terminée.
+    done: (now, start) => now.state.week > start.state.week || now.state.phase === 'weekend',
+  },
+  {
+    id: 'weekend',
+    tag: 'Note de service 16',
+    title: 'Le week-end',
+    body: [
+      'Tu viens de rentrer chez toi. Le week-end a ses propres points d’action : c’est du temps qui ne se prend pas sur la semaine.',
+      'C’est le seul endroit où tu peux te reposer vraiment, fouiller les réseaux de quelqu’un, l’inviter, dîner en tête-à-tête, et acheter sans témoin.',
+      'Le logement décide combien d’actions le week-end contient. Déménager, ce n’est donc pas acheter un décor : c’est acheter du temps libre.',
+    ],
+    anchor: ['.appart__compteurs', '.appart__col'],
   },
   {
     id: 'fin',
-    tag: 'Note de service 12',
+    tag: 'Note de service 17',
     title: 'À toi',
     body: [
       'Monte en réputation. Garde la suspicion basse. Regarde les bulles rouges avant qu’elles ne tombent. Garde des Nerfs.',
@@ -214,7 +273,45 @@ export function tutorialSeen(): boolean {
 export function markTutorialSeen(): void {
   try {
     localStorage.setItem(TUTO_KEY, 'done');
+    localStorage.removeItem(ETAPE_KEY);
   } catch {
     /* mode privé : tant pis */
+  }
+}
+
+// ── Reprise à l'étape en cours ───────────────────────────────
+// Le tuto vit dans l'écran du bureau, et le week-end est un AUTRE écran :
+// passer vendredi soir démonte le composant. Sans mémoire, l'accueil
+// repartait de la note 00 juste après avoir demandé de terminer la
+// semaine — c'est-à-dire exactement au moment où il devient utile.
+//
+// L'index est mémorisé par identifiant d'étape, pas par numéro : insérer
+// une note au milieu du script ne doit pas renvoyer les joueurs en cours
+// au mauvais endroit.
+const ETAPE_KEY = 'plan-de-carriere/tuto/etape';
+
+export function rememberStep(id: string): void {
+  try {
+    localStorage.setItem(ETAPE_KEY, id);
+  } catch {
+    /* ignore */
+  }
+}
+
+export function resumeIndex(): number {
+  try {
+    const id = localStorage.getItem(ETAPE_KEY);
+    const i = TUTORIAL.findIndex((s) => s.id === id);
+    return i >= 0 ? i : 0;
+  } catch {
+    return 0;
+  }
+}
+
+export function forgetStep(): void {
+  try {
+    localStorage.removeItem(ETAPE_KEY);
+  } catch {
+    /* ignore */
   }
 }

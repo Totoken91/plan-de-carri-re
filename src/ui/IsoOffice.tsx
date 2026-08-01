@@ -17,6 +17,7 @@ import { useGame } from './useGame';
 import {
   Bins,
   CoffeeMachine,
+  Credenza,
   Desk,
   Figure,
   FlipChart,
@@ -405,15 +406,18 @@ export function IsoOffice({
         {/* nappe de lumière des baies sur le sol */}
         <polygon points={quad(0.4, 0, 13.2, 2.8)} fill="url(#ambient)" />
 
-        {/* tableau blanc sur le mur du fond-gauche, qui sonnait creux */}
+        {/* Tableau blanc sur le mur du fond-gauche, qui sonnait creux.
+            Descendu de gy 4,6 à 5,6 : les toilettes occupent maintenant
+            le haut de ce mur, et un tableau qui traverse une cloison est
+            pire qu'un mur nu. */}
         <g>
-          <polygon points={panelAlongY(4.6, 8.4, 0.05, 40, 82)} fill={T.structure.ecranArete} />
-          <polygon points={panelAlongY(4.75, 8.25, 0.06, 43, 79)} fill="url(#boardFace)" />
+          <polygon points={panelAlongY(5.6, 9.2, 0.05, 40, 82)} fill={T.structure.ecranArete} />
+          <polygon points={panelAlongY(5.75, 9.05, 0.06, 43, 79)} fill="url(#boardFace)" />
           {[
-            [5.1, 6.4, 70],
-            [5.1, 7.5, 63],
-            [5.1, 6.0, 56],
-            [6.9, 8.0, 49],
+            [6.1, 7.4, 70],
+            [6.1, 8.5, 63],
+            [6.1, 7.0, 56],
+            [7.9, 9.0, 49],
           ].map(([a, b, z]) => (
             <polygon key={`wb${z}`} points={panelAlongY(a!, b!, 0.07, z! - 1.4, z!)} fill={T.structure.ecranArete} />
           ))}
@@ -483,6 +487,71 @@ export function IsoOffice({
         <GlassRun along="x" from={9.5} to={14} at={3.5} />
         <GlassRun along="y" from={0} to={3.5} at={9.5} />
 
+        {/* ── Toilettes ──
+            Le seul volume OPAQUE d'un étage entièrement vitré, et c'est
+            tout ce qu'il faut dire pour expliquer pourquoi les gens y
+            vont : c'est la seule porte qui ferme.
+
+            Adossées au mur de gauche, dans l'allée. Le premier
+            emplacement — entre ton poste et le coin détente — était faux
+            sur deux points démontrables :
+
+             · sa profondeur (gx+gy de 18,3 à 22) dépassait celle du
+               joueur assis (16,95). Le peintre travaillant par
+               profondeur croissante, le cabinet se posait littéralement
+               par-dessus lui ;
+             · sa porte tombait à gy 11,9 pour un plateau qui s'arrête à
+               12. Elle ouvrait donc sur le vide, au ras de la découpe.
+
+            Ici la profondeur va de 3,55 à 6,45 : devant les salles du
+            fond, derrière la première rangée de postes (6,75). D'où sa
+            place dans l'ordre de rendu — juste avant `rowA`. */}
+        <g className="iso-wc">
+          {/* Un BLOC PLEIN, et pas quatre cloisons minces.
+              Dessiné en parois séparées, le cabinet se lisait comme un
+              panneau posé de champ : sans dessus, la caméra isométrique
+              plonge dedans et le volume disparaît. Un bloc opaque, lui,
+              dit d'un seul coup ce qu'il est — la seule chose fermée de
+              l'étage. */}
+          <IsoBox gx={0} gy={3.55} w={1.3} d={1.9} h={62} color={T.structure.cloisonPleine} />
+          {/* La porte, encastrée dans la face tournée vers l'allée. */}
+          <IsoBox gx={1.3} gy={3.95} w={0.06} d={1.05} h={46} color={T.structure.boisFonce} />
+          {(() => {
+            const poignee = iso(1.38, 4.86, 24);
+            const signe = iso(1.38, 4.48, 38);
+            const cible = iso(1.38, 4.48, 22);
+            return (
+              <>
+                <circle cx={poignee.x} cy={poignee.y} r="1.5" fill={T.structure.metalClair} />
+                <text className="iso-wc__signe" x={signe.x} y={signe.y} textAnchor="middle">
+                  🚻
+                </text>
+                {/* On clique la PORTE, pas la pièce : en projection
+                    isométrique, un volume fermé recouvre intégralement
+                    son propre sol, donc la surface cliquable générique
+                    des zones y est rigoureusement inatteignable. Une
+                    zone qu'on ne peut pas sélectionner n'existe pas. */}
+                <rect
+                  x={cible.x - 18}
+                  y={cible.y - 44}
+                  width="36"
+                  height="52"
+                  fill="transparent"
+                  className="iso-hit"
+                  onClick={() => onSelect({ kind: 'zone', id: 'toilettes' })}
+                />
+              </>
+            );
+          })()}
+        </g>
+        {isSelectedZone('toilettes') && (
+          /* Le liseré se pose sur le TOIT du bloc : au sol il serait
+             entièrement caché par le bloc lui-même. */
+          <g transform="translate(0,-62)">
+            <polygon points={quad(0, 3.55, 1.3, 1.9)} className="iso-zone-ring" filter="url(#glowSelect)" />
+          </g>
+        )}
+
         {/* ── Open space ── */}
         {renderRow(rowA)}
         <WaterCooler gx={6.95} gy={6.95} />
@@ -531,56 +600,9 @@ export function IsoOffice({
             onClick={() => onSelect({ kind: 'zone', id: 'player' })}
           />
 
-          {/* Les toilettes, entre ton poste et le coin détente. Deux
-              cloisons pleines et une porte : c'est le seul volume OPAQUE
-              de l'étage, et c'est tout ce qu'il faut lui dire. Le reste
-              du plateau est en verre — c'est le contraste qui explique à
-              lui seul pourquoi les gens y vont. */}
-          <g className="iso-wc">
-            <IsoBox gx={8.72} gy={9.62} w={0.14} d={2.36} h={62} color={T.structure.cloisonPleine} />
-            <IsoBox gx={9.88} gy={9.62} w={0.14} d={2.36} h={62} color={T.structure.cloisonPleine} />
-            <IsoBox gx={8.72} gy={9.62} w={1.3} d={0.14} h={62} color={T.structure.cloisonPleine} />
-            {/* La porte : encastrée, plus sombre, avec sa poignée. */}
-            <IsoBox gx={8.98} gy={11.86} w={0.72} d={0.1} h={48} color={T.structure.boisFonce} />
-            {(() => {
-              const p = iso(9.7, 11.9, 26);
-              return <circle cx={p.x} cy={p.y} r="1.6" fill={T.structure.metal} />;
-            })()}
-            {/* Le pictogramme sur la porte. Une seule glyphe, mais c'est
-                elle qui nomme la pièce à l'échelle de jeu. */}
-            {(() => {
-              const p = iso(9.34, 11.86, 40);
-              return (
-                <text className="iso-wc__signe" x={p.x} y={p.y} textAnchor="middle">
-                  🚻
-                </text>
-              );
-            })()}
-            {/* On clique la PORTE, pas la pièce.
-                Les toilettes sont le seul volume fermé de l'étage : en
-                projection isométrique, leurs cloisons recouvrent
-                entièrement leur propre sol, donc la surface cliquable
-                générique des zones était rigoureusement inatteignable.
-                Une zone qu'on ne peut pas sélectionner n'existe pas. */}
-            {(() => {
-              const p = iso(9.34, 11.9, 22);
-              return (
-                <rect
-                  x={p.x - 22}
-                  y={p.y - 44}
-                  width="44"
-                  height="52"
-                  fill="transparent"
-                  className="iso-hit"
-                  onClick={() => onSelect({ kind: 'zone', id: 'toilettes' })}
-                />
-              );
-            })()}
-          </g>
-          {isSelectedZone('toilettes') && (
-            <polygon points={quad(8.75, 9.6, 1.25, 2.4)} className="iso-zone-ring" filter="url(#glowSelect)" />
-          )}
-          <Plant gx={10.05} gy={11.7} scale={0.66} />
+          {/* angle mort entre ton poste et le coin détente */}
+          <Credenza gx={8.85} gy={10.15} w={1} d={0.7} />
+          <Plant gx={9.35} gy={10.5} scale={0.72} />
 
           <Sofa gx={10.6} gy={10.4} />
           <Plant gx={13.2} gy={10.2} />
