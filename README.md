@@ -81,6 +81,13 @@ ne peut ressortir. En plein jour, la moyenne passe à **0,62** et les 10 %
 sombres qui restent sont **les personnages** — exactement ce qu'on veut
 voir en premier.
 
+Le fond du cadre n'est pas « ce qui reste » : la pièce est un losange qui
+n'occupe qu'environ **40 %** du plateau, donc plus de la moitié de ce qu'on
+voit est du fond. Il est traité comme un **sous-main sombre** sur lequel la
+maquette est posée — la pièce éclairée s'y détache, elle y déborde
+légèrement (`fond.debord`), et le losange redevient une forme choisie
+plutôt qu'un blanc résiduel.
+
 Toute la palette vit dans `src/data/board.json`, rangée par **rôle** et non
 par objet : ce n'est pas « la couleur du caisson », c'est « du métal de
 structure ». Changer d'identité visuelle coûte un fichier JSON. Deux thèmes

@@ -262,6 +262,10 @@ export function IsoOffice({
         preserveAspectRatio="xMidYMid meet"
       >
         <defs>
+          <radialGradient id="roomSpill">
+            <stop offset="0%" stopColor={T.fond.debord[0]} />
+            <stop offset="100%" stopColor={T.fond.debord[1]} />
+          </radialGradient>
           <radialGradient id="screenPool">
             <stop offset="0%" stopColor={T.degrades.ecranNappe[0]} />
             <stop offset="100%" stopColor={T.degrades.ecranNappe[1]} />
@@ -350,6 +354,11 @@ export function IsoOffice({
             </feMerge>
           </filter>
         </defs>
+
+        {/* La pièce est éclairée : elle déborde sur ce qui l'entoure.
+            Sans ce débord, le losange se découpe au ciseau sur le fond. */}
+        <ellipse cx={0} cy={(GRID_W + GRID_D) * 8} rx={(GRID_W + GRID_D) * 26}
+          ry={(GRID_W + GRID_D) * 13} fill="url(#roomSpill)" />
 
         {/* ── Sol ── */}
         <polygon points={quad(0, 0, GRID_W, GRID_D)} fill={T.sol.dalle} />

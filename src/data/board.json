@@ -14,13 +14,19 @@
         0.58
       ],
       "fond": {
-        "hautPage": "#eceef0",
-        "basPage": "#d8dbdf",
+        "hautPage": "#2b2d31",
+        "basPage": "#1c1e21",
         "voile": "linear-gradient(180deg, rgba(255,246,225,0.30) 0%, transparent 55%, rgba(120,150,190,0.10) 100%)",
-        "vignette": "radial-gradient(ellipse at center, transparent 62%, rgba(90,84,66,0.14) 100%)",
+        "vignette": "radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,0.30) 100%)",
         "melangeVignette": "multiply",
         "melangeLumieres": "screen",
-        "opaciteLumieres": 0.5
+        "opaciteLumieres": 0.5,
+        "encre": "rgba(228,226,218,0.78)",
+        "encreDouce": "rgba(228,226,218,0.40)",
+        "debord": [
+          "rgba(255,246,226,0.16)",
+          "rgba(255,246,226,0)"
+        ]
       },
       "sol": {
         "dalle": "#dedad1",
@@ -229,7 +235,13 @@
         "vignette": "radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.42) 100%)",
         "melangeVignette": "multiply",
         "melangeLumieres": "screen",
-        "opaciteLumieres": 1
+        "opaciteLumieres": 1,
+        "encre": "rgba(215,208,190,0.85)",
+        "encreDouce": "rgba(206,198,178,0.45)",
+        "debord": [
+          "rgba(150,180,225,0.10)",
+          "rgba(150,180,225,0)"
+        ]
       },
       "sol": {
         "dalle": "#1b2029",

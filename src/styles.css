@@ -744,18 +744,18 @@ body {
 }
 .iso__hint {
   font-family: var(--font-form); font-size: 9px; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--iso-encre-douce);
+  text-transform: uppercase; color: var(--iso-cadre-encre-douce);
 }
 /* Les commandes du plateau suivent son encre : sur un plateau clair,
    une pastille sombre à texte clair était le seul reste de la nuit. */
 .iso__recenter {
   pointer-events: auto;
   font-family: var(--font-form); font-size: 9px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--iso-encre);
-  background: var(--iso-papier); border: 1px solid var(--iso-encre-douce);
+  text-transform: uppercase; color: var(--iso-cadre-encre);
+  background: transparent; border: 1px solid var(--iso-cadre-encre-douce);
   padding: 4px 9px; cursor: pointer; transition: opacity 0.12s, filter 0.12s;
 }
-.iso__recenter:hover:not(:disabled) { filter: brightness(0.94); }
+.iso__recenter:hover:not(:disabled) { background: rgba(255, 255, 255, 0.08); }
 .iso__recenter:disabled { opacity: 0; pointer-events: none; }
 
 /* ══════════════════════════════════════════════════════════

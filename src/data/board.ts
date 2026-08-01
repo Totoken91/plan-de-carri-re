@@ -39,6 +39,11 @@ export interface BoardTheme {
     melangeVignette: string;
     melangeLumieres: string;
     opaciteLumieres: number;
+    /** Encre lisible sur le fond du cadre, pas sur le sol de la pièce. */
+    encre: string;
+    encreDouce: string;
+    /** Débord lumineux de la pièce éclairée sur ce qui l'entoure. */
+    debord: [string, string];
   };
   sol: {
     dalle: string;
@@ -232,6 +237,8 @@ export function themeVars(t: BoardTheme): Record<string, string> {
   return {
     '--iso-page-haut': t.fond.hautPage,
     '--iso-page-bas': t.fond.basPage,
+    '--iso-cadre-encre': t.fond.encre,
+    '--iso-cadre-encre-douce': t.fond.encreDouce,
     '--iso-voile': t.fond.voile,
     '--iso-vignette': t.fond.vignette,
     '--iso-vignette-melange': t.fond.melangeVignette,
