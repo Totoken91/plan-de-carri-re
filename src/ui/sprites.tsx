@@ -14,7 +14,8 @@
 // ─────────────────────────────────────────────────────────────
 import { useEffect, useMemo, useRef } from 'react';
 import type { Appearance, Colleague, HairStyle } from '@state/schema';
-import { theme as T } from '@data/board';
+import { shading, theme as T } from '@data/board';
+import { shadeWith } from './shading';
 import { DESK_D, DESK_W, box, iso, panelAlongX, quad } from './iso';
 import {
   makeMotion,
@@ -32,26 +33,15 @@ import {
 export const SHADE = { top: 1.2, left: 0.94, right: 0.74 };
 
 /**
- * Lit aussi bien `#rrggbb` que `rgb(r,g,b)`.
+ * Ombre une couleur selon le modèle d'éclairage du thème.
  *
- * Indispensable : `shade()` renvoie du `rgb(...)`, et plusieurs meubles
- * lui repassent le résultat (un caisson tiré du ton du piètement, par
- * exemple). Quand le parseur ne gérait que l'hexadécimal, ces couleurs
- * ressortaient en NOIR PUR — d'où les masses opaques sous les bureaux.
+ * Ce n'est plus une multiplication RGB : la teinte dérive vers celle de
+ * la source du côté éclairé, vers celle de l'ambiant du côté ombré. Voir
+ * shading.ts pour le pourquoi — en deux mots, une ombre n'est pas une
+ * absence de lumière, c'est une lumière d'une AUTRE couleur.
  */
-function parseColor(color: string): [number, number, number] {
-  if (color.startsWith('#')) {
-    const n = parseInt(color.slice(1), 16);
-    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-  }
-  const m = /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/.exec(color);
-  return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : [128, 128, 128];
-}
-
 export function shade(color: string, k: number): string {
-  const [r, g, b] = parseColor(color);
-  const c = (v: number) => Math.max(0, Math.min(255, Math.round(v * k)));
-  return `rgb(${c(r)},${c(g)},${c(b)})`;
+  return shadeWith(shading, color, k);
 }
 
 export function IsoBox({

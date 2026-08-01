@@ -21,6 +21,7 @@
 // pas une question de goût.
 // ─────────────────────────────────────────────────────────────
 import type { Appearance } from '@state/schema';
+import type { ShadingModel } from '@ui/shading';
 import raw from './board.json';
 
 export interface BoardTheme {
@@ -130,6 +131,9 @@ export interface BoardTheme {
 interface BoardFile {
   actif: string;
   themes: BoardTheme[];
+  /** Modèles d'ombrage disponibles (voir ui/shading.ts). */
+  ombrages: ShadingModel[];
+  ombrageActif: string;
 }
 
 const file = raw as unknown as BoardFile;
@@ -154,6 +158,24 @@ function pickTheme(): BoardTheme {
 }
 
 export const theme: BoardTheme = pickTheme();
+
+/**
+ * Modèle d'ombrage actif, surchargeable par `?ombrage=soleil` : comparer
+ * des directions de couleur ne doit pas demander un build.
+ */
+function pickShading(): ShadingModel {
+  let id = file.ombrageActif;
+  try {
+    const q = new URLSearchParams(location.search).get('ombrage');
+    if (q && file.ombrages.some((o) => o.id === q)) id = q;
+  } catch {
+    /* pas de `location` : on garde celui du fichier */
+  }
+  return file.ombrages.find((o) => o.id === id) ?? file.ombrages[0]!;
+}
+
+export const shadingModels = file.ombrages;
+export const shading: ShadingModel = pickShading();
 
 // ── Mesure de valeur ─────────────────────────────────────────
 export function parseRgb(color: string): [number, number, number] | undefined {

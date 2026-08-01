@@ -71,6 +71,39 @@ src/
     ...                événement, résolution hebdo, game over
 ```
 
+### L'ombre n'est pas la couleur de base en plus sombre
+
+Ombrer était une multiplication RGB : `couleur × 0,74`. La teinte ne
+bougeait jamais, d'où l'aspect « aplat assombri ». Une face à l'ombre
+n'est pourtant pas éclairée par *rien* : elle est éclairée par la lumière
+**ambiante**, qui a sa propre couleur. Sa teinte dérive donc vers celle de
+cet ambiant, pendant que la face éclairée dérive vers celle de la source.
+Lumière et ombre ne diffèrent pas seulement en valeur, elles diffèrent en
+**température**.
+
+Le modèle vit dans `ui/shading.ts`, ses réglages dans `board.json`
+(`ombrages`), et `?ombrage=neon` bascule sans rebuild. Trois décisions
+valent d'être notées :
+
+1. **Le mélange se fait en Oklab, pas en sRGB.** Interpoler un beige vers
+   un bleu en sRGB traverse un gris boueux ; Oklab est construit pour que
+   le chemin le plus court soit aussi le plus joli.
+2. **La chroma remonte dans l'ombre** (×1,14). Contre-intuitif, mais c'est
+   ce qu'on observe : une zone à l'ombre n'est plus lavée par la lumière
+   directe, sa couleur propre ressort. Une ombre grise est une ombre morte.
+3. **L'exposant de valeur est 0,722**, et ce n'est pas un réglage à l'œil :
+   c'est la valeur qui reproduit *exactement* la réponse en clarté perçue
+   de l'ancien multiply RGB. Mesurée sur six teintes et trois facteurs
+   d'éclairement, elle sort identique à trois décimales près. Elle garantit
+   que passer à l'ombrage coloré ne change **que** la teinte, jamais la
+   lecture du volume — sans elle, les ombres s'éclaircissent et le relief
+   s'aplatit.
+
+Conséquence sur le budget de saturation : le plafond de 0,18 porte sur les
+**jetons** de la palette, pas sur les couleurs calculées. Une face à
+l'ombre peut le dépasser, et c'est voulu — c'est là que la couleur doit
+vivre.
+
 ### Identité visuelle du plateau : « Plein jour »
 
 L'open space est **diurne**. Ce n'est pas un goût, c'est une conséquence :

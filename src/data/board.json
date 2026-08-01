@@ -442,5 +442,52 @@
         ]
       }
     }
-  ]
+  ],
+  "ombrages": [
+    {
+      "id": "plat",
+      "nom": "Aplat assombri (l'existant)",
+      "note": "Multiplication RGB : la teinte ne bouge jamais. Le témoin.",
+      "lumiere": "#ffffff",
+      "forceLumiere": 0,
+      "ombre": "#000000",
+      "forceOmbre": 0,
+      "chromaOmbre": 1,
+      "contraste": 0.722
+    },
+    {
+      "id": "soleil",
+      "nom": "Soleil — lumière chaude, ombre froide",
+      "note": "La règle classique des peintres : le soleil est ambré, l'ombre est éclairée par le ciel, donc bleue. Chaleureux, lisible, un peu attendu.",
+      "lumiere": "#ffe9bd",
+      "forceLumiere": 0.5,
+      "ombre": "#6d80b4",
+      "forceOmbre": 0.62,
+      "chromaOmbre": 1.14,
+      "contraste": 0.722
+    },
+    {
+      "id": "neon",
+      "nom": "Néon — lumière froide, rebond chaud",
+      "note": "L'éclairage réel d'un open space : des tubes blancs-bleutés, et un ambiant qui rebondit sur le bois, la moquette et la peau, donc chaud. Moins vu, et plus juste pour le registre.",
+      "lumiere": "#e9f3f9",
+      "forceLumiere": 0.46,
+      "ombre": "#96775a",
+      "forceOmbre": 0.6,
+      "chromaOmbre": 1.18,
+      "contraste": 0.722
+    },
+    {
+      "id": "serigraphie",
+      "nom": "Sérigraphie — deux encres",
+      "note": "Toutes les ombres convergent vers une encre unique, toutes les lumières vers le blanc du papier. Le plateau devient un imprimé en trois passes. Identité très forte, variété de couleur écrasée.",
+      "lumiere": "#f6f2e4",
+      "forceLumiere": 0.72,
+      "ombre": "#3d5563",
+      "forceOmbre": 0.84,
+      "chromaOmbre": 0.82,
+      "contraste": 0.86
+    }
+  ],
+  "ombrageActif": "soleil"
 }
