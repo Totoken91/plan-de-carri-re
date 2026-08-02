@@ -641,9 +641,14 @@ export function Figure({
     const kit = pick('kit');
     const mug = pick('mug');
     const mains = [pick('main0'), pick('main1')];
+    const yeux = Array.from(root.querySelectorAll<SVGElement>('[data-r="oeil"]'));
     if (!hip || !torso || !head || !kit) return;
 
     const motion = makeMotion(phaseOf(id));
+    // Décalage propre au personnage : un étage qui cligne à l'unisson est
+    // plus inquiétant qu'un étage qui ne cligne pas du tout.
+    const decalage = phaseOf(id);
+    let ferme = false;
 
     return registerPainter((t, dt) => {
       const p = poseFigure(t, dt, motion, posture, RIG);
@@ -683,6 +688,16 @@ export function Figure({
         'transform',
         `translate(${p.chest.x.toFixed(2)},${p.chest.y.toFixed(2)})`,
       );
+
+      // Le clignement : une fenêtre courte dans un cycle lent. On
+      // n'écrit QUE sur changement d'état — deux écritures par cycle au
+      // lieu de trente-deux par seconde.
+      const cycle = (t + decalage) % 6.2;
+      const doitFermer = cycle > 5.95 && cycle < 6.06;
+      if (doitFermer !== ferme) {
+        ferme = doitFermer;
+        for (const o of yeux) o.setAttribute('ry', ferme ? '0.2' : '1.7');
+      }
     });
   }, [id, posture, RIG]);
 
@@ -784,8 +799,14 @@ export function Figure({
         <circle r={HEAD_R} fill={skin} />
         {discShadow(HEAD_R, skinDark)}
         <Hair style={look.hairStyle} color={look.hair} layer="front" />
-        <circle className="iso-person__eye" cx="-4" cy="1" r="1.7" fill={T.personnages.oeil} />
-        <circle className="iso-person__eye" cx="4" cy="1" r="1.7" fill={T.personnages.oeil} />
+        {/* Les yeux clignent depuis le PEINTRE, plus depuis une
+            animation CSS. Mesuré : une animation CSS dans le SVG coûte
+            à peu près en proportion du nombre d'éléments qu'elle touche,
+            et douze paupières faisaient repeindre tout le plateau à la
+            fréquence de l'écran. Le peintre, lui, tourne déjà à 32 Hz sur
+            ces mêmes personnages : le clignement ne coûte plus rien. */}
+        <ellipse data-r="oeil" cx="-4" cy="1" rx="1.7" ry="1.7" fill={T.personnages.oeil} />
+        <ellipse data-r="oeil" cx="4" cy="1" rx="1.7" ry="1.7" fill={T.personnages.oeil} />
         {look.glasses && (
           /* Deux verres cerclés. La « barre pleine » que j'avais mise ici
              pour gagner en lisibilité se lisait comme un bandeau. */
@@ -894,7 +915,8 @@ export function Desk({
       )}
 
       {/* nappe de lumière projetée sur le plateau, côté occupant */}
-      <ellipse cx={spill.x} cy={spill.y} rx="30" ry="13" fill="url(#screenPool)" className="iso-screen-pool" />
+      <ellipse cx={spill.x} cy={spill.y} rx="30" ry="13" fill="url(#screenPool)"
+        className="iso-screen-pool" />
 
       {/* pied : socle + colonne */}
       <IsoBox gx={gx + 0.88} gy={gy + 0.7} w={0.34} d={0.22} h={2.5} z0={TOP} color={T.structure.ecranPied} />
@@ -1000,7 +1022,11 @@ export function CoffeeMachine({ gx, gy }: { gx: number; gy: number }) {
       <IsoBox gx={gx - 0.1} gy={gy - 0.1} w={1.2} d={1.1} h={30} color={T.structure.metalFonce} />
       <IsoBox gx={gx} gy={gy} w={0.92} d={0.9} h={26} z0={30} color={T.structure.ecranArete} />
       <IsoBox gx={gx + 0.1} gy={gy + 0.62} w={0.7} d={0.24} h={13} z0={32} color={shade(T.structure.ecranArete, 0.8)} />
-      <circle cx={led.x} cy={led.y} r="2.6" fill={T.signal.orClair} className="iso-blink" />
+      {/* La veilleuse ne clignote plus. Elle était le dernier élément
+          animé du décor, et une seule animation suffit à faire repeindre
+          la toile entière à chaque image — dix-huit cents formes pour un
+          point de deux pixels sur une machine à café. */}
+      <circle cx={led.x} cy={led.y} r="2.6" fill={T.signal.orClair} />
       {[0, 1].map((i) => (
         <IsoBox key={i} gx={gx + 0.2 + i * 0.34} gy={gy + 0.7} w={0.16} d={0.16} h={5} z0={32}
           color={T.personnages.tasse} />

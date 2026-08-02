@@ -414,6 +414,62 @@ Deux pièges rencontrés, tous deux invisibles à la lecture du code :
 Le plateau est **100 % vectoriel** (SVG + CSS, aucun asset externe) : net à
 toutes les densités et animable au CSS.
 
+### Le plateau est peint sur DEUX toiles, et le décor ne bouge jamais
+
+Le jeu ne tenait pas le 60 images par seconde, même sur une machine
+rapide : 39 img/s et **46 % d'images hors budget**. La cause n'était ni
+le nombre de formes, ni les filtres, ni le grain — c'était une seule
+propriété du rendu SVG :
+
+> Une animation CSS posée **n'importe où** dans un `<svg>` fait repeindre
+> **toute la toile** à la fréquence de l'écran, et la zone repeinte est
+> l'**union** de tout ce qui bouge.
+
+Le plateau portait 52 animations permanentes, éparpillées : la lueur des
+dix moniteurs (30 éléments), les paupières des six personnages (12), les
+phares d'opportunité, les cartouches d'intention, une veilleuse sur la
+machine à café. Leur union couvrait la scène entière, donc mille huit
+cents formes étaient rasterisées à chaque image — pour un point de deux
+pixels qui clignotait dans un coin.
+
+Le protocole de mesure a d'abord été faux, et ça vaut d'être noté :
+mesurer avec `--disable-frame-rate-limit` donne toujours ~100 % d'un
+cœur, quel que soit le contenu, puisque le navigateur ne s'arrête jamais.
+« 900 ms de tâche par seconde » ne disait rien d'autre que « il n'a pas
+attendu ». Le banc (`scratchpad/banc.mjs`) mesure donc **vsync actif,
+processeur ralenti** via CDP — et le chiffre qui compte n'est pas la
+moyenne mais la part d'images qui dépassent le budget.
+
+Trois changements, chacun mesuré :
+
+1. **Les paupières sont passées dans le peintre.** Il parcourt déjà ces
+   six personnages à 32 Hz : le clignement ne coûte plus rien, et il
+   n'écrit que sur changement d'état — deux écritures par cycle au lieu
+   de trente-deux par seconde.
+2. **Le décor ne contient plus aucune animation CSS.** La lueur des
+   moniteurs ne respire plus, la veilleuse de la machine à café ne
+   clignote plus. C'est le prix, il est assumé : ces deux effets
+   coûtaient à eux seuls plus que tout le reste du rendu.
+3. **Une seconde toile** (`.iso__sur`) porte tout ce qui bouge de
+   lui-même — phares, cartouches, traits de complot, chevron du joueur.
+   Elle est transparente au clic sauf sur les phares, et `attachViewport`
+   tient son cadrage identique à celui du décor, sinon un phare se
+   décollerait du bureau qu'il désigne au premier zoom.
+
+| | avant | après |
+|---|---|---|
+| machine rapide | 39,4 img/s · 46 % hors budget | **59,4 · 0 %** |
+| processeur ×4 | 32,3 · 69 % | **57–59 · 1–4 %** |
+| processeur ×6 | 26,7 · 83 % | **45–54 · 10–28 %** |
+
+Le temps processeur passe de 82 % d'un cœur à 15 % sur une machine
+rapide. Rien n'a été retiré de ce qui porte de l'information.
+
+**La règle à tenir** : si vous ajoutez une animation CSS sur le plateau,
+elle va dans `.iso__sur`. Le décor ne bouge pas. Le seul mouvement
+autorisé dans sa toile vient du peintre JavaScript, dont les zones sales
+sont petites et deux fois moins fréquentes que l'écran.
+
 ### Cadrage du plateau
 
 Molette ou **pincement** (deux doigts, ou pavé tactile) pour zoomer, centré

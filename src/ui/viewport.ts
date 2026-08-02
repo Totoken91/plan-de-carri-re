@@ -46,6 +46,16 @@ interface SafariGesture extends Event {
 export function attachViewport(
   svg: SVGSVGElement,
   base: Box,
+  /**
+   * Calques à garder cadrés comme le premier.
+   *
+   * Le plateau est peint sur DEUX toiles superposées — le décor d'un
+   * côté, les surcouches animées de l'autre (voir IsoOffice). Elles ne
+   * partagent rien, sauf ceci : elles doivent montrer exactement la même
+   * portion de monde, sinon un phare d'opportunité se décolle du bureau
+   * qu'il désigne dès qu'on zoome.
+   */
+  miroirs: ReadonlyArray<SVGSVGElement | null> = [],
 ): { detach: () => void; reset: () => void } {
   const view: Box = { ...base };
 
@@ -54,7 +64,9 @@ export function attachViewport(
     view.h = clamp(view.h, base.h / MAX_ZOOM, base.h);
     view.x = clamp(view.x, base.x, base.x + base.w - view.w);
     view.y = clamp(view.y, base.y, base.y + base.h - view.h);
-    svg.setAttribute('viewBox', `${view.x} ${view.y} ${view.w} ${view.h}`);
+    const vb = `${view.x} ${view.y} ${view.w} ${view.h}`;
+    svg.setAttribute('viewBox', vb);
+    for (const m of miroirs) m?.setAttribute('viewBox', vb);
   };
 
   /** Point écran → coordonnées du SVG (tient compte du letterboxing). */

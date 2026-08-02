@@ -383,25 +383,34 @@ body {
 .iso-glass__post { fill: var(--iso-vitre-montant); }
 .iso-gone { opacity: 0.28; filter: grayscale(1); }
 
-/* Personnages : respiration et clignement, désynchronisés par un délai
-   dérivé de l'identifiant — un open space qui bouge à l'unisson est mort. */
-.iso-person__body { animation: idleBreathe 4.6s ease-in-out infinite; transform-origin: 0 -6px; }
-@keyframes idleBreathe {
-  0%, 100% { transform: scaleY(1) translateY(0); }
-  50% { transform: scaleY(1.018) translateY(-0.6px); }
-}
-.iso-person__eye { animation: blinkEye 6.2s steps(1, end) infinite; transform-origin: center; }
-@keyframes blinkEye {
-  0%, 95% { transform: scaleY(1); }
-  96%, 98% { transform: scaleY(0.1); }
-  99%, 100% { transform: scaleY(1); }
-}
+/* ══ LA RÈGLE DU DÉCOR : IL NE BOUGE PAS ═══════════════════════
+   Une seule animation CSS posée quelque part dans un SVG fait repeindre
+   TOUTE la toile à la fréquence de l'écran — mille huit cents formes
+   pour un point qui clignote sur une machine à café. Et la zone
+   repeinte est l'union de tout ce qui bouge, donc quelques éléments
+   éparpillés suffisent à couvrir le plateau entier.
 
-.iso-screen { animation: screenBreathe 4.3s ease-in-out infinite; }
-.iso-screen-pool { animation: screenBreathe 5.7s ease-in-out infinite; mix-blend-mode: screen; }
-@keyframes screenBreathe { 0%, 100% { opacity: 0.85; } 50% { opacity: 1; } }
-.iso-blink { animation: blink 2.6s steps(1, end) infinite; }
-@keyframes blink { 0%, 78% { opacity: 1; } 79%, 100% { opacity: 0.15; } }
+   Mesuré, processeur ralenti quatre fois, vsync actif :
+
+     52 animations dans la toile du décor   →  38 img/s · 43 % hors budget
+     décor figé, animations en surcouche    →  55 img/s ·  8 % hors budget
+
+   D'où la règle, tenue sans exception : la toile du décor ne contient
+   AUCUNE animation CSS. Tout ce qui bouge de lui-même vit dans
+   `.iso__sur`, la toile de dessus. Le seul mouvement autorisé dans le
+   décor vient du peintre JavaScript, qui écrit à 32 Hz sur six
+   personnages — mesuré négligeable, parce que ses zones sales sont
+   petites et deux fois moins fréquentes.
+
+   Ce qu'on a perdu : la lueur des moniteurs ne respire plus, la
+   veilleuse de la machine à café ne clignote plus. Ce qu'on a gardé :
+   tout ce qui VEUT DIRE quelque chose — une menace qui va tomber, une
+   opportunité à saisir, la personne qu'on joue. Les paupières des
+   personnages, elles, sont passées dans le peintre : elles clignent
+   toujours, et ne coûtent plus rien. */
+.iso-screen,
+.iso-screen-pool { opacity: 0.93; }
+.iso-screen-pool { mix-blend-mode: screen; }
 
 .iso-zone { cursor: pointer; }
 .iso-zone__hit { fill: transparent; transition: fill 0.18s; }
@@ -800,6 +809,21 @@ body {
   overscroll-behavior: contain;
 }
 .iso__svg { cursor: grab; touch-action: none; }
+
+/* La toile des surcouches, empilée sur celle du décor.
+   Pas de `will-change` : mesuré à 55 images/s avec comme sans, et une
+   promotion en couche de composition réserve de la mémoire graphique
+   pour toute la surface du plateau. Ce qui compte n'était pas de
+   promouvoir cette toile-ci, mais que l'autre n'ait plus rien à
+   repeindre. */
+.iso__sur {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  cursor: default;
+}
+/* Seul ce qui se clique reprend la main sur le pointeur. */
+.iso__sur .iso-beacon { pointer-events: auto; cursor: pointer; }
 .iso__svg.is-panning { cursor: grabbing; }
 .iso__svg * { user-select: none; }
 

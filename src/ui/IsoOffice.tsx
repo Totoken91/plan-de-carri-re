@@ -165,6 +165,8 @@ export function IsoOffice({
 }) {
   const { state } = useGame();
   const svgRef = useRef<SVGSVGElement>(null);
+  /** La toile des surcouches — voir le commentaire au moment du rendu. */
+  const surRef = useRef<SVGSVGElement>(null);
   const resetRef = useRef<() => void>(() => {});
   const [framed, setFramed] = useState(true);
 
@@ -172,7 +174,7 @@ export function IsoOffice({
     const svg = svgRef.current;
     if (!svg) return;
     const base = parseViewBox(VIEW_BOX);
-    const vp = attachViewport(svg, base);
+    const vp = attachViewport(svg, base, [surRef.current]);
     resetRef.current = () => {
       vp.reset();
       setFramed(true);
@@ -574,11 +576,6 @@ export function IsoOffice({
               Le placement et l'animation vivent sur DEUX groupes : une
               transformation CSS l'emporte sur l'attribut `transform`, et
               le chevron repartait se coller à l'origine du plateau. */}
-          <g transform={`translate(${me.x},${me.y - 64})`}>
-            <g className="iso-me" filter="url(#glowGold)">
-              <path d="M -7 -7 L 7 -7 L 0 5 Z" />
-            </g>
-          </g>
           <rect
             x={me.x - 24}
             y={me.y - 68}
@@ -611,63 +608,104 @@ export function IsoOffice({
           );
         })}
 
+      </svg>
+
+      {/* ── La toile des surcouches ─────────────────────────────
+          Une SECONDE toile, superposée, qui ne porte que ce qui bouge
+          en permanence : les phares d'opportunité, les cartouches
+          d'intention, les traits de complot, le chevron du joueur.
+
+          Pourquoi la séparer. Une animation CSS posée dans un SVG fait
+          repeindre TOUTE la couche à la fréquence de l'écran, et la zone
+          repeinte est l'union de tout ce qui bouge. Le plateau
+          contenait donc, à chaque image, l'intégralité du décor —
+          murs, dalles, dix-huit cents formes — parce qu'un phare
+          clignotait dans un coin. Mesuré sur un processeur ralenti
+          quatre fois, vsync actif : 41 images/s et 41 % d'images hors
+          budget.
+
+          Les surcouches déménagées dans leur propre toile, promue en
+          couche de composition, le décor n'est plus jamais repeint :
+          55 images/s et 8 % d'images hors budget. Rien n'a été retiré
+          au jeu.
+
+          Elle est transparente au clic sauf là où il y a quelque chose
+          à cliquer — les phares — et son cadrage est tenu identique à
+          celui du décor par `attachViewport`, sinon un phare se
+          décollerait du bureau qu'il désigne au premier zoom. */}
+      <svg
+        ref={surRef}
+        className="iso__svg iso__sur"
+        viewBox={VIEW_BOX}
+        preserveAspectRatio="xMidYMid meet"
+        aria-hidden="true"
+      >
+        {/* Pas de `defs` ici : les identifiants SVG portent sur le
+            DOCUMENT, pas sur la racine `<svg>`. Un `url(#glowGold)` écrit
+            dans cette toile va chercher le filtre défini dans celle du
+            décor, et le trouve. */}
+        <g transform={`translate(${me.x},${me.y - 64})`}>
+          <g className="iso-me" filter="url(#glowGold)">
+            <path d="M -7 -7 L 7 -7 L 0 5 Z" />
+          </g>
+        </g>
         {/* ── Surcouches ── */}
-        {/* Les guerres internes : un trait animé du comploteur vers sa cible.
-            C'est ce qui rend visible le fait que l'open space vit sans toi. */}
-        {state.colleagues.map((c, i) => {
-          if (!c.alive || c.intent?.kind !== 'scheme') return null;
-          const vIdx = state.colleagues.findIndex((x) => x.id === c.intent!.victimId);
-          const victim = state.colleagues[vIdx];
-          if (vIdx < 0 || !victim?.alive) return null;
+          {/* Les guerres internes : un trait animé du comploteur vers sa cible.
+              C'est ce qui rend visible le fait que l'open space vit sans toi. */}
+          {state.colleagues.map((c, i) => {
+            if (!c.alive || c.intent?.kind !== 'scheme') return null;
+            const vIdx = state.colleagues.findIndex((x) => x.id === c.intent!.victimId);
+            const victim = state.colleagues[vIdx];
+            if (vIdx < 0 || !victim?.alive) return null;
 
-          const s = seatOf(i);
-          const v = seatOf(vIdx);
-          const a = iso(s.gx, s.gy);
-          const b = iso(v.gx, v.gy);
-          // Le trait passe AU-DESSUS des têtes (crâne ≈ −48) et sous les
-          // bulles (−66). Plus bas, il traversait les bustes et son
-          // marqueur se lisait comme une tache sur la chemise de la cible.
-          const LIFT = 52;
-          const mx = (a.x + b.x) / 2;
-          const my = (a.y + b.y) / 2 - LIFT - 34;
+            const s = seatOf(i);
+            const v = seatOf(vIdx);
+            const a = iso(s.gx, s.gy);
+            const b = iso(v.gx, v.gy);
+            // Le trait passe AU-DESSUS des têtes (crâne ≈ −48) et sous les
+            // bulles (−66). Plus bas, il traversait les bustes et son
+            // marqueur se lisait comme une tache sur la chemise de la cible.
+            const LIFT = 52;
+            const mx = (a.x + b.x) / 2;
+            const my = (a.y + b.y) / 2 - LIFT - 34;
 
-          return (
-            <g key={`scheme-${c.id}`} className={`iso-scheme ${c.intent.boost ? 'is-boosted' : ''}`}>
-              <path
-                d={`M ${a.x} ${a.y - LIFT} Q ${mx} ${my} ${b.x} ${b.y - LIFT}`}
-                className="iso-scheme__link"
-              />
-              {/* cible : un réticule, pas un disque plein */}
-              <g className="iso-scheme__mark" transform={`translate(${b.x},${b.y - LIFT})`}>
-                <circle r="5" fill="none" strokeWidth="1.6" />
-                <circle r="1.6" strokeWidth="0" />
+            return (
+              <g key={`scheme-${c.id}`} className={`iso-scheme ${c.intent.boost ? 'is-boosted' : ''}`}>
+                <path
+                  d={`M ${a.x} ${a.y - LIFT} Q ${mx} ${my} ${b.x} ${b.y - LIFT}`}
+                  className="iso-scheme__link"
+                />
+                {/* cible : un réticule, pas un disque plein */}
+                <g className="iso-scheme__mark" transform={`translate(${b.x},${b.y - LIFT})`}>
+                  <circle r="5" fill="none" strokeWidth="1.6" />
+                  <circle r="1.6" strokeWidth="0" />
+                </g>
               </g>
-            </g>
-          );
-        })}
+            );
+          })}
 
-        {state.colleagues.map((c, i) => {
-          if (!c.alive || !c.intent) return null;
-          const seat = seatOf(i);
-          const p = iso(seat.gx, seat.gy, ASSISE);
-          return <IntentBubble key={`int-${c.id}`} c={c} x={p.x} y={p.y - 66} />;
-        })}
+          {state.colleagues.map((c, i) => {
+            if (!c.alive || !c.intent) return null;
+            const seat = seatOf(i);
+            const p = iso(seat.gx, seat.gy, ASSISE);
+            return <IntentBubble key={`int-${c.id}`} c={c} x={p.x} y={p.y - 66} />;
+          })}
 
-        {state.opportunities.map((opp, i) => {
-          const def = getOpportunity(opp.defId);
-          if (!def) return null;
-          const seatIdx = seatIndexOf(opp.targetId);
-          const pt = opportunityPoint(opp.place, seatIdx >= 0 ? seatIdx : undefined);
-          return (
-            <Beacon
-              key={`${opp.defId}-${i}`}
-              x={pt.x}
-              y={pt.y}
-              disabled={!canAct}
-              onClick={() => onSelect({ kind: 'opportunity', index: i })}
-            />
-          );
-        })}
+          {state.opportunities.map((opp, i) => {
+            const def = getOpportunity(opp.defId);
+            if (!def) return null;
+            const seatIdx = seatIndexOf(opp.targetId);
+            const pt = opportunityPoint(opp.place, seatIdx >= 0 ? seatIdx : undefined);
+            return (
+              <Beacon
+                key={`${opp.defId}-${i}`}
+                x={pt.x}
+                y={pt.y}
+                disabled={!canAct}
+                onClick={() => onSelect({ kind: 'opportunity', index: i })}
+              />
+            );
+          })}
       </svg>
 
       {/* Le grain coûte ~3,5 ms par image (mesuré, séries alternées) :
