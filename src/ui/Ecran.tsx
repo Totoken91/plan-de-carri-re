@@ -46,7 +46,23 @@ const ICONES: Icone[] = [
   { id: 'messagerie', nom: 'Messagerie', icone: 'enveloppe', legende: 'Ce qui s’est dit cette semaine.' },
 ];
 
-export function Ecran({ onClose }: { onClose: () => void }) {
+/**
+ * Le même poste sert au bureau et chez soi, et c'est volontaire : la
+ * bourse et le casino ne s'ouvrent QUE devant un écran, où qu'il soit.
+ * Ce qui change d'un lieu à l'autre, c'est ce qu'on peut y produire —
+ * au bureau on avance un dossier contre un point d'action, chez soi
+ * contre un morceau de week-end.
+ */
+export function Ecran({
+  onClose,
+  lieu = 'bureau',
+  onDossiers,
+}: {
+  onClose: () => void;
+  lieu?: 'bureau' | 'appart';
+  /** Chez soi : ce que fait l'icône du tableur (l'activité « dossiers »). */
+  onDossiers?: () => void;
+}) {
   const { state, store } = useGame();
   const [appli, setAppli] = useState<Appli>('bureau');
   const [toast, setToast] = useState<ActionResult | null>(null);
@@ -117,7 +133,29 @@ export function Ecran({ onClose }: { onClose: () => void }) {
                     </button>
                   </div>
                   <div className="fenetre__corps">
-                    {appli === 'tableur' && (
+                    {appli === 'tableur' && lieu === 'appart' && (
+                      <div className="tableur">
+                        <p className="tableur__note">
+                          Dimanche, 22 h. Tu enverras le document demain matin à 8 h 04,
+                          daté d’aujourd’hui. On le remarquera.
+                        </p>
+                        <button className="act" onClick={() => { onDossiers?.(); onClose(); }}>
+                          <span className="act__icon"><Icone nom="tableur" /></span>
+                          <span className="act__body">
+                            <span className="act__head">
+                              <span className="act__label">Avancer des dossiers</span>
+                            </span>
+                            <span className="act__summary">
+                              Travailler le dimanche ne se voit pas dans le salaire.
+                              Ça se voit ailleurs.
+                            </span>
+                          </span>
+                          <span className="act__cost">week-end</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {appli === 'tableur' && lieu === 'bureau' && (
                       <div className="tableur">
                         <p className="tableur__note">
                           Quatre heures dessus et personne ne saura jamais que tu l’as
@@ -171,7 +209,9 @@ export function Ecran({ onClose }: { onClose: () => void }) {
                   que ce sont les deux chiffres qui décident de tout ce
                   qu'on peut faire depuis ce fauteuil. */}
               <div className="poste__barre">
-                <span className="poste__demarrer">Poste 3‑14</span>
+                <span className="poste__demarrer">
+                  {lieu === 'bureau' ? 'Poste 3‑14' : 'Portable perso'}
+                </span>
                 <span className="poste__zone">
                   {euros(state.argent)}
                   {valeurPortefeuille(state) > 0 && (
@@ -179,7 +219,9 @@ export function Ecran({ onClose }: { onClose: () => void }) {
                   )}
                 </span>
                 <span className="poste__zone poste__zone--pa">
-                  {state.actionPointsRemaining} PA
+                  {lieu === 'bureau'
+                    ? `${state.actionPointsRemaining} PA`
+                    : `${state.weekendPointsRemaining} week-end`}
                 </span>
               </div>
             </div>
@@ -188,7 +230,7 @@ export function Ecran({ onClose }: { onClose: () => void }) {
         </div>
 
         <button className="btn btn--small poste__quitter" onClick={onClose}>
-          Se lever du poste
+          {lieu === 'bureau' ? 'Se lever du poste' : 'Fermer l’ordinateur'}
         </button>
 
         {toast && <div className={`toast toast--${toast.tone} poste__toast`}>{toast.text}</div>}

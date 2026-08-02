@@ -7,6 +7,7 @@
 // clic. Les nombres viennent de @engine/preview, qui relit la même
 // arithmétique que le moteur.
 // ─────────────────────────────────────────────────────────────
+import { useEffect, useState } from 'react';
 import type { ActionOption } from '@engine/preview';
 import type { ActionResult } from '@engine/actions';
 import { colleagueActions, describeEffect, previewBosser, previewGlander } from '@engine/preview';
@@ -71,6 +72,32 @@ function ActionButton({
   );
 }
 
+// ── Les onglets de la fiche d'un collègue ────────────────────
+/**
+ * Pourquoi découper.
+ *
+ * Tout était empilé : identité, opinion, intention, quatre jauges,
+ * actions, secrets, romance, encadrement, dépenses, et six plans. Mesuré
+ * sur un collègue ordinaire, ça faisait plus de deux écrans et demi dans
+ * un tiroir large de 380 px — donc on ne trouvait rien sans faire défiler
+ * en aveugle, et surtout on ne savait jamais ce qu'on n'avait pas vu.
+ *
+ * Quatre onglets, et le choix des groupes n'est pas cosmétique : il
+ * répond à quatre QUESTIONS différentes qu'on se pose devant quelqu'un.
+ *   · Qui est-ce, et qu'est-ce qu'il prépare ?   → Fiche
+ *   · Qu'est-ce que je fais de mon temps ?       → Agir
+ *   · Comment je le fais tomber ?                → Manœuvres
+ *   · Qu'est-ce qu'on est l'un pour l'autre ?    → Lien
+ */
+type Onglet = 'fiche' | 'agir' | 'manoeuvres' | 'lien';
+
+const ONGLETS: Array<{ id: Onglet; nom: string; icone: string }> = [
+  { id: 'agir', nom: 'Agir', icone: 'mallette' },
+  { id: 'manoeuvres', nom: 'Manœuvres', icone: 'cible' },
+  { id: 'lien', nom: 'Lien', icone: 'rapprochement' },
+  { id: 'fiche', nom: 'Fiche', icone: 'personne' },
+];
+
 // ── Vues par type de sélection ───────────────────────────────
 // Rien de sélectionné : trois rappels, pas un cours. Le reste est dans
 // le règlement intérieur, sous le bouton « ? ».
@@ -108,6 +135,13 @@ export function Inspector({
   onResult: (r: { text: string; tone: 'good' | 'bad' | 'neutral' }) => void;
 }) {
   const { state, store } = useGame();
+  const [onglet, setOnglet] = useState<Onglet>('agir');
+  const cible = selection?.kind === 'colleague' ? selection.id : null;
+  // Changer de personne remet la fiche au début : rester sur « Manœuvres »
+  // en passant à quelqu'un d'autre donne l'impression d'un menu qui a
+  // gardé une intention qu'on n'a pas eue.
+  useEffect(() => setOnglet('agir'), [cible]);
+
   const blocked =
     state.status !== 'playing' || state.actionPointsRemaining < 1 || !!state.pendingEvent;
 
@@ -158,6 +192,33 @@ export function Inspector({
           </span>
         )}
 
+        <nav className="fiches" role="tablist">
+          {ONGLETS.map((o) => (
+            <button
+              key={o.id}
+              role="tab"
+              aria-selected={onglet === o.id}
+              className={`fiches__onglet ${onglet === o.id ? 'is-on' : ''}`}
+              onClick={() => setOnglet(o.id)}
+            >
+              <Icone nom={o.icone} />
+              {o.nom}
+              {o.id === 'agir' && actions.filter((a) => a.available).length > 0 && (
+                <span className="fiches__compte">{actions.filter((a) => a.available).length}</span>
+              )}
+              {o.id === 'manoeuvres' && plans.filter((p) => p.canStart || p.inProgress).length > 0 && (
+                <span className="fiches__compte">
+                  {plans.filter((p) => p.canStart || p.inProgress).length}
+                </span>
+              )}
+            </button>
+          ))}
+        </nav>
+
+        {/* Hors onglets : l'opinion et ce qu'il prépare. Ce sont les deux
+            choses dont on a besoin QUOI QU'ON VIENNE FAIRE — les cacher
+            derrière un onglet obligerait à faire l'aller-retour avant
+            chaque décision. */}
         <OpinionPip value={c.opinion} />
 
         {c.intent && c.intent.kind !== 'idle' && (
@@ -176,25 +237,13 @@ export function Inspector({
           </div>
         )}
 
+        {onglet === 'fiche' && (
+        <>
         <div className="inspector__stats">
           {STAT_KEYS.map((k) => (
             <StatBar key={k} stat={k} value={c.stats[k]} />
           ))}
         </div>
-
-        <section className="inspector__block">
-          <h3 className="section-title">Actions</h3>
-          <div className="actlist">
-            {actions.map((opt) => (
-              <ActionButton
-                key={opt.key}
-                opt={opt}
-                blocked={blocked}
-                onRun={() => run(store.perform(opt.id))}
-              />
-            ))}
-          </div>
-        </section>
 
         <section className="inspector__block">
           <h3 className="section-title">Secrets</h3>
@@ -218,9 +267,33 @@ export function Inspector({
             ))}
           </ul>
         </section>
+        </>
+        )}
 
-        <BlocRomance c={c} onResult={run} />
-        <BlocSubordonne c={c} onResult={run} />
+        {onglet === 'agir' && (
+          <section className="inspector__block">
+            <div className="actlist">
+              {actions.map((opt) => (
+                <ActionButton
+                  key={opt.key}
+                  opt={opt}
+                  blocked={blocked}
+                  onRun={() => run(store.perform(opt.id))}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {onglet === 'lien' && (
+          <>
+            <BlocRomance c={c} onResult={run} />
+            <BlocSubordonne c={c} onResult={run} />
+          </>
+        )}
+
+        {onglet === 'manoeuvres' && (
+        <>
         <BlocDepenses cible={c} lieu="bureau" onResult={run} />
 
         <section className="inspector__block">
@@ -261,6 +334,8 @@ export function Inspector({
             ))}
           </ul>
         </section>
+        </>
+        )}
       </aside>
     );
   }

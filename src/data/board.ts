@@ -272,6 +272,7 @@ export function themeVars(t: BoardTheme): Record<string, string> {
     '--iso-lumieres-melange': t.fond.melangeLumieres,
     '--iso-lumieres-opacite': String(t.fond.opaciteLumieres),
     '--iso-joint': t.sol.joint,
+    '--iso-dalle': t.sol.dalle,
     '--iso-vitre': t.cloison.vitre,
     '--iso-vitre-rail': t.cloison.rail,
     '--iso-vitre-montant': t.cloison.montant,

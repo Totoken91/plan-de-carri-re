@@ -864,7 +864,17 @@ body {
 
 .tuto { position: fixed; inset: 0; z-index: 70; pointer-events: none; }
 .tuto__scrim { position: fixed; inset: 0; pointer-events: none; }
-.tuto__veil { fill: rgba(9, 9, 11, 0.72); pointer-events: auto; }
+/* Le voile ne bloque RIEN.
+   Il verrouillait tout l'écran sauf le trou éclairé, ce qui produisait
+   exactement la sensation dont on voulait se débarrasser : un mur qui
+   te dit ce que tu as le droit de toucher. Une leçon qui apparaît parce
+   que la situation s'y prête n'a aucune raison de confisquer le jeu —
+   elle assombrit pour désigner, et c'est tout. Le joueur reste libre de
+   l'ignorer, ce qui est la meilleure façon de ne pas l'exaspérer.
+
+   Il est aussi beaucoup plus léger : à 0,72 d'opacité, une note qui
+   arrive en pleine partie éteignait la scène. */
+.tuto__veil { fill: rgba(9, 9, 11, 0.46); pointer-events: none; }
 .tuto__ring {
   fill: none; stroke: var(--note); stroke-width: 1.5;
   stroke-dasharray: 5 4; pointer-events: none;
@@ -1998,3 +2008,134 @@ body:has(.appart) { overflow: hidden; }
 .btn__warn .picto { font-size: 13px; }
 .lock .picto { font-size: 12px; }
 .tag--hold .picto { font-size: 12px; }
+
+/* ══════════════════════════════════════════════════════════════
+   Fiche d'un collègue : quatre onglets, quatre questions
+   ──────────────────────────────────────────────────────────────
+   La fiche empilait tout : identité, jauges, actions, secrets,
+   romance, encadrement, dépenses et six plans — plus de deux
+   écrans et demi dans un tiroir de 380 px. On ne trouvait rien
+   sans faire défiler en aveugle, et surtout on ne savait jamais
+   ce qu'on n'avait pas vu.
+
+   Les onglets collent en haut du tiroir : ils doivent rester
+   atteignables même quand le contenu d'un onglet, lui, défile.
+   ══════════════════════════════════════════════════════════════ */
+.fiches {
+  position: sticky; top: 0; z-index: 2;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px;
+  margin: 8px 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper);
+}
+.fiches__onglet {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 7px 2px 6px;
+  background: none; border: 1px solid transparent; border-radius: 0;
+  font-family: var(--font-form); font-size: 10px; letter-spacing: 0.04em;
+  color: var(--ink-2); cursor: pointer;
+}
+.fiches__onglet .picto { font-size: 15px; }
+.fiches__onglet:hover { background: var(--paper-hi); border-color: var(--rule-soft); }
+.fiches__onglet.is-on {
+  background: var(--ink); color: var(--paper-hi); border-color: var(--ink);
+}
+/* La pastille dit « il y a quelque chose à faire ici » — c'est ce qui
+   remplace le fait de tout voir d'un coup. */
+.fiches__compte {
+  position: absolute; margin: -6px 0 0 26px;
+  min-width: 14px; height: 14px; padding: 0 3px;
+  display: grid; place-items: center;
+  background: var(--seal); color: var(--paper-hi);
+  font-size: 9px; font-variant-numeric: tabular-nums;
+}
+.fiches__onglet.is-on .fiches__compte { background: var(--paper-hi); color: var(--ink); }
+.fiches__onglet { position: relative; }
+
+/* ══════════════════════════════════════════════════════════════
+   Chez soi — une pièce, pas un formulaire
+   ──────────────────────────────────────────────────────────────
+   Même coque que le bureau : barre, scène qui prend tout,
+   panneaux ouvrables par la barre du bas. Le week-end n'est pas
+   un écran d'options, c'est l'autre moitié du jeu.
+   ══════════════════════════════════════════════════════════════ */
+.scene--appart {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 10px;
+  min-height: 0;
+}
+.appartiso {
+  display: block; width: 100%; height: 100%;
+  background: linear-gradient(180deg, var(--iso-page-haut), var(--iso-page-bas));
+  border: 1px solid var(--rule);
+  box-shadow: var(--shadow-sheet);
+}
+.appart__flavor {
+  margin: 0; align-self: center;
+  font-size: 12.5px; color: var(--ink-soft); font-style: italic;
+  max-width: 46ch;
+}
+.tiroir--appart {
+  position: static; width: auto; height: 100%;
+  animation: none; overflow: hidden;
+}
+/* La feuille vit dans l'enfant, comme dans le tiroir du bureau : c'est
+   elle qui porte le papier, le grain et le défilement. */
+.tiroir--appart .inspector { box-shadow: var(--shadow-sheet); }
+
+/* Les coins de la pièce. Le halo ne dit pas « sélectionné », il dit
+   « c'est ICI que ça va se passer » — d'où la place au sol plutôt
+   qu'un contour autour du meuble. */
+.coin__hit { fill: transparent; cursor: pointer; pointer-events: auto; }
+.coin:hover .coin__hit { fill: var(--iso-encre); fill-opacity: 0.07; }
+.coin__halo {
+  fill: var(--note); fill-opacity: 0.16;
+  stroke: var(--note); stroke-width: 1.6; stroke-dasharray: 5 4;
+}
+.coin__nom {
+  font-family: var(--font-form); font-size: 8px;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  fill: var(--iso-encre); opacity: 0.3;
+  pointer-events: none;
+  transition: opacity 0.16s;
+  paint-order: stroke; stroke: var(--iso-dalle, #d9d5cc); stroke-width: 3;
+}
+.coin__nom.is-on { opacity: 1; fill: var(--note); font-size: 9px; }
+.iso-grid-line { stroke: var(--iso-joint); stroke-width: 1; opacity: 0.5; }
+
+.btn--faire { width: 100%; margin-top: 10px; padding: 11px; font-size: 13px; }
+.appart__manque {
+  margin: 8px 0 0; font-size: 12px; color: var(--ink-soft);
+  border-left: 2px solid var(--note); padding-left: 8px;
+}
+.lien {
+  background: none; border: 0; padding: 0;
+  font: inherit; color: var(--note); cursor: pointer;
+  text-decoration: underline dotted; text-underline-offset: 3px;
+}
+
+/* Le bilan : ce que l'action a réellement donné. Il RESTE — c'est tout
+   le sujet. Un message qui passe en quatre secondes n'informe personne. */
+.bilan {
+  margin-top: 12px; padding: 11px 12px;
+  border: 1px solid var(--rule); border-left-width: 3px;
+  background: var(--paper-hi);
+}
+.bilan--good { border-left-color: var(--seal); }
+.bilan--bad { border-left-color: var(--stamp); }
+.bilan--neutral { border-left-color: var(--rule); }
+.bilan__texte { margin: 4px 0 8px; font-size: 13px; line-height: 1.4; }
+.bilan__lignes { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; }
+.bilan__ligne {
+  font-family: var(--font-form); font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.bilan__ligne--good { color: var(--seal); }
+.bilan__ligne--bad { color: var(--stamp); }
+.act__lines--bloc { display: grid; gap: 2px; margin-top: 0; }
+.act__lines--bloc .act__line + .act__line::before { content: none; }
+
+.panneau--appart { width: min(560px, 48vw); }
+body:has(.coque--appart) { overflow: hidden; }

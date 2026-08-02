@@ -18,6 +18,7 @@ import { shading, theme as T } from '@data/board';
 import { shadeWith } from './shading';
 import { DESK_D, DESK_W, box, iso, panelAlongX, quad } from './iso';
 import {
+  ambianceDe,
   makeMotion,
   phaseOf,
   poseFigure,
@@ -645,13 +646,16 @@ export function Figure({
     if (!hip || !torso || !head || !kit) return;
 
     const motion = makeMotion(phaseOf(id));
-    // Décalage propre au personnage : un étage qui cligne à l'unisson est
-    // plus inquiétant qu'un étage qui ne cligne pas du tout.
-    const decalage = phaseOf(id);
+    const dephasage = phaseOf(id);
+    // On ne réécrit les paupières que sur CHANGEMENT d'état : un
+    // clignement dure moins d'un cinquième de seconde, écrire à chaque
+    // image reviendrait à salir la toile trente-deux fois par seconde
+    // pour deux valeurs distinctes.
     let ferme = false;
 
     return registerPainter((t, dt) => {
-      const p = poseFigure(t, dt, motion, posture, RIG);
+      const amb = ambianceDe(t, dephasage, !!mug);
+      const p = poseFigure(t, dt, motion, posture, RIG, amb);
       hip.setAttribute('cx', p.hip.x.toFixed(2));
       hip.setAttribute('cy', p.hip.y.toFixed(2));
       hip.setAttribute('r', p.hipR.toFixed(2));
@@ -689,14 +693,10 @@ export function Figure({
         `translate(${p.chest.x.toFixed(2)},${p.chest.y.toFixed(2)})`,
       );
 
-      // Le clignement : une fenêtre courte dans un cycle lent. On
-      // n'écrit QUE sur changement d'état — deux écritures par cycle au
-      // lieu de trente-deux par seconde.
-      const cycle = (t + decalage) % 6.2;
-      const doitFermer = cycle > 5.95 && cycle < 6.06;
+      const doitFermer = amb.cligne > 0.45;
       if (doitFermer !== ferme) {
         ferme = doitFermer;
-        for (const o of yeux) o.setAttribute('ry', ferme ? '0.2' : '1.7');
+        for (const o of yeux) o.setAttribute('ry', ferme ? '0.25' : '1.7');
       }
     });
   }, [id, posture, RIG]);

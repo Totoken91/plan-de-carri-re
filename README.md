@@ -518,6 +518,62 @@ l'emporte sur l'attribut `transform` d'un élément SVG, donc placement et
 animation vivent sur deux groupes distincts — sinon l'animation renvoie
 l'élément à l'origine du plateau.
 
+### L'accueil : des leçons, pas une file d'attente
+
+C'étaient dix-huit notes de service servies à la suite dès la première
+minute. Trois défauts, tous constatés en jouant :
+
+- on lisait dix-huit fenêtres avant d'avoir joué un tour, donc on n'en
+  retenait rien — la moitié parlait de systèmes qu'on ne verrait pas
+  avant la dixième semaine ;
+- le script étant une LISTE, il fallait le reprendre exactement où on
+  l'avait laissé. Passer au week-end démonte l'écran du bureau : on
+  rentrait chez soi sans accueil, on revenait au bureau et il avait
+  disparu ;
+- les étapes visaient l'interface par sélecteur CSS. Quand l'appartement
+  a été refait, deux étapes pointaient dans le vide et ne s'affichaient
+  plus du tout.
+
+Une leçon n'a plus de rang, elle a une **condition**. Elle apparaît quand
+la situation la rend utile : la première bulle rouge explique les
+intentions, le premier vendredi explique le bilan, la première fois qu'on
+a la réputation sans avoir la place explique l'échelle. Une seule à la
+fois, jamais deux, et chaque texte tient en deux phrases — si une leçon
+en demande trois, c'est la règle qu'il faut reprendre.
+
+Il n'y a donc plus rien à « reprendre » : à chaque rendu on demande à
+l'état quelle leçon mérite d'être montrée (`leconCourante`). Changer
+d'écran, recharger, reprendre une sauvegarde — la question se repose et
+la réponse reste juste. Les leçons vues sont mémorisées par identifiant,
+donc en insérer une au milieu ne renvoie personne au mauvais endroit.
+
+**Le voile ne bloque plus rien.** Il verrouillait tout sauf le trou
+éclairé, ce qui produisait exactement la sensation dont on voulait se
+débarrasser : un mur qui dit ce qu'on a le droit de toucher. Il assombrit
+pour désigner, et c'est tout.
+
+### Chez soi, en isométrique
+
+Le week-end était une liste de boutons avec une vignette décorative à
+côté. On ne savait pas ce qu'une activité allait faire, ni ce qu'elle
+avait fait — un message passait quatre secondes puis disparaissait.
+
+C'est maintenant une **pièce**, dessinée avec les mêmes primitives que
+l'open space. On clique un endroit : le lit, l'ordinateur, le canapé, la
+table. Le panneau annonce les effets chiffrés avant, et **affiche le
+bilan après** — mesuré sur l'état, ligne par ligne, et il reste tant
+qu'on n'a pas cliqué ailleurs. Y compris le cas qui ressemblait à un
+bug : « Nerfs déjà au maximum : rien à gagner ici ».
+
+Chaque coin existe **sans** son meuble : on dort sur un matelas par
+terre, on travaille sur deux cartons, on reçoit sur des caisses. Le
+meuble ne débloque pas l'activité, il l'améliore — et ce qu'on achète se
+voit dans la pièce. Le contraste entre le carton et le vrai bureau
+raconte la progression mieux qu'un compteur.
+
+La bourse et le casino ne s'ouvrent plus depuis le solde : il faut aller
+sur son ordinateur, chez soi comme au bureau. C'est le même composant.
+
 ### Apprendre le jeu
 
 Deux dispositifs, deux usages :

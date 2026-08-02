@@ -13,7 +13,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useGame } from './useGame';
 import type { Selection } from './iso';
-import { TUTORIAL, markTutorialSeen, rememberStep, resumeIndex, type TutoCtx } from './tutorial';
+import { leconCourante, marquerLue, markTutorialSeen, resteALire, type TutoCtx } from './tutorial';
 
 interface Rect {
   x: number;
@@ -103,66 +103,64 @@ export function Tutorial({
   selection,
   onSelect,
   onClose,
+  lieu = 'bureau',
 }: {
   selection: Selection;
   onSelect: (s: Selection) => void;
   onClose: () => void;
+  /** Les leçons du week-end ne valent que chez soi, et l'inverse. */
+  lieu?: 'bureau' | 'appart';
 }) {
   const { state } = useGame();
-  // Reprise à l'étape mémorisée : le week-end est un autre écran, donc
-  // ce composant se démonte à chaque vendredi soir.
-  const [index, setIndex] = useState(resumeIndex);
   const [holes, setHoles] = useState<Rect[]>([]);
   const [cardH, setCardH] = useState(260);
   const [, forceRender] = useState(0);
   const cardRef = useRef<HTMLDivElement>(null);
-  /** Contexte figé à l'entrée dans l'étape : sert de point de comparaison. */
-  const startRef = useRef<TutoCtx>({ state, selection });
-  /** Verrou : une consigne remplie ne déclenche son passage qu'une fois. */
+
+  // Il n'y a plus de curseur à mémoriser : la leçon à montrer se DÉDUIT
+  // de l'état à chaque rendu. Changer d'écran, recharger, reprendre une
+  // sauvegarde — la question se repose et la réponse reste juste.
+  const ctx: TutoCtx = { state, selection, lieu };
+  const step = leconCourante(ctx);
+
+  /** Contexte figé à l'entrée dans la leçon : point de comparaison. */
+  const startRef = useRef<TutoCtx>(ctx);
+  /** Verrou : une consigne remplie ne se valide qu'une fois. */
   const firedRef = useRef(false);
   const timerRef = useRef<number>();
-
-  const step = TUTORIAL[index]!;
-  const last = index === TUTORIAL.length - 1;
+  const ctxRef = useRef(ctx);
+  ctxRef.current = ctx;
 
   const finish = useCallback(() => {
     markTutorialSeen();
     onClose();
   }, [onClose]);
 
+  /** Leçon suivie : on la marque lue, et l'état désignera la suivante. */
   const next = useCallback(() => {
-    setIndex((i) => {
-      if (i >= TUTORIAL.length - 1) {
-        finish();
-        return i;
-      }
-      return i + 1;
-    });
-  }, [finish]);
+    if (step) marquerLue(step.id);
+    forceRender((n) => n + 1);
+  }, [step]);
 
-  // ── Entrée dans une étape ──────────────────────────────────
-  const ctx: TutoCtx = { state, selection };
-  const ctxRef = useRef(ctx);
-  ctxRef.current = ctx;
-
+  const idCourant = step?.id;
   useEffect(() => {
+    if (!idCourant) return;
     startRef.current = ctxRef.current;
     firedRef.current = false;
-    rememberStep(step.id);
-    step.onEnter?.({ select: onSelect });
-    const el = step.anchor?.map((s) => document.querySelector(s)).find(Boolean);
+    step?.onEnter?.({ select: onSelect });
+    const el = step?.anchor?.map((s) => document.querySelector(s)).find(Boolean);
     el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    // Volontairement dépendant du seul index : rejouer cet effet à chaque
+    // Dépendant du seul identifiant : rejouer cet effet à chaque
     // changement d'état réinitialiserait le point de comparaison, et
     // aucune consigne ne serait jamais validée.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index]);
+  }, [idCourant]);
 
   // ── Validation d'une consigne ──────────────────────────────
   // Sans verrou, chaque nouveau rendu relancerait le délai : la carte
   // resterait bloquée sur une consigne pourtant remplie.
   useEffect(() => {
-    if (!step.done || firedRef.current) return;
+    if (!step?.done || firedRef.current) return;
     if (!step.done(ctx, startRef.current)) return;
     firedRef.current = true;
     // Un temps de latence court : le joueur voit le résultat de son geste
@@ -177,7 +175,7 @@ export function Tutorial({
   // plutôt que d'essayer de deviner les moments où ça bouge.
   useLayoutEffect(() => {
     const measure = () => {
-      const found = (step.anchor ?? [])
+      const found = (step?.anchor ?? [])
         .map((s) => document.querySelector(s))
         .filter((e): e is Element => !!e)
         .map(rectOf);
@@ -198,7 +196,7 @@ export function Tutorial({
       window.removeEventListener('resize', onResize);
       window.removeEventListener('scroll', measure, true);
     };
-  }, [index, step.anchor]);
+  }, [idCourant]);
 
   useLayoutEffect(() => {
     const h = cardRef.current?.offsetHeight;
@@ -208,14 +206,20 @@ export function Tutorial({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') finish();
-      else if ((e.key === 'Enter' || e.key === ' ') && !step.done) {
+      else if ((e.key === 'Enter' || e.key === ' ') && !step?.done) {
         e.preventDefault();
         next();
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [finish, next, step.done]);
+  }, [finish, next, step?.done]);
+
+  // Rien à dire pour l'instant : l'accueil s'efface complètement plutôt
+  // que d'afficher une carte vide. Il reviendra quand la partie lui
+  // donnera une raison.
+  if (!step) return null;
+  const reste = resteALire();
 
   const vw = window.innerWidth;
   const vh = window.innerHeight;
@@ -310,32 +314,22 @@ export function Tutorial({
         )}
 
         <div className="tuto__foot">
+          {/* Un compte à rebours, pas un rang : l'ordre des leçons dépend
+              de ce qui arrive dans la partie, donc « 7 sur 18 » ne
+              voudrait rien dire. « Il en reste 7 » si. */}
           <span className="tuto__count">
-            {String(index + 1).padStart(2, '0')} / {String(TUTORIAL.length).padStart(2, '0')}
+            {reste > 1 ? `encore ${reste - 1} après celle-ci` : 'dernière note'}
           </span>
           <div className="tuto__btns">
-            {index > 0 && (
-              <button className="btn btn--small" onClick={() => setIndex((i) => i - 1)}>
-                Retour
-              </button>
-            )}
-            {step.done ? (
-              <button className="btn btn--small btn--ghostline" onClick={next}>
-                Passer cette étape
-              </button>
-            ) : (
-              <button className="btn btn--small btn--primary" onClick={next}>
-                {last ? 'Au travail' : 'Suivant'}
-              </button>
-            )}
+            <button className="btn btn--small btn--primary" onClick={next}>
+              {step.done ? 'Plus tard' : reste > 1 ? 'Compris' : 'Au travail'}
+            </button>
           </div>
         </div>
 
-        {!last && (
-          <button className="tuto__quit" onClick={finish}>
-            Fermer le tutoriel
-          </button>
-        )}
+        <button className="tuto__quit" onClick={finish}>
+          Ne plus rien m’expliquer
+        </button>
       </div>
     </div>
   );

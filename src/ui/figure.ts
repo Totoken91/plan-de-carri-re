@@ -279,6 +279,7 @@ export function poseFigure(
   m: FigureMotion,
   posture: Posture,
   rig: FigureRig = DEFAULT_RIG,
+  amb?: Ambiance,
 ): PosedFigure {
   const k = TUNING[posture];
   const ph = m.phase;
@@ -293,7 +294,10 @@ export function poseFigure(
   // Squash & stretch : le corps s'écrase ET s'élargit, se tend ET
   // s'affine. C'est l'inversion des deux qui fait lire le volume ; une
   // simple mise à l'échelle verticale ne se remarque pas.
-  const squash = 1 + breath * 0.035 + slow * 0.012;
+  // L'étirement se lit sur la même grandeur que la respiration : le
+  // corps se tend franchement, puis retombe. C'est le geste le plus
+  // lisible du lot à cinquante pixels de haut.
+  const squash = 1 + breath * 0.035 + slow * 0.012 + (amb?.etirement ?? 0) * 0.06;
   // Signe négatif volontaire : les ordonnées montent vers le haut de
   // l'écran. Avec un bounce positif, l'étirement remontait la tête
   // pendant que le rebond la descendait — les deux termes s'annulaient
@@ -309,7 +313,11 @@ export function poseFigure(
 
   // La tête suit le buste avec du retard : c'est ce décalage qui donne
   // l'impression de masse.
-  stepSpring(m.headLag, chest.x + Math.sin(w * 0.77) * k.headSway, dt, 120, 14);
+  // Le regard de côté déplace la cible de la tête : le ressort s'en
+  // charge, donc le mouvement part et revient avec de l'inertie plutôt
+  // qu'en ligne droite.
+  const cible = chest.x + Math.sin(w * 0.77) * k.headSway + (amb?.regard ?? 0) * 3.4;
+  stepSpring(m.headLag, cible, dt, 120, 14);
   // Le hochement suit la cadence de frappe, pas la respiration : c'est
   // ce décalage de fréquence qui donne l'air occupé.
   const nod = Math.sin(w * 3.1) * k.nod;
@@ -321,14 +329,24 @@ export function poseFigure(
   // Les mains visent un point du plan de travail, en opposition de phase.
   // L'IK place les coudes : aucune position d'articulation n'est écrite
   // à la main, c'est là tout l'intérêt de la chaîne.
+  const frappe = amb?.frappe ?? 1;
+  const gorgee = amb?.gorgee ?? 0;
   const arms = ([-1, 1] as const).map((side) => {
     const shoulder = v(chest.x + side * rig.shoulder, chest.y + 3);
     const beat = Math.sin(w * 3.1 + (side > 0 ? Math.PI : 0));
     // Mains devant le ventre, à hauteur de clavier. Le coude, lui, part
     // vers l'extérieur : c'est ce triangle qui fait lire le bras.
-    const target = v(
+    const repos = v(
       chest.x + side * (9.5 + k.armSpread * 0.5) + beat * 0.5,
-      rig.hipY - 3 + beat * k.typing,
+      rig.hipY - 3 + beat * k.typing * frappe,
+    );
+    // La main gauche est celle qui porte la tasse : pendant une gorgée
+    // elle monte vers la bouche, et la tasse la suit puisqu'elle est
+    // accrochée à la même cible.
+    const bu = side < 0 ? gorgee : 0;
+    const target = v(
+      repos.x + (head.x - repos.x) * bu * 0.72,
+      repos.y + (head.y + 2 - repos.y) * bu * 0.82,
     );
     const { joint, end } = solveIK2(shoulder, target, rig.upperArm, rig.foreArm, side as 1 | -1);
     return { a: shoulder, b: joint, c: end };
@@ -346,6 +364,82 @@ export function poseFigure(
     shoulderHalf: rig.shoulderHalf / squash,
     shoulderR: rig.shoulderR / squash,
     arms,
+  };
+}
+
+// ── Ambiance : ce que les gens font quand ils ne font rien ───
+/**
+ * Un open space où chacun tape à la même cadence du lundi au vendredi
+ * n'est pas un bureau, c'est un atelier d'horlogerie. Ce qui donne vie à
+ * une pièce, ce sont les MICRO-ÉVÉNEMENTS : quelqu'un lève les yeux,
+ * quelqu'un boit, quelqu'un s'étire, quelqu'un s'arrête de taper trois
+ * secondes parce qu'il réfléchit.
+ *
+ * Tout est calculé, sans aucun état : à chaque instant on regarde dans
+ * quel CRÉNEAU on se trouve, on tire de façon déterministe si un
+ * événement occupe ce créneau, et on en déduit une enveloppe. Deux
+ * conséquences utiles : rien à stocker par personnage, et une même
+ * partie rejouée donne exactement les mêmes gestes.
+ */
+export interface Ambiance {
+  /** Paupières fermées (0 ouvert, 1 fermé). */
+  cligne: number;
+  /** Regard de côté, en unités de décalage de tête. −1 gauche, +1 droite. */
+  regard: number;
+  /** Gorgée en cours : la main monte vers le visage (0 → 1 → 0). */
+  gorgee: number;
+  /** Étirement : le buste se redresse et s'ouvre. */
+  etirement: number;
+  /** Cadence de frappe, 0 = les mains s'arrêtent. */
+  frappe: number;
+}
+
+/** Enveloppe en cloche sur [0,1] : montée, plateau, descente. */
+const cloche = (u: number): number =>
+  u <= 0 || u >= 1 ? 0 : Math.sin(Math.PI * Math.min(1, Math.max(0, u))) ** 0.7;
+
+/**
+ * Un événement périodique : dans chaque créneau de `periode` secondes,
+ * il occupe une fenêtre de `duree` avec la probabilité `chance`, à une
+ * position tirée dans le créneau.
+ */
+function evenement(
+  t: number,
+  phase: number,
+  canal: number,
+  periode: number,
+  duree: number,
+  chance: number,
+): number {
+  const tt = t + phase * periode * 0.16;
+  const creneau = Math.floor(tt / periode);
+  const r = tirage(phase + canal, creneau);
+  if (r > chance) return 0;
+  // Position du début dans le créneau, tirée elle aussi : deux
+  // personnages au même créneau ne partent pas ensemble.
+  const debut = tirage(phase + canal + 7.7, creneau) * (periode - duree);
+  return cloche((tt - creneau * periode - debut) / duree);
+}
+
+export function ambianceDe(t: number, phase: number, actif: boolean): Ambiance {
+  // Le clignement : bref, fréquent, et parfois double — c'est le double
+  // qui fait vivant, un clignement isolé toutes les six secondes est un
+  // métronome.
+  const cligne1 = evenement(t, phase, 1, 5.4, 0.16, 0.92);
+  const cligne2 = evenement(t, phase, 2, 5.4, 0.14, 0.22);
+  const regard = evenement(t, phase, 3, 11, 2.6, 0.55) * (tirage(phase, 3) < 0.5 ? -1 : 1);
+  const gorgee = actif ? evenement(t, phase, 4, 26, 2.8, 0.6) : 0;
+  const etirement = actif ? evenement(t, phase, 5, 41, 3.4, 0.45) : 0;
+  // Les pauses de frappe : on ne tape pas en continu, on tape par
+  // rafales. La main s'immobilise pendant qu'on lit ce qu'on a écrit.
+  const pause = evenement(t, phase, 6, 9, 3.2, 0.5);
+
+  return {
+    cligne: Math.max(cligne1, cligne2),
+    regard,
+    gorgee,
+    etirement,
+    frappe: Math.max(0, 1 - pause * 0.9) * (1 - gorgee),
   };
 }
 
@@ -412,9 +506,45 @@ export function registerPainter(p: Painter): () => void {
   };
 }
 
-/** Déphasage stable dérivé d'un identifiant. */
+/**
+ * Déphasage stable dérivé d'un identifiant.
+ *
+ * L'ancienne version faisait `h * 31 + code` puis `h % 1000`. Sur des
+ * identifiants qui ne diffèrent que par leur dernier caractère —
+ * « pnj0 » à « pnj5 », soit exactement notre étage — les empreintes se
+ * suivaient de 1 en 1, donc les déphasages de 0,006 radian. Six
+ * collègues respiraient, tapaient et clignaient des yeux à six
+ * millisecondes d'écart : à l'œil, un banc de poissons.
+ *
+ * On mélange donc les bits avant de réduire. Le test est simple et il
+ * est dans le banc : « pnj0 » à « pnj5 » doivent se répartir sur tout le
+ * cercle, pas se tasser sur un arc.
+ */
 export function phaseOf(id: string): number {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  return (h % 1000) / 1000 * TAU;
+  let h = 0x811c9dc5;
+  for (let i = 0; i < id.length; i++) {
+    h ^= id.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  // Avalanche finale : sans elle, les bits de poids faible restent
+  // corrélés à la dernière lettre, et c'est justement eux qu'on garde.
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x7feb352d) >>> 0;
+  h ^= h >>> 15;
+  return (h / 4294967296) * TAU;
+}
+
+/**
+ * Un tirage stable dans [0,1) pour un couple (identité, rang).
+ *
+ * Sert aux comportements d'ambiance : il faut pouvoir demander « ce
+ * personnage, à sa 47ᵉ occasion, fait-il quelque chose ? » sans stocker
+ * d'état et en obtenant toujours la même réponse.
+ */
+export function tirage(phase: number, n: number): number {
+  let h = (Math.round(phase * 100000) ^ Math.imul(n + 1, 0x9e3779b9)) >>> 0;
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x7feb352d) >>> 0;
+  h ^= h >>> 15;
+  return h / 4294967296;
 }
