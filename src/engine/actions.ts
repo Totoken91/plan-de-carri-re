@@ -10,7 +10,7 @@ import { clamp, getColleague } from './util';
 import { traitBonus, traitFactor } from './traits';
 import { canStartPlan, startPlan } from './plans';
 import type { Rng } from './rng';
-import { raiseSuspicion } from './suspicion';
+import { easeSuspicion, raiseSuspicion } from './suspicion';
 
 export type ActionKind = 'bosser' | 'cafe' | 'fouiner' | 'comploter' | 'glander';
 
@@ -76,8 +76,25 @@ export function actBosser(state: GameState): ActionResult {
   adjust(state, 'rendement', rendement);
   adjust(state, 'nerfs', nerfs); // le coût nerveux, lui, ne diminue pas
   state.player.reputation += reputation;
+
+  // Le travail visible est le meilleur alibi qui existe, et c'est la
+  // SEULE façon de faire redescendre la Suspicion sans sortir le
+  // carnet de chèques. Le banc d'essai avait rendu le trou évident :
+  // la Suspicion ne savait que monter, donc toute partie qui touchait
+  // aux complots finissait licenciée, sans exception. Une jauge qu'on ne
+  // peut pas redescendre n'est pas une tension, c'est un compte à
+  // rebours.
+  //
+  // Le soulagement ne s'émousse PAS avec la répétition : c'est le
+  // contraire du rendement décroissant, parce que ce qui rassure la
+  // hiérarchie, c'est justement la régularité.
+  const cfg2 = balance.actions.bosser;
+  easeSuspicion(state, -cfg2.suspicion);
+
   const worn = f < 0.9 ? ' (rendement en baisse — tu tournes en rond)' : '';
-  return good(`Tu abats du travail. +${rendement} Rendement, +${reputation} réput., ${nerfs} Nerfs.${worn}`);
+  return good(
+    `Tu abats du travail. +${rendement} Rendement, +${reputation} réput., ${nerfs} Nerfs, ${cfg2.suspicion} Suspicion.${worn}`,
+  );
 }
 
 /** Machine à café : réseauter avec un collègue → +son opinion. */
@@ -91,25 +108,47 @@ export function actCafe(state: GameState, targetId: string): ActionResult {
   return good(`Café avec ${c.name}. Son opinion grimpe (+${gain}).`);
 }
 
-/** Fouiner : chercher un secret sur une cible. Risque de +Suspicion. */
+/**
+ * Fouiner : chercher un secret sur une cible. Risque de +Suspicion.
+ *
+ * C'est aussi la seule ÉCOLE de Combine du jeu, et ça n'a rien d'un
+ * détail : les plans, les montages et les hauts paliers de Combine
+ * étaient jusqu'ici verrouillés derrière une statistique qu'aucune
+ * action ne faisait monter. La moitié « intrigue » du jeu existait sur
+ * le papier et restait fermée en pratique.
+ *
+ * On apprend même en se faisant prendre — surtout en se faisant prendre.
+ */
 export function actFouiner(state: GameState, targetId: string, rng: Rng): ActionResult {
   const c = getColleague(state, targetId);
   if (!c || !c.alive) return fail('Personne à fouiner ici.');
   const cfg = balance.actions.fouiner;
+  // Rendement décroissant DANS la semaine, et rendement décroissant sur
+  // la carrière : on n'apprend plus grand-chose à fouiller des tiroirs
+  // quand on sait déjà tout faire. Sans ce second frein, cinq fouilles
+  // par semaine amenaient au plus haut palier de Combine en huit
+  // semaines, et les plans devenaient presque gratuits.
+  const f = diminishing(state, 'fouiner');
+  const marge = Math.max(0.15, 1 - state.player.stats.combine / 110);
+  const metier = Math.max(1, Math.round(cfg.combine * f * marge));
 
   // Se faire griller ? Un fouineur aguerri se fait moins voir.
   if (rng.chance(caughtRisk(state, cfg.suspicionRisk))) {
     raiseSuspicion(state, cfg.suspicionOnCaught);
-    return bad(`On t'a vu fouiner ${c.name}. La Suspicion monte (+${cfg.suspicionOnCaught}).`);
+    adjust(state, 'combine', metier);
+    return bad(
+      `On t'a vu fouiner ${c.name}. +${cfg.suspicionOnCaught} Suspicion — et +${metier} Combine, parce qu'on retient surtout ce genre de leçon.`,
+    );
   }
 
+  adjust(state, 'combine', metier);
   const hidden = c.secrets.filter((s) => !s.discovered);
   if (hidden.length === 0) {
-    return neutral(`Tu fouines ${c.name}, mais tu ne trouves plus rien de neuf.`);
+    return neutral(`Tu fouines ${c.name} sans rien trouver de neuf. +${metier} Combine tout de même.`);
   }
   const found = rng.pick(hidden)!;
   found.discovered = true;
-  return good(`Tu découvres un secret sur ${c.name} : « ${found.label} »`);
+  return good(`Tu découvres un secret sur ${c.name} : « ${found.label} » (+${metier} Combine)`);
 }
 
 /**
@@ -133,12 +172,16 @@ export function actComploter(
     startPlan(state, planDefId, targetId);
     plan = state.activePlans.find((p) => p.defId === planDefId)!;
     raiseSuspicion(state, cfg.suspicionPerPrep);
-    return neutral(`Tu lances « ${def.name} ». Préparation en cours.`);
+    adjust(state, 'combine', cfg.combine);
+    return neutral(`Tu lances « ${def.name} ». Préparation en cours. +${cfg.combine} Combine.`);
   }
 
   plan.preparation = clamp(plan.preparation + cfg.preparationGain, 0, 100);
   raiseSuspicion(state, cfg.suspicionPerPrep);
-  return neutral(`Tu avances « ${def.name} » (préparation ${plan.preparation}/100).`);
+  adjust(state, 'combine', cfg.combine);
+  return neutral(
+    `Tu avances « ${def.name} » (préparation ${plan.preparation}/100). +${cfg.combine} Combine.`,
+  );
 }
 
 /** Glander : +Nerfs (récupération décroissante). Un Fayot peut te griller. */

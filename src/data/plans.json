@@ -10,7 +10,9 @@
     "suspicionOnFailure": 15,
     "successEffects": {
       "reputation": 18,
-      "stats": { "rendement": 3 },
+      "stats": {
+        "rendement": 3
+      },
       "targetOpinion": -15
     },
     "failureEffects": {
@@ -31,7 +33,11 @@
     "successEffects": {
       "targetOpinion": -10,
       "rivalOpinion": -10,
-      "reputation": 8
+      "reputation": 8,
+      "targetStats": {
+        "rendement": -9,
+        "aura": -4
+      }
     },
     "failureEffects": {
       "suspicion": 5,
@@ -50,7 +56,10 @@
     "minRank": "junior",
     "successEffects": {
       "targetOpinion": -25,
-      "globalOpinion": -8
+      "globalOpinion": -8,
+      "targetStats": {
+        "aura": -7
+      }
     },
     "failureEffects": {
       "suspicion": 8,
@@ -67,12 +76,23 @@
     "suspicionOnSuccess": 18,
     "suspicionOnFailure": 35,
     "minRank": "confirme",
-    "requires": { "requiresSecretDiscovered": true, "stats": { "combine": 35 } },
+    "requires": {
+      "requiresSecretDiscovered": true,
+      "stats": {
+        "combine": 35
+      }
+    },
     "successEffects": {
       "targetOpinion": -40,
       "rivalOpinion": -40,
       "reputation": 25,
-      "setFlags": ["rival_en_sursis"]
+      "setFlags": [
+        "rival_en_sursis"
+      ],
+      "targetStats": {
+        "rendement": -16,
+        "aura": -8
+      }
     },
     "failureEffects": {
       "suspicion": 10,
@@ -90,7 +110,11 @@
     "suspicionOnSuccess": 6,
     "suspicionOnFailure": 14,
     "minRank": "confirme",
-    "requires": { "stats": { "aura": 40 } },
+    "requires": {
+      "stats": {
+        "aura": 40
+      }
+    },
     "successEffects": {
       "targetOpinion": 35,
       "rivalOpinion": -20,
@@ -112,7 +136,12 @@
     "suspicionOnFailure": 55,
     "minRank": "senior",
     "requiresScapegoat": true,
-    "requires": { "requiresSecretDiscovered": true, "stats": { "combine": 55 } },
+    "requires": {
+      "requiresSecretDiscovered": true,
+      "stats": {
+        "combine": 55
+      }
+    },
     "successEffects": {
       "removeTarget": true,
       "reputation": 20,

@@ -9,7 +9,8 @@
     "build": "tsc --noEmit && node scripts/audit-palette.mjs && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "audit:palette": "node scripts/audit-palette.mjs"
+    "audit:palette": "node scripts/audit-palette.mjs",
+    "simuler": "esbuild scripts/simulation/lancer.ts --bundle --platform=node --format=esm --outfile=node_modules/.cache/simuler.mjs --log-level=warning && node node_modules/.cache/simuler.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

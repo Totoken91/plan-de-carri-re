@@ -19,13 +19,14 @@ import { euros } from '@engine/argent';
 import { romanceDe } from '@engine/romance';
 import { useGame } from './useGame';
 import { Bourse, Casino } from './Marche';
+import { Parking } from './Parking';
 import { BlocDepenses } from './ViePrivee';
 import { Figure } from './sprites';
 import { Tutorial } from './Tutorial';
 import { tutorialSeen } from './tutorial';
 import { GooFilter } from './sprites';
 
-type Onglet = 'week-end' | 'logement' | 'marche';
+type Onglet = 'week-end' | 'logement' | 'parking' | 'marche';
 
 export function Appart({ onLundi }: { onLundi: () => void }) {
   const { state, store } = useGame();
@@ -66,13 +67,19 @@ export function Appart({ onLundi }: { onLundi: () => void }) {
         </div>
 
         <nav className="appart__onglets">
-          {(['week-end', 'logement', 'marche'] as Onglet[]).map((o) => (
+          {(['week-end', 'logement', 'parking', 'marche'] as Onglet[]).map((o) => (
             <button
               key={o}
               className={`chip ${onglet === o ? 'is-on' : ''}`}
               onClick={() => setOnglet(o)}
             >
-              {o === 'week-end' ? 'Le week-end' : o === 'logement' ? 'Chez toi' : 'Argent'}
+              {o === 'week-end'
+                ? 'Le week-end'
+                : o === 'logement'
+                  ? 'Chez toi'
+                  : o === 'parking'
+                    ? 'Parking'
+                    : 'Argent'}
             </button>
           ))}
         </nav>
@@ -302,6 +309,8 @@ export function Appart({ onLundi }: { onLundi: () => void }) {
               </section>
             </>
           )}
+
+          {onglet === 'parking' && <Parking onResult={flash} />}
 
           {onglet === 'marche' && (
             <>

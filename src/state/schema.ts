@@ -56,6 +56,13 @@ export interface Effect {
   suspicion?: number; // delta suspicion globale
   reputation?: number; // delta vers la prochaine promotion
   targetOpinion?: number; // delta opinion de la cible de l'événement
+  /**
+   * Deltas sur les STATS de la cible — sa tenue de poste, pas ses
+   * sentiments. C'est ce qui manquait pour pouvoir user quelqu'un : tous
+   * les plans ne savaient toucher que des opinions, donc aucun ne pouvait
+   * faire perdre sa place à qui que ce soit.
+   */
+  targetStats?: Partial<Stats>;
   rivalOpinion?: number; // delta opinion du rival (Carriériste)
   globalOpinion?: number; // delta opinion de TOUS les collègues (rumeur)
   colleagueOpinions?: Record<ColleagueId, number>; // deltas ciblés explicites
@@ -267,6 +274,23 @@ export interface Rank {
   salaire: number;
   /** Combien de collègues peuvent t'être rattachés à ce rang. */
   subordonnes: number;
+  /**
+   * Nerfs prélevés chaque vendredi à ce rang. Monter, c'est encaisser
+   * des semaines plus lourdes : sans ça, le sommet serait plus reposant
+   * que le bas de l'échelle.
+   */
+  charge: number;
+  /**
+   * Ce que le rang oblige à dépenser chaque semaine — costume, déjeuners,
+   * tournées. Le salaire monte vite ; ceci fait qu'il ne monte pas seul.
+   */
+  trainDeVie: number;
+  /**
+   * Combien de personnes tiennent ce rang en même temps, toi compris.
+   * C'est la pièce qui transforme la promotion en CONCURRENCE : au-delà
+   * du seuil de réputation, il faut encore qu'un siège se libère.
+   */
+  places: number;
 }
 
 // ── Argent et vie privée : définitions (données) ─────────────
@@ -428,6 +452,8 @@ export interface Player {
   reputation: number; // progression légitime vers la promotion
   appearance: Appearance;
   traits: TraitId[];
+  /** Modèle garé sur le parking, réf. voitures.json. */
+  voiture?: string;
 }
 
 export type GameStatus = 'playing' | 'won' | 'fired' | 'burnout' | 'expulse';

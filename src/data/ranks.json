@@ -6,7 +6,10 @@
     "reputationRequired": 0,
     "backstabMultiplier": 0.5,
     "salaire": 520,
-    "subordonnes": 0
+    "subordonnes": 0,
+    "charge": 0,
+    "trainDeVie": 0,
+    "places": 99
   },
   {
     "id": "alternant",
@@ -15,7 +18,10 @@
     "reputationRequired": 30,
     "backstabMultiplier": 0.7,
     "salaire": 780,
-    "subordonnes": 0
+    "subordonnes": 0,
+    "charge": 1,
+    "trainDeVie": 60,
+    "places": 99
   },
   {
     "id": "junior",
@@ -24,7 +30,10 @@
     "reputationRequired": 70,
     "backstabMultiplier": 1.0,
     "salaire": 1150,
-    "subordonnes": 1
+    "subordonnes": 1,
+    "charge": 3,
+    "trainDeVie": 180,
+    "places": 99
   },
   {
     "id": "confirme",
@@ -36,7 +45,10 @@
     ],
     "backstabMultiplier": 1.3,
     "salaire": 1600,
-    "subordonnes": 2
+    "subordonnes": 2,
+    "charge": 5,
+    "trainDeVie": 420,
+    "places": 2
   },
   {
     "id": "senior",
@@ -48,7 +60,10 @@
     ],
     "backstabMultiplier": 1.6,
     "salaire": 2200,
-    "subordonnes": 3
+    "subordonnes": 3,
+    "charge": 8,
+    "trainDeVie": 760,
+    "places": 1
   },
   {
     "id": "team_lead",
@@ -61,6 +76,9 @@
     ],
     "backstabMultiplier": 2.0,
     "salaire": 3100,
-    "subordonnes": 4
+    "subordonnes": 4,
+    "charge": 12,
+    "trainDeVie": 1250,
+    "places": 1
   }
 ]

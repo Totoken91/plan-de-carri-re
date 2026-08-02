@@ -16,16 +16,17 @@ import { balance } from '@data/balance';
 import { clamp } from './util';
 import { pickWeeklyEvent, resolveEventTarget } from './events';
 import { resolveDuePlans } from './plans';
-import { assignIntents, resolveIntents, tickRecovery } from './intents';
+import { assignIntents, resetMisesAuPoint, resolveIntents, tickRecovery } from './intents';
 import { tickScapegoat } from './scapegoat';
 import { runAudit, checkBurnout } from './suspicion';
-import { checkPromotion, isAtTop } from './promotion';
+import { chargeDuRang, checkPromotion, isAtTop, tickCarrieresPNJ, tickTurnover } from './promotion';
 import { generateOpportunities } from './opportunities';
 import { euros, verserSalaire, type LigneDePaie } from './argent';
 import { appliquerMobilierHebdo, pointsWeekend } from './vieprivee';
 import { tickRomance } from './romance';
 import { resolveOrdres } from './subordonnes';
 import { tickMarche } from './marche';
+import { tickPaliers } from './paliers';
 import type { Rng } from './rng';
 
 const log = (state: GameState, text: string, tone: LogEntry['tone'] = 'neutral') =>
@@ -139,10 +140,15 @@ export function finalizeWeek(state: GameState, rng: Rng): WeekSummary {
   // faire expulser le jour d'une promotion.
   const paie = verserSalaire(state);
   summary.paie = paie;
+  const postes = [
+    paie.train > 0 ? `${euros(paie.train)} de train de vie` : '',
+    paie.voiture > 0 ? `${euros(paie.voiture)} de voiture` : '',
+  ].filter(Boolean);
+  const detail = postes.length ? ` et ${postes.join(', ')}` : '';
   record(
     paie.decouvert
-      ? `Paie : ${euros(paie.salaire)}. Loyer : ${euros(paie.loyer)}. Le compte ne suivait pas.`
-      : `Paie : ${euros(paie.salaire)}, moins ${euros(paie.loyer)} de loyer. Net : ${euros(paie.net)}.`,
+      ? `Paie : ${euros(paie.salaire)}. Loyer ${euros(paie.loyer)}${detail}. Le compte ne suivait pas.`
+      : `Paie : ${euros(paie.salaire)}, moins ${euros(paie.loyer)} de loyer${detail}. Net : ${euros(paie.net)}.`,
     paie.decouvert ? 'bad' : 'neutral',
   );
 
@@ -170,7 +176,20 @@ export function finalizeWeek(state: GameState, rng: Rng): WeekSummary {
     record('Loyer à jour. Le bailleur retire son courrier.', 'good');
   }
 
+  // La charge du rang. Elle tombe avant les paliers, qui peuvent en
+  // rendre une partie : c'est ce qui fait qu'un haut palier de Nerfs se
+  // sent, au lieu de se lire.
+  const charge = chargeDuRang(state);
+  if (charge > 0) {
+    state.player.stats.nerfs = Math.max(0, state.player.stats.nerfs - charge);
+    record(`La semaine à ton niveau : −${charge} Nerfs. Personne ne t’a demandé si ça allait.`, 'bad');
+  }
+
   appliquerMobilierHebdo(state);
+  // Les hauts paliers rendent un peu de terrain chaque semaine : sans
+  // cette clémence, on traverserait les seuils dans les deux sens tous
+  // les vendredis et le nom du palier n'afficherait que du bruit.
+  tickPaliers(state);
 
   // 3 ter) Un pas de marché. Il tourne même sans portefeuille : le cours
   // doit exister avant qu'on décide d'y entrer.
@@ -194,12 +213,24 @@ export function finalizeWeek(state: GameState, rng: Rng): WeekSummary {
     return summary;
   }
 
-  // 6) Promotion.
+  // 5 bis) Le turn-over : quelqu'un s'en va parfois tout seul. AVANT la
+  // promotion, pour que la place libérée serve dès ce vendredi.
+  for (const note of tickTurnover(state, rng, balance.turnoverParSemaine)) {
+    record(note.text, note.tone);
+  }
+
+  // 6) Promotion. La tienne d'abord — à seuil égal, c'est toi qui
+  // t'assieds, sinon un PNJ prendrait la place le vendredi même où tu
+  // deviens éligible et le joueur n'y comprendrait rien.
   const promo = checkPromotion(state);
   if (promo) {
     summary.promotion = promo;
     record(`Promotion : te voilà ${promo}. On te sourit. On t’observe aussi.`, 'good');
   }
+
+  // 6 bis) Puis celle des autres. L'organigramme bouge sans toi, et
+  // chaque montée referme une porte au-dessus de ta tête.
+  for (const note of tickCarrieresPNJ(state)) record(note.text, note.tone);
 
   // 7) Victoire : rester au sommet X semaines.
   if (isAtTop(state)) {
@@ -223,6 +254,7 @@ export function finalizeWeek(state: GameState, rng: Rng): WeekSummary {
   state.pendingEvent = undefined;
   state.pendingTargetId = undefined;
   state.weeklyActionCounts = {}; // reset anti-spam
+  resetMisesAuPoint(state); // on peut de nouveau aller voir les gens
   state.depensesSemaine = {};
   generateOpportunities(state, rng); // nouvelles opportunités
   assignIntents(state, rng); // nouvelles intentions des collègues

@@ -10,7 +10,7 @@
 //         resolveIntents (vendredi).
 // ─────────────────────────────────────────────────────────────
 import type { Colleague, GameState, Intent } from '@state/schema';
-import { getArchetype } from '@data/content';
+import { getArchetype, getRank } from '@data/content';
 import { aliveColleagues, clamp, getColleague } from './util';
 import type { ActionResult } from './actions';
 import type { Rng } from './rng';
@@ -125,9 +125,26 @@ const idle = (): Intent => ({
   weeksLeft: 1,
 });
 
+/**
+ * Le facteur « cible dans le dos » du rang courant.
+ *
+ * Il était présent dans les données depuis le début, commenté « plus tu
+ * montes, plus on te cible », et n'était branché nulle part. Le banc
+ * d'essai a rendu ce trou visible : sans lui, un joueur qui monte ne
+ * subit rien de plus qu'un stagiaire, et gravir l'échelle en travaillant
+ * sans jamais parler à personne ne comporte aucun risque.
+ *
+ * Il élargit maintenant la fenêtre d'hostilité — au sommet, il suffit
+ * d'une opinion tiède pour qu'on monte un dossier — et alourdit le coup
+ * quand il tombe.
+ */
+const cible = (state: GameState): number =>
+  getRank(state.player.rank)?.backstabMultiplier ?? 1;
+
 /** Choisit l'intention d'un collègue selon son archétype, son opinion et ta Suspicion. */
 function buildIntent(c: Colleague, state: GameState, rng: Rng): Intent {
   const susp = state.suspicion;
+  const m = cible(state);
 
   // Un collègue sous emprise ne complote plus contre toi.
   if (c.flags.includes('sous_emprise')) return c.opinion >= 30 ? bond() : idle();
@@ -150,16 +167,16 @@ function buildIntent(c: Colleague, state: GameState, rng: Rng): Intent {
 
   switch (c.archetype) {
     case 'carrieriste':
-      return c.opinion < 25 ? plot(rng) : schemeOrElse(climb());
+      return c.opinion < 25 * m ? plot(rng) : schemeOrElse(climb());
     case 'fayot':
       // Couler un collègue est encore le plus court chemin pour briller.
-      return susp >= 35 && c.opinion < 30 ? watch() : schemeOrElse(climb());
+      return susp >= 35 && c.opinion < 30 * m ? watch() : schemeOrElse(climb());
     case 'parano':
-      return susp >= 25 || c.opinion < -20 ? watch() : idle();
+      return susp >= 25 || c.opinion < -20 * m ? watch() : idle();
     case 'glandeur':
       return c.opinion >= 15 ? gossip() : idle();
     case 'veteran':
-      if (c.opinion <= -30) return plot(rng);
+      if (c.opinion <= 20 * m - 40) return plot(rng);
       if (c.opinion >= 40) return bond();
       return schemeOrElse(idle()); // le vétéran connaît les dossiers de tout le monde
     case 'nouveau':
@@ -213,8 +230,8 @@ export function resolveIntents(state: GameState, rng: Rng): IntentOutcome[] {
     switch (intent.kind) {
       case 'plot': {
         // Ton Aura amortit le coup : savoir se défendre en réunion, ça compte.
-        const raw = 10 + Math.round(c.stats.combine * 0.15);
-        const loss = Math.max(3, raw - Math.round(state.player.stats.aura * 0.1));
+        const raw = (10 + c.stats.combine * 0.15) * cible(state);
+        const loss = Math.max(3, Math.round(raw - state.player.stats.aura * 0.1));
         state.player.reputation = Math.max(0, state.player.reputation - loss);
         raiseSuspicion(state, 5);
         out.push({
@@ -290,12 +307,46 @@ export function resolveIntents(state: GameState, rng: Rng): IntentOutcome[] {
 /** Nombre de semaines pendant lesquelles une réputation reste entamée. */
 const DISGRACE_WEEKS = 3;
 
+/** Ce qu'une semaine de disgrâce coûte à la tenue de poste. */
+const USURE_HEBDO = 4;
+
+/** En dessous, le poste est « redéfini » et son titulaire s'en va. */
+const PLANCHER_POSTE = 18;
+
 /**
  * Retour en grâce : sans ça, chaque victime reste discréditée à vie et
  * l'open space finit en champ de ruines où plus personne ne pèse rien.
  */
 export function tickRecovery(state: GameState): IntentOutcome[] {
   const out: IntentOutcome[] = [];
+
+  // L'USURE, avant le retour en grâce.
+  //
+  // C'est la voie lente pour libérer une place, et elle manquait
+  // complètement : tous les moyens d'écarter quelqu'un étaient des coups
+  // d'éclat à forte Suspicion — un plan lourd, un cabinet à 4 200 €, un
+  // bouc émissaire. Le banc d'essai montrait toutes les politiques se
+  // faire licencier en essayant, parce qu'il n'existait aucune façon
+  // PATIENTE de faire tomber quelqu'un.
+  //
+  // Maintenant, une réputation entamée s'entretient : tant qu'on est
+  // discrédité, la tenue de poste s'effrite. En dessous du plancher, on
+  // ne licencie personne — on redéfinit le poste. C'est plus long, moins
+  // spectaculaire, presque invisible pour la hiérarchie. Autrement dit :
+  // le bon jeu.
+  for (const c of aliveColleagues(state)) {
+    if (!c.flags.includes('discredite')) continue;
+    c.stats.rendement = clamp(c.stats.rendement - USURE_HEBDO, 0, 100);
+    if (c.stats.rendement <= PLANCHER_POSTE) {
+      c.alive = false;
+      c.intent = undefined;
+      out.push({
+        tone: 'neutral',
+        text: `Le poste de ${c.name} a été « redéfini ». Il n'a pas été reconduit dessus. Personne n'a eu à décider quoi que ce soit.`,
+      });
+    }
+  }
+
   for (const c of aliveColleagues(state)) {
     const marker = c.flags.find((f) => f.startsWith('discredite_since:'));
     if (!marker) continue;
@@ -381,14 +432,18 @@ export function canDefuse(c: Colleague): boolean {
 /** Probabilité (0–100) de désamorcer l'intention d'un collègue. */
 export function defuseChance(state: GameState, c: Colleague): number {
   const vigilance = getArchetype(c.archetype)?.baseVigilance ?? 40;
+  // Le désamorçage est la réponse que le jeu ANNONCE aux menaces
+  // visibles. Mesuré, il était perdant : 24 % en début de partie, et
+  // chaque échec rendait le suivant plus difficile. Une réponse
+  // officielle qui échoue trois fois sur quatre n'est pas une réponse.
   const raw =
-    35 +
-    state.player.stats.aura * 0.6 +
+    48 +
+    state.player.stats.aura * 0.7 +
     c.opinion * 0.15 -
-    vigilance * 0.3 -
+    vigilance * 0.25 -
     state.suspicion * 0.1 +
     traitBonus(state, 'defuseChance');
-  return Math.round(clamp(raw, 10, 90));
+  return Math.round(clamp(raw, 25, 90));
 }
 
 /**
@@ -401,8 +456,16 @@ export function defuseIntent(state: GameState, colleagueId: string, rng: Rng): A
   if (!canDefuse(c)) {
     return { ok: false, text: `${c.name} ne prépare rien contre toi.`, tone: 'neutral' };
   }
+  if (c.flags.includes(MISE_AU_POINT)) {
+    return {
+      ok: false,
+      text: `Tu as déjà tenté le coup avec ${c.name} cette semaine. Y revenir maintenant, c'est insister.`,
+      tone: 'neutral',
+    };
+  }
 
   const chance = defuseChance(state, c);
+  c.flags.push(MISE_AU_POINT);
   if (rng.chance(chance)) {
     c.intent = undefined;
     c.opinion = clamp(c.opinion + 8, -100, 100);
@@ -413,11 +476,34 @@ export function defuseIntent(state: GameState, colleagueId: string, rng: Rng): A
     };
   }
 
-  raiseSuspicion(state, 4);
-  c.opinion = clamp(c.opinion - 5, -100, 100);
+  raiseSuspicion(state, 3);
+  c.opinion = clamp(c.opinion - 3, -100, 100);
   return {
     ok: true,
     tone: 'bad',
-    text: `${c.name} n'a pas apprécié ta démarche. +4 Suspicion. (${chance}% — raté)`,
+    text: `${c.name} n'a pas apprécié ta démarche. +3 Suspicion. (${chance}% — raté)`,
   };
+}
+
+/**
+ * Une mise au point par personne et par semaine.
+ *
+ * Le banc d'essai a produit des parties où le joueur retentait cinq fois
+ * de suite le même désamorçage à 20 % : chaque échec coûtait de la
+ * Suspicion ET de l'opinion, donc faisait baisser la chance du coup
+ * suivant. Cinq essais, vingt points de Suspicion, un audit, licencié
+ * semaine 3 — en n'ayant rien fait de mal.
+ *
+ * Ce n'était pas une erreur de réglage : le jeu proposait une boucle
+ * strictement perdante sans jamais la signaler. On la ferme.
+ */
+export const MISE_AU_POINT = 'mise_au_point';
+
+/** Lundi : on peut de nouveau aller voir les gens. */
+export function resetMisesAuPoint(state: GameState): void {
+  for (const c of state.colleagues) {
+    if (c.flags.includes(MISE_AU_POINT)) {
+      c.flags = c.flags.filter((f) => f !== MISE_AU_POINT);
+    }
+  }
 }

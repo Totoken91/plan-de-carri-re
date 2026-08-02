@@ -41,14 +41,28 @@ export function Manual({
             <h3 className="section-title">Le but</h3>
             <p>
               Atteindre le grade de <b>{ranks[ranks.length - 1]?.name}</b>, puis tenir la position{' '}
-              {balance.winSurviveWeeks} semaines sans se faire éjecter. Seule la{' '}
-              <b>réputation</b> fait monter en grade.
+              {balance.winSurviveWeeks} semaines sans se faire éjecter.
+            </p>
+            <p>
+              La réputation te rend <b>éligible</b> — elle ne te fait pas monter. Les
+              grades d’encadrement ont un nombre de <b>places</b>, et quelqu’un les
+              occupe déjà. Tant que la place n’est pas libre, ta barre reste pleine
+              et il ne se passe rien le vendredi. Il faut attendre un départ, ou
+              t’occuper de celui qui est assis là.
+            </p>
+            <p>
+              Et quand une place se libère sur un grade disputé, on regarde les
+              dossiers : <b>rendement, aura, et les appuis que tu as dans l’étage</b>.
+              Travailler seul remplit un tiers de ce dossier.
             </p>
             <ul className="manual__ranks">
               {ranks.map((r) => (
                 <li key={r.id}>
                   <span>{r.name}</span>
-                  <em>{r.reputationRequired} réput.</em>
+                  <em>
+                    {r.reputationRequired} réput.
+                    {r.places <= 6 ? ` · ${r.places} place${r.places > 1 ? 's' : ''}` : ''}
+                  </em>
                 </li>
               ))}
             </ul>
@@ -78,25 +92,74 @@ export function Manual({
                 {balance.actions.bosser.reputation} de base par « Bosser »).
               </dd>
               <dt>Combine</dt>
-              <dd>Tu manœuvres. Augmente la réussite des complots et la discrétion.</dd>
+              <dd>
+                Tu manœuvres. Augmente la réussite des complots et la discrétion. Elle
+                monte en <b>fouinant</b> et en <b>complotant</b>, jamais autrement — et
+                de moins en moins à mesure qu’elle est haute.
+              </dd>
               <dt>Nerfs</dt>
               <dd>
                 Ton carburant. « Bosser » en consomme {Math.abs(balance.actions.bosser.nerfs)},
                 « Glander » en rend {balance.actions.glander.nerfs}. À zéro pendant{' '}
-                {balance.burnoutGraceWeeks} semaines, c’est le burn-out et la partie s’arrête.
+                Sous {balance.burnoutSeuil} pendant {balance.burnoutGraceWeeks} semaines,
+                c’est le burn-out et la partie s’arrête.
               </dd>
             </dl>
+          </section>
+
+          <section>
+            <h3 className="section-title">Les paliers</h3>
+            <p>
+              Chaque chiffre traverse cinq <b>seuils nommés</b>, et le nom n’est pas
+              décoratif : il porte un effet réel — un gain d’opinion multiplié, une
+              chance de complot en plus, un coût nerveux allégé. Le panneau{' '}
+              <b>Ton dossier</b> affiche le palier tenu et ce qu’il reste avant le
+              suivant.
+            </p>
+            <p>
+              Les hauts paliers rendent aussi un peu de terrain chaque vendredi. C’est
+              ce qui les rend durables : une mauvaise semaine ne fait pas retomber deux
+              crans d’un coup.
+            </p>
+          </section>
+
+          <section>
+            <h3 className="section-title">Le parking</h3>
+            <p>
+              Une voiture est le seul achat du jeu qui touche directement une
+              statistique : le bonus d’<b>Aura</b> est acquis une fois, au changement de
+              véhicule, et c’est la différence avec la précédente qui s’applique.
+            </p>
+            <p>
+              L’<b>entretien</b>, lui, tombe tous les vendredis sur la même facture que
+              le loyer. C’est celui-là qui ruine les gens.
+            </p>
           </section>
 
           <section>
             <h3 className="section-title">Suspicion et audit</h3>
             <p>
               Chaque manœuvre laisse une trace. À <b>{balance.suspicionAuditThreshold}</b> de
-              suspicion, un audit se déclenche. Il te faut alors un alibi ou un{' '}
-              <b>bouc émissaire</b> — un dossier monté d’avance sur un innocent, valable{' '}
-              {balance.scapegoat.staleWeeks} semaines. L’audit le consomme : la personne saute à ta
-              place, l’étage t’en veut un peu, et ta suspicion retombe. Sans couverture, c’est toi
-              qui pars.
+              suspicion, un audit se déclenche — et le seuil <b>descend de{' '}
+              {balance.auditSeuilParRang} points par grade</b> : on ne pardonne pas la
+              même chose à un {ranks[ranks.length - 1]?.name} qu’à un {ranks[0]?.name}.
+            </p>
+            <p>
+              Il te faut alors un alibi ou un <b>bouc émissaire</b> — un dossier monté
+              d’avance sur un innocent, valable {balance.scapegoat.staleWeeks} semaines.
+              L’audit le consomme : la personne saute à ta place, l’étage t’en veut un
+              peu, et ta suspicion retombe. Mais pas deux fois de suite : un second
+              coupable désigné en moins de {balance.scapegoat.reciditeWeeks} semaines,
+              et c’est la coïncidence que l’auditeur relève.
+            </p>
+            <p>
+              Sans couverture, le premier audit n’est pas la fin : <b>mise à pied</b>,
+              un tiers de ta réputation, et un dossier ouvert. Un second pendant les{' '}
+              {balance.sursisWeeks} semaines de sursis, et tu pars.
+            </p>
+            <p>
+              Ce qui fait <b>redescendre</b> la suspicion sans rien dépenser : bosser.
+              Le travail visible est le meilleur alibi qui existe.
             </p>
           </section>
 
@@ -249,12 +312,13 @@ export function Manual({
             <p>Quatre choses, toutes annoncées avant de tomber :</p>
             <ul className="manual__list">
               <li>
-                <b>L’audit RH</b>, si la suspicion dépasse{' '}
-                {balance.suspicionAuditThreshold} sans couverture.
+                <b>L’audit RH</b>, si la suspicion crève le plafond sans couverture —
+                deux fois, la seconde pendant le sursis de la première.
               </li>
               <li>
-                <b>Le burn-out</b>, après {balance.burnoutGraceWeeks} semaines de
-                Nerfs à zéro.
+                <b>Le burn-out</b>, après {balance.burnoutGraceWeeks} semaines de Nerfs
+                sous {balance.burnoutSeuil}. Chaque grade prélève sa charge nerveuse
+                tous les vendredis, et elle monte avec le poste.
               </li>
               <li>
                 <b>L’expulsion</b>, après {balance.expulsionApres} loyers impayés
@@ -264,8 +328,10 @@ export function Manual({
               </li>
               <li>
                 <b>Un loyer qui dépasse ton salaire</b> n’est pas interdit — c’est
-                juste la façon la plus rapide de perdre. Le dernier étage coûte plus
-                cher qu’un salaire de Senior.
+                juste la façon la plus rapide de perdre. Vendredi, la même facture
+                prend le loyer, le <b>train de vie de ton grade</b> et l’entretien de
+                ta voiture. Une voiture au-dessus de tes moyens met à la rue aussi
+                sûrement qu’un penthouse.
               </li>
             </ul>
           </section>

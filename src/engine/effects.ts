@@ -67,6 +67,16 @@ export function applyEffect(state: GameState, effect: Effect, targetId?: string)
 
   if (effect.targetOpinion !== undefined) applyOpinion(state, targetId, effect.targetOpinion);
 
+  if (effect.targetStats && targetId) {
+    const c = state.colleagues.find((x) => x.id === targetId);
+    if (c) {
+      for (const key of Object.keys(effect.targetStats) as StatKey[]) {
+        const delta = effect.targetStats[key];
+        if (delta !== undefined) c.stats[key] = clamp(c.stats[key] + delta, STAT_MIN, STAT_MAX);
+      }
+    }
+  }
+
   if (effect.rivalOpinion !== undefined) applyOpinion(state, findRival(state), effect.rivalOpinion);
 
   if (effect.globalOpinion !== undefined) {

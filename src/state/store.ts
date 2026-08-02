@@ -6,7 +6,7 @@
 // RNG, sauvegarde et notifie les abonnés (React).
 // ─────────────────────────────────────────────────────────────
 import type { Appearance, GameEvent, GameState, Player, TraitId } from './schema';
-import { startingColleagues } from '@data/content';
+import { genererRoster } from '@engine/roster';
 import { DEFAULT_APPEARANCE, randomName } from '@data/appearance';
 import { balance } from '@data/balance';
 import { Rng, randomSeed } from '@engine/rng';
@@ -37,6 +37,7 @@ import {
   revendreMeuble,
 } from '@engine/vieprivee';
 import { draguer, officialiser, rompre, toilettes } from '@engine/romance';
+import { acheterVoiture, revendreVoiture } from '@engine/voitures';
 import { detacher, donnerOrdre, rattacher } from '@engine/subordonnes';
 import { raiseSuspicion } from '@engine/suspicion';
 import type { OrdreKind } from './schema';
@@ -53,6 +54,10 @@ export function createInitialState(
   appearance: Appearance = DEFAULT_APPEARANCE,
   traits: TraitId[] = [],
 ): GameState {
+  // L'étage est tiré au sort, avec le générateur seedé de la partie :
+  // une même graine reproduit le même open space. C'est ce qui rend les
+  // parties rejouables ET les simulations d'équilibrage comparables.
+  const tirage = new Rng(seed, 0);
   const player: Player = {
     name: playerName?.trim() || randomName(),
     stats: { ...balance.startStats },
@@ -78,7 +83,7 @@ export function createInitialState(
     depensesSemaine: {},
     loyersImpayes: 0,
     player,
-    colleagues: structuredClone(startingColleagues),
+    colleagues: genererRoster(tirage),
     suspicion: balance.startSuspicion,
     activePlans: [],
     opportunities: [],
@@ -90,6 +95,12 @@ export function createInitialState(
     status: 'playing',
     log: [{ week: 1, text: 'Premier jour. L’open space t’attend. Le sommet aussi.', tone: 'neutral' }],
   };
+  // Le curseur du tirage est conservé : sans ça, la suite de la partie
+  // rejouerait exactement les nombres déjà consommés par la génération
+  // de l'étage, et les premières opportunités seraient corrélées au
+  // roster.
+  state.rngCursor = tirage.cursor;
+
   // Les traits posent leurs valeurs de départ AVANT que quoi que ce soit
   // d'autre ne touche à l'état : ce sont des conditions initiales, pas
   // des effets récurrents.
@@ -174,7 +185,7 @@ export class GameStore {
   ): void {
     this.state = createInitialState(seed, name, appearance, traits);
     this.slot = slot;
-    this.rng = new Rng(this.state.seed, 0);
+    this.rng = new Rng(this.state.seed, this.state.rngCursor);
     generateOpportunities(this.state, this.rng);
     assignIntents(this.state, this.rng);
     this.persist();
@@ -514,6 +525,14 @@ export class GameStore {
 
   performRevendreMeuble(id: string): ActionResult {
     return this.achat((d) => revendreMeuble(d, id));
+  }
+
+  performAcheterVoiture(id: string): ActionResult {
+    return this.achat((d) => acheterVoiture(d, id));
+  }
+
+  performRevendreVoiture(): ActionResult {
+    return this.achat((d) => revendreVoiture(d));
   }
 
   // ── Marché et casino ───────────────────────────────────────

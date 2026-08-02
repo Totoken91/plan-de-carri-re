@@ -20,6 +20,8 @@
 import type { GameState } from '@state/schema';
 import { getRank } from '@data/content';
 import { apparts } from '@data/vieprivee';
+import { trainDeVie } from './promotion';
+import { entretienVoiture } from './voitures';
 
 /** Format monétaire unique du jeu. Un seul endroit, donc un seul style. */
 export function euros(n: number): string {
@@ -57,6 +59,10 @@ export function crediter(state: GameState, montant: number): void {
 export interface LigneDePaie {
   salaire: number;
   loyer: number;
+  /** Ce que le rang oblige à dépenser : costume, déjeuners, tournées. */
+  train: number;
+  /** Entretien, carburant, parking. */
+  voiture: number;
   net: number;
   decouvert: boolean;
 }
@@ -71,8 +77,22 @@ export interface LigneDePaie {
 export function verserSalaire(state: GameState): LigneDePaie {
   const salaire = salaireDe(state);
   const loyer = loyerDe(state);
+  // Le train de vie n'est pas une taxe déguisée : c'est ce qui empêche
+  // le salaire de rendre l'argent sans objet passé le premier tiers de
+  // la partie. Sans lui, un Senior n'a plus aucune décision financière à
+  // prendre — mesuré, et c'était le cas.
+  const train = trainDeVie(state);
+  // L'entretien de la voiture était prélevé APRÈS la paie, dans un
+  // deuxième temps, avec un plancher à zéro : autrement dit il ne pouvait
+  // structurellement jamais causer d'impayé. Sur des milliers de parties
+  // simulées, y compris avec un joueur qui achetait systématiquement la
+  // voiture la plus chère à sa portée, l'expulsion n'est jamais tombée
+  // une seule fois. Une charge qui ne peut pas mettre en défaut n'est pas
+  // une charge, c'est un affichage.
+  const voiture = entretienVoiture(state);
   state.argent += salaire;
-  const decouvert = state.argent < loyer;
-  state.argent = Math.max(0, state.argent - loyer);
-  return { salaire, loyer, net: salaire - loyer, decouvert };
+  const du = loyer + train + voiture;
+  const decouvert = state.argent < du;
+  state.argent = Math.max(0, state.argent - du);
+  return { salaire, loyer, train, voiture, net: salaire - du, decouvert };
 }

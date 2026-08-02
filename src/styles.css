@@ -267,9 +267,30 @@ body {
   text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-2);
 }
 .statbar__track {
+  position: relative;
   height: 7px; border: 1px solid var(--ink-2);
   background: repeating-linear-gradient(90deg, transparent 0 9px, var(--rule-soft) 9px 10px);
 }
+/* Le seuil suivant : un trait sur la piste, pas une étiquette. La
+   distance chiffrée est déjà écrite en dessous — deux fois la même
+   information, mais l'une se lit sans lire. */
+.statbar__seuil {
+  position: absolute; top: -2px; bottom: -2px; width: 1px;
+  background: var(--ink-2); opacity: 0.7;
+}
+.statbar--palier { grid-template-rows: auto auto; row-gap: 2px; }
+/* Le palier passe à la ligne plutôt que de se faire couper : dans le
+   panneau à deux colonnes, « Transparent — 2 avant Identifié » tenait sur
+   la moitié d'une colonne et finissait en « Transparent — 2 a… ». Une
+   distance chiffrée tronquée ne sert à rien. */
+.statbar__palier {
+  grid-column: 2 / -1;
+  font-family: var(--font-form); font-size: 10.5px; line-height: 1.35;
+  color: var(--ink-2);
+  text-wrap: balance;
+}
+.statbar__palier b { color: var(--ink); letter-spacing: 0.02em; }
+.statbar__palier em { font-style: normal; color: var(--ink-soft); }
 .statbar__fill { display: block; height: 100%; transition: width 0.4s ease-out; }
 .statbar__fill--aura { background: #6a4f86; }
 .statbar__fill--rendement { background: var(--seal); }
@@ -1871,3 +1892,39 @@ body:has(.appart) { overflow: hidden; }
 .appart__body { margin-top: 0; min-height: 0; align-items: stretch; }
 .appart__scene { position: static; overflow-y: auto; }
 .appart__col { min-height: 0; overflow-y: auto; padding-right: 4px; align-content: start; }
+
+/* ══════════════════════════════════════════════════════════════
+   Parking — le seul achat qui touche une statistique
+   ──────────────────────────────────────────────────────────────
+   Toute la mise en forme sert un seul but : que l'entretien
+   hebdomadaire soit aussi visible que le prix d'achat. Le prix se
+   paie une fois et se voit tout de suite ; l'entretien se paie
+   tous les vendredis et ne se voit jamais — c'est celui-là qu'il
+   faut mettre en gras.
+   ══════════════════════════════════════════════════════════════ */
+.parking__actuelle {
+  display: flex; align-items: baseline; gap: 9px;
+  margin: 0 0 4px; font-size: 15px;
+}
+.parking__icone { font-size: 22px; line-height: 1; }
+.parking__alerte { color: var(--stamp); font-weight: 700; }
+
+/* La classe du véhicule teinte la tranche gauche du bouton : on
+   parcourt la concession du regard sans lire les prix. */
+.voiture { border-left: 3px solid var(--rule); }
+.voiture--épave { border-left-color: #7a6a58; }
+.voiture--banale { border-left-color: #5b7286; }
+.voiture--cadre { border-left-color: var(--seal); }
+.voiture--prestige { border-left-color: #6a4f86; }
+.voiture--obscène { border-left-color: var(--stamp); }
+
+/* L'échelle des rangs : un rang complet se barre, comme une liste
+   d'inscription pleine. C'est le seul endroit du jeu où l'on voit d'un
+   coup d'œil pourquoi la promotion ne tombe pas. */
+.echelle--rangs .echelle__pas { align-items: baseline; }
+.echelle--rangs .echelle__pas.is-complet { opacity: 0.62; }
+.echelle--rangs .echelle__pas.is-complet b {
+  text-decoration: line-through;
+  text-decoration-color: var(--stamp);
+}
+.alerte--siege .alerte__icone { filter: none; }

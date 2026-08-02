@@ -16,6 +16,7 @@
 // ─────────────────────────────────────────────────────────────
 import type { GameState, TraitId, TraitModKey } from '@state/schema';
 import { getTrait } from '@data/traits';
+import { palierBonus, palierFactor } from './paliers';
 
 /** Les clés qui s'additionnent (points de %). Toutes les autres se multiplient. */
 const ADDITIVE: ReadonlySet<TraitModKey> = new Set<TraitModKey>([
@@ -28,20 +29,28 @@ export function hasTrait(state: GameState, id: TraitId): boolean {
   return state.player.traits.includes(id);
 }
 
-/** Somme des modificateurs additifs. 0 si aucun trait ne joue. */
+/**
+ * Somme des modificateurs additifs. 0 si rien ne joue.
+ *
+ * Les PALIERS de stats passent par la même porte que les traits, et
+ * c'est délibéré : tout ce qui lisait déjà `traitBonus` — les aperçus
+ * chiffrés, la résolution des plans, le désamorçage — tient compte des
+ * paliers sans une ligne de plus. Deux chemins parallèles auraient fini
+ * par diverger, et l'aperçu aurait menti sur le résultat.
+ */
 export function traitBonus(state: GameState, key: TraitModKey): number {
   if (!ADDITIVE.has(key)) return 0;
   let sum = 0;
   for (const id of state.player.traits) sum += getTrait(id)?.mods?.[key] ?? 0;
-  return sum;
+  return sum + palierBonus(state, key);
 }
 
-/** Produit des modificateurs multiplicatifs. 1 si aucun trait ne joue. */
+/** Produit des modificateurs multiplicatifs. 1 si rien ne joue. */
 export function traitFactor(state: GameState, key: TraitModKey): number {
   if (ADDITIVE.has(key)) return 1;
   let f = 1;
   for (const id of state.player.traits) f *= getTrait(id)?.mods?.[key] ?? 1;
-  return f;
+  return f * palierFactor(state, key);
 }
 
 /**

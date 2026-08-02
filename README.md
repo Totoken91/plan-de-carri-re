@@ -19,7 +19,11 @@ npm install
 npm run dev        # serveur de dev
 npm run build      # typecheck + build de production
 npm run preview    # sert le build
+npm run simuler    # 2 400 parties sans interface : équilibrage
 ```
+
+`npm run simuler -- 800` pour un échantillon plus large, `-- 400 csv`
+pour une ligne par partie. Voir « Équilibrage » plus bas.
 
 ## Principe d'architecture : moteur ≠ contenu
 
@@ -883,7 +887,91 @@ alliés futurs.
 
 Le vendredi : événement hebdomadaire → résolution des plans → résolution des
 intentions → audit RH → promotion. **Suspicion** trop haute → audit ; sans alibi
-ni bouc émissaire → licenciement. **Nerfs** à zéro trop longtemps → placard.
+ni bouc émissaire → mise à pied, puis licenciement. **Nerfs** au plancher trop
+longtemps → placard.
+
+## Équilibrage : ce que 2 100 parties simulées ont dit
+
+`npm run simuler` fait tourner le vrai moteur sans interface — même store,
+mêmes données, même générateur seedé — avec sept joueurs artificiels qui
+sont des **caricatures** de styles de jeu (bourreau de travail, mondain,
+serpent, opportuniste, flambeur, équilibré, et « au hasard » comme
+plancher de mesure). Toutes jouent les mêmes graines : les open spaces,
+les événements et les opportunités sont identiques d'une colonne à
+l'autre, donc un écart est un écart de stratégie, pas de chance.
+
+Le premier passage a rendu un verdict sans appel :
+
+| | gagne | viré | burn-out | expulsé |
+|---|---|---|---|---|
+| Bourreau de travail | **100 %** | 0 % | 0 % | 0 % |
+| Au hasard | 50 % | 50 % | 0 % | 0 % |
+| Équilibré | 46 % | 54 % | 0 % | 0 % |
+
+Autrement dit : la stratégie dominante était d'appuyer cinq fois par
+semaine sur le même bouton, sans parler à personne, sans un complot,
+sans un audit ; jouer au hasard gagnait une fois sur deux ; et deux des
+quatre fins de partie n'étaient jamais tombées, pas une seule fois.
+
+Ce n'étaient pas des chiffres mal réglés. C'étaient **cinq trous de
+conception**, que les mesures ont mis à nu un par un :
+
+1. **La carrière n'était pas une compétition.** La promotion ne
+   dépendait que d'un seuil de réputation, et le fauteuil de Team Lead
+   était vide dès le premier jour. Remplir une barre ne devient un jeu
+   d'intrigue que si quelqu'un occupe la place qu'on vise. → les grades
+   d'encadrement ont un nombre de **places**, l'étage commence avec un
+   chef, et un siège disputé se joue sur un **dossier** (rendement, aura,
+   appuis) où le travail solitaire ne pèse qu'un tiers.
+2. **La Combine n'avait aucune source.** Cinq apparitions dans tout le
+   contenu, +12 au total, toutes conditionnelles. Les plans, les montages
+   et les hauts paliers étaient verrouillés derrière une statistique
+   qu'aucune action ne faisait monter : la moitié « intrigue » du jeu
+   existait sur le papier et restait fermée. → **fouiner** et
+   **comploter** l'enseignent, avec un plafond doux.
+3. **La Suspicion ne savait que monter.** Aucune action de bureau ne la
+   faisait redescendre — `easeSuspicion` était exportée et appelée nulle
+   part. Toute partie qui touchait aux complots finissait licenciée, sans
+   exception. → **bosser** est un alibi, et le premier audit sans
+   couverture est une **mise à pied**, pas la fin.
+4. **`backstabMultiplier` n'était branché nulle part.** Le champ existait
+   depuis le premier commit, commenté « plus tu montes, plus on te
+   cible », et ne servait à rien. → il élargit la fenêtre d'hostilité et
+   alourdit les coups ; le seuil d'audit descend aussi avec le grade.
+5. **Deux fins de partie étaient des lignes de code mortes.** Le
+   burn-out se déclenchait à « exactement 0 » de Nerfs, valeur qu'on
+   traverse sans s'y arrêter ; l'entretien de la voiture était prélevé
+   *après* la paie avec un plancher à zéro, donc ne pouvait
+   structurellement jamais causer d'impayé. → seuil de burn-out, charge
+   nerveuse par grade, et une facture du vendredi unique (loyer + train
+   de vie + voiture).
+
+Le banc a aussi trouvé deux vrais bugs de règle, invisibles en jouant :
+le **désamorçage était spammable** — cinq tentatives à 20 % sur la même
+personne dans la même semaine, chaque échec abaissant la chance de la
+suivante, licencié semaine 3 sans avoir rien fait de mal — et le **bouc
+émissaire était une rente** (monter un dossier, laisser la suspicion
+crever le plafond, encaisser le soulagement et la place libérée,
+recommencer : quatre départs par partie sur six collègues).
+
+Après correction :
+
+| | gagne | viré | burn-out | inachevé | sem. médiane |
+|---|---|---|---|---|---|
+| Mondain | 48 % | 49 % | 2 % | 1 % | 23 |
+| Opportuniste | 41 % | 55 % | 0 % | 4 % | 24 |
+| Équilibré | 36 % | 57 % | 0 % | 7 % | 27 |
+| Au hasard | 31 % | 54 % | 0 % | 15 % | 20 |
+| Bourreau de travail | 25 % | 73 % | 1 % | 2 % | 16 |
+| Serpent | 22 % | 54 % | 6 % | 18 % | 14 |
+| Flambeur | 17 % | 73 % | 4 % | 6 % | 19 |
+
+Aucune stratégie ne domine, la plus bête est devenue la moins bonne, et
+les plans sont réellement joués (5 à 15 par partie, contre 0,4 avant).
+L'expulsion reste à 0 % chez les IA parce qu'elles gardent toutes une
+réserve de trésorerie — elle est bien atteignable, vérifiée sur une
+partie montée exprès, mais c'est une fin que seul un joueur imprudent va
+chercher.
 
 ## Périmètre
 

@@ -1,0 +1,30 @@
+{
+  "aura": [
+    { "seuil": 0, "nom": "Transparent", "note": "On oublie ton prénom en réunion." },
+    { "seuil": 25, "nom": "Identifié", "note": "On sait qui tu es. C'est déjà ça.", "mods": { "opinionGain": 1.08 } },
+    { "seuil": 45, "nom": "Écouté", "note": "Quand tu parles, la salle attend la fin.", "mods": { "opinionGain": 1.18 }, "hebdo": { "aura": 1 } },
+    { "seuil": 65, "nom": "Influent", "note": "On te cite quand tu n'es pas là.", "mods": { "opinionGain": 1.3, "defuseChance": 6 }, "hebdo": { "aura": 1 } },
+    { "seuil": 85, "nom": "Incontournable", "note": "Les décisions t'attendent.", "mods": { "opinionGain": 1.45, "defuseChance": 12 }, "hebdo": { "aura": 2 } }
+  ],
+  "rendement": [
+    { "seuil": 0, "nom": "En rodage", "note": "Tu rends tes dossiers. En retard." },
+    { "seuil": 25, "nom": "Fiable", "note": "On te confie des choses sans vérifier.", "mods": { "reputationGain": 1.08 } },
+    { "seuil": 45, "nom": "Solide", "note": "Ton nom rassure sur une note de service.", "mods": { "reputationGain": 1.18 } },
+    { "seuil": 65, "nom": "Référence", "note": "On t'appelle quand c'est cassé.", "mods": { "reputationGain": 1.32 }, "hebdo": { "rendement": 1 } },
+    { "seuil": 85, "nom": "Homme-orchestre", "note": "Le service tiendrait mal sans toi. Tu le sais, eux aussi.", "mods": { "reputationGain": 1.5 }, "hebdo": { "rendement": 1 } }
+  ],
+  "combine": [
+    { "seuil": 0, "nom": "Maladroit", "note": "Tes manœuvres se voient à trois bureaux." },
+    { "seuil": 25, "nom": "Prudent", "note": "Tu sais fermer une porte derrière toi.", "mods": { "suspicionGain": 0.94, "planSuccess": 3 } },
+    { "seuil": 45, "nom": "Manœuvrier", "note": "Tu prépares deux coups d'avance.", "mods": { "suspicionGain": 0.86, "planSuccess": 7, "secretChance": 5 } },
+    { "seuil": 65, "nom": "Tacticien", "note": "On ne remonte plus jusqu'à toi.", "mods": { "suspicionGain": 0.78, "planSuccess": 12, "secretChance": 10 } },
+    { "seuil": 85, "nom": "Éminence grise", "note": "Personne ne sait exactement ce que tu fais. C'est le but.", "mods": { "suspicionGain": 0.68, "planSuccess": 18, "secretChance": 16 } }
+  ],
+  "nerfs": [
+    { "seuil": 0, "nom": "À bout", "note": "Tu tiens à la caféine et à l'orgueil." },
+    { "seuil": 25, "nom": "Fatigué", "note": "Ça va. Ça pourrait aller mieux.", "mods": { "nerfsCost": 0.96 } },
+    { "seuil": 45, "nom": "D'aplomb", "note": "Tu encaisses les mauvaises nouvelles sans changer de visage.", "mods": { "nerfsCost": 0.9 } },
+    { "seuil": 65, "nom": "Imperturbable", "note": "Les réunions de crise te détendent presque.", "mods": { "nerfsCost": 0.82 }, "hebdo": { "nerfs": 2 } },
+    { "seuil": 85, "nom": "De marbre", "note": "On te croit au courant de quelque chose que les autres ignorent.", "mods": { "nerfsCost": 0.72 }, "hebdo": { "nerfs": 3 } }
+  ]
+}

@@ -26,9 +26,10 @@
 // ─────────────────────────────────────────────────────────────
 import { useEffect, useState } from 'react';
 import { STAT_KEYS } from '@engine/util';
-import { getRank, nextRank, getOpportunity } from '@data/content';
-import { suspicionTier } from '@engine/suspicion';
+import { catalog, getRank, nextRank, getOpportunity } from '@data/content';
+import { seuilAudit, suspicionTier } from '@engine/suspicion';
 import { scapegoatOf, scapegoatWeeksLeft } from '@engine/scapegoat';
+import { blocagePromotion, occupants, tenantsDe, trainDeVie } from '@engine/promotion';
 import { ORDRES, placesDeSubordonnes, subordonnesDe } from '@engine/subordonnes';
 import { useGame } from './useGame';
 import { StatBar, SuspicionGauge } from './Bits';
@@ -110,8 +111,9 @@ export function DeskScreen({
   const from = rank?.reputationRequired ?? 0;
   const to = next?.reputationRequired ?? state.player.reputation;
   const progress = to > from ? ((state.player.reputation - from) / (to - from)) * 100 : 100;
-  const tier = suspicionTier(state.suspicion);
+  const tier = suspicionTier(state.suspicion, seuilAudit(state));
   const scapegoat = scapegoatOf(state);
+  const blocage = blocagePromotion(state);
   const alertes = alertesDe(state);
   const conseil = conseilDe(state);
   const landingFriday = alertes.find((a) => a.id === 'menaces')?.compte ?? 0;
@@ -247,7 +249,7 @@ export function DeskScreen({
                 <>
                   <div className="hud__stats">
                     {STAT_KEYS.map((k) => (
-                      <StatBar key={k} stat={k} value={state.player.stats[k]} />
+                      <StatBar key={k} stat={k} value={state.player.stats[k]} palier />
                     ))}
                   </div>
                   <SuspicionGauge value={state.suspicion} tier={tier} />
@@ -270,7 +272,48 @@ export function DeskScreen({
                       <dt>Trésorerie</dt>
                       <dd>{euros(state.argent)}</dd>
                     </div>
+                    <div>
+                      <dt>Train de vie</dt>
+                      <dd>{euros(trainDeVie(state))} / semaine</dd>
+                    </div>
                   </dl>
+
+                  {/* L'organigramme. Il répond à la seule question que la
+                      barre de réputation ne sait pas poser : « la place
+                      est-elle libre ? » Un rang complet se lit d'un coup
+                      d'œil, avec le nom de qui l'occupe. */}
+                  <h3 className="section-title">L’échelle</h3>
+                  <ul className="echelle echelle--rangs">
+                    {catalog.ranks
+                      .slice()
+                      .reverse()
+                      .map((r) => {
+                        const tenants = tenantsDe(state, r.id);
+                        const moi = state.player.rank === r.id;
+                        const pris = occupants(state, r.id);
+                        const complet = pris >= r.places && !moi;
+                        return (
+                          <li
+                            key={r.id}
+                            className={`echelle__pas ${moi ? 'is-on' : ''} ${complet ? 'is-complet' : ''}`}
+                          >
+                            <b>{r.name}</b>
+                            <em className="muted">
+                              {r.places > 6
+                                ? 'places à volonté'
+                                : `${pris} / ${r.places} place${r.places > 1 ? 's' : ''}`}
+                              {tenants.length > 0 && ` · ${tenants.map((c) => c.name).join(', ')}`}
+                              {moi && ' · toi'}
+                            </em>
+                          </li>
+                        );
+                      })}
+                  </ul>
+                  {blocage?.siegeManquant && (
+                    <p className="hud__cover">
+                      Tu as la réputation pour {blocage.rang.name}. Il n’y a pas la place.
+                    </p>
+                  )}
                 </>
               )}
 

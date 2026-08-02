@@ -23,7 +23,8 @@
 import type { GameState } from '@state/schema';
 import { balance } from '@data/balance';
 import { getRank, nextRank } from '@data/content';
-import { suspicionTier } from '@engine/suspicion';
+import { seuilAudit, suspicionTier } from '@engine/suspicion';
+import { blocagePromotion } from '@engine/promotion';
 import { scapegoatOf } from '@engine/scapegoat';
 import { placesDeSubordonnes, subordonnesDe } from '@engine/subordonnes';
 import { romanceDe } from '@engine/romance';
@@ -63,7 +64,35 @@ export function alertesDe(state: GameState): Alerte[] {
     });
   }
 
-  const tier = suspicionTier(state.suspicion);
+  // Le siège occupé. C'est la seule alerte qui ne signale pas un danger
+  // mais un PLAFOND : sans elle, le joueur voit sa barre de réputation
+  // pleine et rien ne se passe le vendredi, sans jamais comprendre
+  // pourquoi. Un blocage qu'on ne peut pas lire est un bug, quelle que
+  // soit l'intention derrière.
+  const b = blocagePromotion(state);
+  if (b && (b.siegeManquant || b.concurrent)) {
+    a.push({
+      id: 'siege',
+      icone: '🪑',
+      ton: 'attention',
+      titre: b.siegeManquant
+        ? `Le poste de ${b.rang.name} est pris`
+        : `${b.concurrent} passerait avant toi`,
+      detail: b.siegeManquant
+        ? `Tu as la réputation ; il n'y a pas la place. ${b.tenants.join(' et ')} ${b.tenants.length > 1 ? 'occupent' : 'occupe'} le poste. Il faut attendre un départ — ou en provoquer un.`
+        : `À poste égal, c'est son dossier qu'on regarde : plus de rendement et plus d'aura que toi. Fais-toi voir, ou fais-le trébucher.`,
+      panneau: 'stats',
+      selection: b.tenants[0]
+        ? {
+            kind: 'colleague',
+            id:
+              state.colleagues.find((c) => c.name === (b.concurrent ?? b.tenants[0]))?.id ?? '',
+          }
+        : undefined,
+    });
+  }
+
+  const tier = suspicionTier(state.suspicion, seuilAudit(state));
   if (tier === 'critique' || tier === 'surveillance') {
     const couvert = scapegoatOf(state);
     a.push({
@@ -83,7 +112,7 @@ export function alertesDe(state: GameState): Alerte[] {
       icone: '🫠',
       ton: state.player.stats.nerfs <= 8 ? 'danger' : 'attention',
       titre: `Nerfs à ${state.player.stats.nerfs}`,
-      detail: `À zéro pendant ${balance.burnoutGraceWeeks} semaines, c'est le placard. Le coin détente les fait remonter.`,
+      detail: `Sous ${balance.burnoutSeuil} pendant ${balance.burnoutGraceWeeks} semaines, c'est le placard. Le coin détente les fait remonter.`,
       selection: { kind: 'zone', id: 'detente' },
     });
   }
@@ -220,7 +249,7 @@ export function conseilDe(state: GameState): string | undefined {
   if (p.stats.nerfs <= 12) {
     return `Tes Nerfs sont à ${p.stats.nerfs}. Va glander au coin détente : à zéro trop longtemps, c’est le placard, et ça ne prévient pas.`;
   }
-  if (suspicionTier(state.suspicion) === 'critique' && !scapegoatOf(state)) {
+  if (suspicionTier(state.suspicion, seuilAudit(state)) === 'critique' && !scapegoatOf(state)) {
     return `Suspicion ${state.suspicion} et aucune couverture. Monte un dossier sur quelqu’un avant vendredi, ou arrête tout ce qui est risqué cette semaine.`;
   }
   const menace = state.colleagues.find(
@@ -233,12 +262,15 @@ export function conseilDe(state: GameState): string | undefined {
     return `Il reste ${state.opportunities.length} opportunité(s) sur le plateau. Elles disparaissent vendredi, saisies ou non.`;
   }
 
-  const suivant = nextRank(state.player.rank);
-  if (suivant) {
-    const manque = suivant.reputationRequired - p.reputation;
-    if (manque > 0 && manque <= 20) {
-      return `Encore ${manque} de réputation et tu passes ${suivant.name}. Bosser à ton poste est le chemin le plus court.`;
-    }
+  const bloc = blocagePromotion(state);
+  if (bloc?.siegeManquant) {
+    return `Tu as la réputation pour être ${bloc.rang.name}, mais ${bloc.tenants.join(' et ')} ${bloc.tenants.length > 1 ? 'tiennent' : 'tient'} le poste. On monte quand la place se libère : attends un départ, ou occupe-toi du titulaire.`;
+  }
+  if (bloc?.concurrent) {
+    return `${bloc.concurrent} a un meilleur dossier que toi pour le poste de ${bloc.rang.name} — plus de rendement, plus d’aura. Fais-toi voir, gagne des appuis, ou abîme le sien.`;
+  }
+  if (bloc && bloc.reputationManquante > 0 && bloc.reputationManquante <= 20) {
+    return `Encore ${bloc.reputationManquante} de réputation et tu passes ${bloc.rang.name}. Bosser à ton poste est le chemin le plus court.`;
   }
 
   const places = placesDeSubordonnes(state) - subordonnesDe(state).length;

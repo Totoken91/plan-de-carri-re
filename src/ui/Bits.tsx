@@ -1,4 +1,5 @@
 import type { StatKey } from '@state/schema';
+import { palierDe, palierSuivant } from '@engine/paliers';
 
 export const STAT_LABELS: Record<StatKey, string> = {
   aura: 'Aura',
@@ -7,18 +8,50 @@ export const STAT_LABELS: Record<StatKey, string> = {
   nerfs: 'Nerfs',
 };
 
-export function StatBar({ stat, value }: { stat: StatKey; value: number }) {
+/**
+ * `palier` n'est vrai que pour le joueur. Sur la fiche d'un collègue on
+ * affiche une valeur brute : les seuils nommés sont des OBJECTIFS, et on
+ * ne donne pas d'objectifs à quelqu'un qu'on ne joue pas — ça ajouterait
+ * quatre lignes de texte par collègue sans rien dire de plus.
+ */
+export function StatBar({
+  stat,
+  value,
+  palier = false,
+}: {
+  stat: StatKey;
+  value: number;
+  palier?: boolean;
+}) {
   const low = stat === 'nerfs' && value <= 25;
+  const p = palier ? palierDe(value, stat) : undefined;
+  const next = palier ? palierSuivant(value, stat) : undefined;
   return (
-    <div className="statbar">
+    <div className={`statbar ${palier ? 'statbar--palier' : ''}`}>
       <span className="statbar__label">{STAT_LABELS[stat]}</span>
       <span className="statbar__track">
         <span
           className={`statbar__fill statbar__fill--${stat} ${low ? 'is-low' : ''}`}
           style={{ width: `${value}%` }}
         />
+        {/* Le seuil suivant, marqué sur la piste : on voit d'un coup
+            d'œil s'il est à portée de la semaine ou hors de vue. */}
+        {next && <span className="statbar__seuil" style={{ left: `${next.seuil}%` }} />}
       </span>
       <span className="statbar__value">{Math.round(value)}</span>
+      {p && (
+        <span className="statbar__palier" title={p.note}>
+          <b>{p.nom}</b>
+          {next ? (
+            <em>
+              {' '}
+              — {next.seuil - Math.round(value)} avant {next.nom}
+            </em>
+          ) : (
+            <em> — palier maximum</em>
+          )}
+        </span>
+      )}
     </div>
   );
 }

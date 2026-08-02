@@ -1,0 +1,123 @@
+[
+  {
+    "id": "scooter",
+    "nom": "Scooter 50 cm³",
+    "marque": "d'occasion, kilométrage inconnu",
+    "description": "Il démarre une fois sur deux. On te voit arriver de loin, au bruit.",
+    "icone": "🛵",
+    "prix": 600,
+    "entretien": 15,
+    "aura": 0,
+    "classe": "épave"
+  },
+  {
+    "id": "citadine_vieille",
+    "nom": "Citadine 2004",
+    "marque": "198 000 km",
+    "description": "Portière avant gauche d'une autre couleur. Elle roule, c'est tout ce qu'on lui demande.",
+    "icone": "🚗",
+    "prix": 1800,
+    "entretien": 40,
+    "aura": 1,
+    "classe": "épave"
+  },
+  {
+    "id": "citadine",
+    "nom": "Citadine récente",
+    "marque": "reprise garage",
+    "description": "Propre, anonyme, sans reproche. Exactement comme la voiture de neuf personnes de l'étage.",
+    "icone": "🚙",
+    "prix": 9500,
+    "entretien": 90,
+    "aura": 3,
+    "classe": "banale"
+  },
+  {
+    "id": "break",
+    "nom": "Break familial",
+    "marque": "diesel, 5 places",
+    "description": "La voiture de quelqu'un qui a renoncé à quelque chose. On ne sait jamais à quoi.",
+    "icone": "🚐",
+    "prix": 16000,
+    "entretien": 130,
+    "aura": 4,
+    "classe": "banale"
+  },
+  {
+    "id": "berline",
+    "nom": "Berline de fonction",
+    "marque": "gris métallisé",
+    "description": "Le premier modèle que le parking remarque. Elle dit « cadre » sans avoir à le dire.",
+    "icone": "🚘",
+    "prix": 34000,
+    "entretien": 240,
+    "aura": 8,
+    "classe": "cadre"
+  },
+  {
+    "id": "suv",
+    "nom": "SUV premium",
+    "marque": "jantes 20 pouces",
+    "description": "Trop grand pour la place que tu as. C'est un peu le principe.",
+    "icone": "🚙",
+    "prix": 58000,
+    "entretien": 380,
+    "aura": 12,
+    "classe": "cadre"
+  },
+  {
+    "id": "coupe",
+    "nom": "Coupé allemand",
+    "marque": "boîte auto, cuir",
+    "description": "Deux portes, quatre places théoriques. Personne au bureau ne demande plus ce que tu gagnes.",
+    "icone": "🏎",
+    "prix": 92000,
+    "entretien": 620,
+    "aura": 17,
+    "classe": "prestige"
+  },
+  {
+    "id": "electrique",
+    "nom": "Électrique haut de gamme",
+    "marque": "sans concession, sauf sur le prix",
+    "description": "Silencieuse. Le seul modèle qui te fasse passer pour quelqu'un de bien ET de riche.",
+    "icone": "⚡",
+    "prix": 128000,
+    "entretien": 410,
+    "aura": 21,
+    "classe": "prestige"
+  },
+  {
+    "id": "gt",
+    "nom": "Grand tourisme",
+    "marque": "V8, deux places",
+    "description": "Elle ne sert à rien et coûte une maison. C'est tout ce qu'on lui demande.",
+    "icone": "🏁",
+    "prix": 260000,
+    "entretien": 1400,
+    "aura": 28,
+    "classe": "prestige"
+  },
+  {
+    "id": "supercar",
+    "nom": "Supercar",
+    "marque": "portes en élytre",
+    "description": "Le gardien du parking te salue par ton nom depuis qu'elle est là.",
+    "icone": "🚀",
+    "prix": 520000,
+    "entretien": 3200,
+    "aura": 36,
+    "classe": "obscène"
+  },
+  {
+    "id": "hypercar",
+    "nom": "Hypercar",
+    "marque": "série de 40 exemplaires",
+    "description": "Tu ne la conduis pas au bureau. Tout le monde sait quand même qu'elle existe.",
+    "icone": "👑",
+    "prix": 1400000,
+    "entretien": 9000,
+    "aura": 48,
+    "classe": "obscène"
+  }
+]

@@ -14,7 +14,8 @@
     "bosser": {
       "rendement": 4,
       "reputation": 6,
-      "nerfs": -12
+      "nerfs": -12,
+      "suspicion": -1
     },
     "cafe": {
       "opinion": 10,
@@ -22,11 +23,13 @@
     },
     "fouiner": {
       "suspicionRisk": 25,
-      "suspicionOnCaught": 8
+      "suspicionOnCaught": 8,
+      "combine": 3
     },
     "comploter": {
       "preparationGain": 25,
-      "suspicionPerPrep": 3
+      "suspicionPerPrep": 3,
+      "combine": 2
     },
     "glander": {
       "nerfs": 20,
@@ -44,7 +47,8 @@
     "opinionOnFail": -14,
     "staleWeeks": 4,
     "auditSuspicionRelief": 45,
-    "auditWitnessOpinion": -8
+    "auditWitnessOpinion": -8,
+    "reciditeWeeks": 6
   },
   "plan": {
     "combineWeight": 0.8,
@@ -94,5 +98,9 @@
     "fraisTransaction": 0.6,
     "tuyauBonus": 0.16
   },
-  "expulsionApres": 2
+  "expulsionApres": 2,
+  "turnoverParSemaine": 5,
+  "auditSeuilParRang": 4,
+  "sursisWeeks": 8,
+  "burnoutSeuil": 8
 }
