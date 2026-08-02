@@ -355,6 +355,54 @@ Ce qui distingue un archétype, c'est sa **silhouette** : capuche, queue de
 cheval, cheveux en rideau, crâne dégarni. Un collègue doit se reconnaître
 à 20 px, réduit à sa découpe.
 
+### Les icônes : dessinées, jamais empruntées à une police
+
+Il n'y a **aucun emoji** dans le jeu. Un emoji n'est pas un dessin, c'est
+une demande de dessin adressée au système d'exploitation : le même
+caractère devient une vignette bombée sous Windows, un aplat sous
+Android, une image 3D sous macOS, et un rectangle vide partout où la
+police ne l'a pas. Trois conséquences, dont aucune n'était acceptable :
+
+- la palette est tenue au dixième près par `scripts/audit-palette.mjs`, et
+  un emoji fait entrer une dizaine de couleurs saturées **hors de portée**
+  de tout contrôle ;
+- les hauteurs optiques et les poids de trait ne s'accordent pas d'un
+  glyphe à l'autre, donc une liste d'actions ne s'aligne jamais vraiment ;
+- rien ne réagit à l'encre : une icône de bouton désactivé doit pâlir avec
+  son libellé, un emoji reste vif à côté d'un texte gris.
+
+`src/ui/icones.tsx` porte les 83 dessins, tous sur une grille de 24, au
+trait, en `currentColor`, avec une épaisseur unique (1,7). Une icône
+hérite donc de la couleur du texte — elle pâlit quand il pâlit, rougit
+dans une alerte, verdit dans une ligne favorable — et vaut `1em`, donc
+elle suit la taille de ce qui l'entoure. L'épaisseur unique n'est pas un
+détail de style : c'est ce qui donne à 83 dessins l'air d'une seule main.
+
+Trois points d'entrée :
+
+| | |
+|---|---|
+| `<Icone nom="berline" />` | dans le DOM, taille = `1em` |
+| `<IconeSvg nom="oeil" x y />` | **dans** le plateau isométrique, en unités de la scène |
+| `<Jetons pleins={3} total={5} />` | la rangée de points d'action |
+
+**La règle d'architecture est tenue** : le contenu (`voitures.json`,
+`depenses.json`, `opportunities.json`, …) ne porte plus un glyphe mais un
+NOM d'icône. Les données restent ignorantes du rendu, et `icones.tsx` est
+le seul endroit qui sait à quoi ressemble une « berline ». Un nom inconnu
+tombe sur un carré barré — visible, jamais une case vide.
+
+Deux pièges rencontrés, tous deux invisibles à la lecture du code :
+
+- **collision de classe.** `.icone` désignait déjà, depuis l'écran du
+  poste de travail, une icône de BUREAU — celle qu'on double-clique sur
+  un fond sombre. Les pictogrammes en héritaient et s'affichaient en
+  blanc sur du papier beige : parfaitement présents dans le DOM,
+  parfaitement invisibles. D'où `.picto`.
+- **`width="1em"` en attribut SVG** ne résout pas pareil sur les deux
+  axes : les icônes sortaient en 14 × 12 au lieu d'être carrées. La
+  taille se pose en CSS, pas en attribut.
+
 ### Deux règles d'interface
 
 1. **Aucun bouton muet.** Toute action affiche ses deltas exacts et sa

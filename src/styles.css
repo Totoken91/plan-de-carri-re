@@ -482,7 +482,7 @@ body {
   border-left: 2px solid var(--rule); padding-left: 7px; flex-shrink: 0;
 }
 .agendaitem:hover { background: var(--paper-2); }
-.agendaitem__icon { font-size: 15px; flex-shrink: 0; }
+.agendaitem__icon { font-size: 16px; flex-shrink: 0; color: var(--ink-2); }
 .agendaitem__body { flex: 1; min-width: 0; }
 .agendaitem__body b { font-family: var(--font-title); font-weight: 700; }
 .agendaitem__body em { color: var(--ink-2); font-style: italic; }
@@ -569,7 +569,7 @@ body {
   background: var(--paper-2); border: 1px solid var(--rule);
   border-left: 3px solid var(--ink-2); padding: 11px 13px;
 }
-.intentcard__icon { font-size: 17px; line-height: 1.2; }
+.intentcard__icon { font-size: 18px; line-height: 1; color: var(--ink-2); }
 .intentcard__label { font-size: 14px; font-weight: 600; }
 .intentcard__label em {
   font-family: var(--font-form); font-style: normal; font-size: 11px;
@@ -591,7 +591,7 @@ body {
 .act:hover:not(:disabled) { background: var(--paper-2); }
 .act:disabled { opacity: 0.4; cursor: not-allowed; }
 .act--danger:hover:not(:disabled) { background: rgba(158, 52, 40, 0.09); }
-.act__icon { font-size: 17px; line-height: 1.3; flex-shrink: 0; width: 20px; }
+.act__icon { font-size: 18px; line-height: 1; flex-shrink: 0; width: 22px; color: var(--ink-2); }
 .act__body { flex: 1; min-width: 0; }
 .act__head { display: flex; align-items: baseline; gap: 9px; }
 .act__label { font-family: var(--font-title); font-weight: 700; font-size: 15px; }
@@ -771,8 +771,6 @@ body {
 /* Les icônes viennent du contenu sous forme d'emoji. En couleur, elles
    se lisent comme des autocollants posés sur un décor en aplats. On les
    ramène au monochrome : elles redeviennent des pictogrammes gravés. */
-.iso-glyph { filter: grayscale(1) brightness(1.9) contrast(1.15); }
-.iso-glyph--dark { filter: grayscale(1) brightness(0.35) contrast(1.3); }
 
 /* Verrou de plan : la raison en clair, pas un simple grisé muet */
 .plan__prep--locked { color: var(--stamp); font-style: italic; }
@@ -1364,7 +1362,7 @@ body {
 .ordres { display: grid; gap: 8px; margin-top: 6px; }
 .ordre { border: 1px solid var(--rule-soft); padding: 8px 10px; }
 .ordre__head { display: flex; align-items: baseline; gap: 7px; }
-.ordre__icone { font-size: 15px; }
+.ordre__icone { font-size: 16px; color: var(--ink-2); }
 .ordre__head em { margin-left: auto; font-family: var(--font-form); font-size: 11px; }
 .ordre__desc { font-size: 12.5px; margin: 3px 0 6px; }
 .ordre__cible, .appart__col select {
@@ -1446,7 +1444,7 @@ body {
 
 /* Le pictogramme des toilettes : petit, mais c'est lui qui nomme la
    pièce à l'échelle de jeu. */
-.iso-wc__signe { font-size: 13px; }
+.iso-wc__signe { color: var(--iso-signe, #6f7d8c); }
 
 /* ══════════════════════════════════════════════════════════════
    Cliquer sur le plateau
@@ -1830,7 +1828,7 @@ body:has(.coque) { overflow: hidden; }
 }
 .dock__bouton:hover { background: var(--paper-hi); border-color: var(--rule-soft); }
 .dock__bouton.is-on { background: var(--ink); color: var(--paper-hi); border-color: var(--ink); }
-.dock__glyphe { font-size: 14px; }
+.dock__glyphe { font-size: 16px; display: inline-flex; }
 .dock__pastille {
   min-width: 16px; height: 16px; display: grid; place-items: center; padding: 0 3px;
   background: var(--stamp); color: var(--paper-hi);
@@ -1864,7 +1862,7 @@ body:has(.coque) { overflow: hidden; }
   .barre { grid-template-columns: 1fr auto; row-gap: 8px; }
   .objectif { grid-column: 1 / -1; order: 3; }
   .dock__bouton { padding: 6px 8px; font-size: 0; gap: 0; }
-  .dock__glyphe { font-size: 16px; }
+  .dock__glyphe { font-size: 18px; }
 }
 
 
@@ -1906,7 +1904,7 @@ body:has(.appart) { overflow: hidden; }
   display: flex; align-items: baseline; gap: 9px;
   margin: 0 0 4px; font-size: 15px;
 }
-.parking__icone { font-size: 22px; line-height: 1; }
+.parking__icone { line-height: 0; color: var(--ink-2); }
 .parking__alerte { color: var(--stamp); font-weight: 700; }
 
 /* La classe du véhicule teinte la tranche gauche du bouton : on
@@ -1928,3 +1926,51 @@ body:has(.appart) { overflow: hidden; }
   text-decoration-color: var(--stamp);
 }
 .alerte--siege .alerte__icone { filter: none; }
+
+/* ══════════════════════════════════════════════════════════════
+   Icônes — un seul trait, la couleur du texte
+   ──────────────────────────────────────────────────────────────
+   Tout est en `currentColor` et en `1em`, donc une icône se règle
+   comme du texte : on change la taille et la couleur du parent,
+   jamais celles de l'icône. Elle pâlit avec un bouton désactivé,
+   rougit dans une alerte, verdit dans une ligne favorable — sans
+   qu'aucune règle ne la vise nommément.
+
+   Le calage vertical est le seul réglage qui lui appartient en
+   propre : un carré de 1em posé sur la ligne de base dépasse
+   visuellement d'environ un septième de cadratin, parce que les
+   minuscules, elles, ne descendent pas jusque-là.
+   ══════════════════════════════════════════════════════════════ */
+.picto {
+  display: inline-block;
+  width: 1em; height: 1em;
+  vertical-align: -0.145em;
+  flex: none;
+}
+/* Une icône seule dans son conteneur n'a personne avec qui s'aligner :
+   on la recentre plutôt que de la caler sur une ligne de base absente. */
+.act__icon .picto,
+.voyant__icone .picto,
+.dock__glyphe .picto,
+.parking__icone .picto,
+.intentcard__icon .picto,
+.agendaitem__icon .picto,
+.ordre__icone .picto,
+.icone__glyphe .picto { vertical-align: middle; }
+
+.jetons { vertical-align: middle; display: inline-block; }
+
+/* Sur le plateau, l'icône d'intention prend la couleur du cartouche :
+   claire sur fond sombre, rouge quand c'est une menace. */
+.iso-intent__icone { color: #cfc9bb; }
+.iso-intent--threat .iso-intent__icone { color: #e8b3a8; }
+.iso-intent--good .iso-intent__icone { color: #9fd0ba; }
+.iso-intent--scheme .iso-intent__icone { color: #e2c489; }
+
+/* Le pouce du conseil et la croix de fermeture : des icônes, plus des
+   caractères, donc plus de réglage de police à faire tenir. */
+.conseil__bascule .picto { font-size: 15px; }
+.btn--ghost .picto { font-size: 13px; }
+.btn__warn .picto { font-size: 13px; }
+.lock .picto { font-size: 12px; }
+.tag--hold .picto { font-size: 12px; }

@@ -21,6 +21,7 @@ import { conjointDe, romanceDe } from '@engine/romance';
 import { ORDRES, peutEtreRattache, placesDeSubordonnes, subordonnesDe } from '@engine/subordonnes';
 import { useGame } from './useGame';
 import type { ActionResult } from '@engine/actions';
+import { Icone } from './icones';
 
 const R = balance.romance;
 
@@ -96,7 +97,7 @@ export function BlocRomance({
           onClick={() => onResult(store.performDraguer(c.id))}
           title={prisAilleurs ? `Tu es avec ${conjoint!.name}.` : undefined}
         >
-          <span className="act__icon">💬</span>
+          <span className="act__icon"><Icone nom="bulle" /></span>
           <span className="act__body">
             <span className="act__head">
               <span className="act__label">Draguer</span>
@@ -115,7 +116,7 @@ export function BlocRomance({
           disabled={sansPA || r.niveau < R.seuilLiaison}
           onClick={() => onResult(store.performToilettes(c.id))}
         >
-          <span className="act__icon">🚻</span>
+          <span className="act__icon"><Icone nom="toilettes" /></span>
           <span className="act__body">
             <span className="act__head">
               <span className="act__label">Les toilettes du troisième</span>
@@ -139,7 +140,7 @@ export function BlocRomance({
             disabled={bloque || r.niveau < R.seuilCouple || !!conjoint}
             onClick={() => onResult(store.performOfficialiser(c.id))}
           >
-            <span className="act__icon">💍</span>
+            <span className="act__icon"><Icone nom="alliance" /></span>
             <span className="act__body">
               <span className="act__head">
                 <span className="act__label">Officialiser</span>
@@ -162,7 +163,7 @@ export function BlocRomance({
             disabled={bloque}
             onClick={() => onResult(store.performRompre(c.id))}
           >
-            <span className="act__icon">✂</span>
+            <span className="act__icon"><Icone nom="ciseaux" /></span>
             <span className="act__body">
               <span className="act__head">
                 <span className="act__label">Rompre</span>
@@ -250,7 +251,7 @@ export function BlocSubordonne({
           {ORDRES.map((o) => (
             <div key={o.kind} className="ordre">
               <div className="ordre__head">
-                <span className="ordre__icone">{o.icone}</span>
+                <span className="ordre__icone"><Icone nom={o.icone} /></span>
                 <b>{o.nom}</b>
                 <em className="muted">{o.semaines} sem.</em>
               </div>
@@ -337,7 +338,7 @@ export function BlocDepenses({
               disabled={!!raison}
               onClick={() => onResult(store.performDepense(d.id, cible?.id))}
             >
-              <span className="act__icon">{d.icone}</span>
+              <span className="act__icon"><Icone nom={d.icone} /></span>
               <span className="act__body">
                 <span className="act__head">
                   <span className="act__label">{d.nom}</span>
@@ -404,7 +405,7 @@ export function BlocToilettes({ onResult }: { onResult: (r: ActionResult) => voi
             disabled={bloque}
             onClick={() => onResult(store.performToilettes(c.id))}
           >
-            <span className="act__icon">🚻</span>
+            <span className="act__icon"><Icone nom="toilettes" /></span>
             <span className="act__body">
               <span className="act__head">
                 <span className="act__label">{c.name}</span>

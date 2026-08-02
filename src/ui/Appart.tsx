@@ -25,6 +25,7 @@ import { Figure } from './sprites';
 import { Tutorial } from './Tutorial';
 import { tutorialSeen } from './tutorial';
 import { GooFilter } from './sprites';
+import { Icone, Jetons } from './icones';
 
 type Onglet = 'week-end' | 'logement' | 'parking' | 'marche';
 
@@ -60,8 +61,10 @@ export function Appart({ onLundi }: { onLundi: () => void }) {
         <div className="appart__compteurs">
           <span className="appart__argent">{euros(state.argent)}</span>
           <span className="topbar__ap" title="Ce que tu peux faire de ton week-end">
-            {'●'.repeat(state.weekendPointsRemaining)}
-            {'○'.repeat(Math.max(0, (logement?.pointsWeekend ?? 2) - state.weekendPointsRemaining))}
+            <Jetons
+              pleins={state.weekendPointsRemaining}
+              total={logement?.pointsWeekend ?? 2}
+            />
             <em> {state.weekendPointsRemaining} week-end</em>
           </span>
         </div>
@@ -131,7 +134,7 @@ export function Appart({ onLundi }: { onLundi: () => void }) {
                 <g key={id}>
                   <ellipse cx={x} cy={y + 3} rx="13" ry="3.4" className="appart__pose" />
                   <text className="appart__meuble" x={x} y={y} textAnchor="middle">
-                    {m.icone}
+                    <Icone nom={m.icone} taille={17} />
                   </text>
                 </g>
               );
@@ -189,7 +192,7 @@ export function Appart({ onLundi }: { onLundi: () => void }) {
                         disabled={!!raison}
                         onClick={() => flash(store.performActivite(a.id, cibleId || undefined))}
                       >
-                        <span className="act__icon">{a.icone}</span>
+                        <span className="act__icon"><Icone nom={a.icone} /></span>
                         <span className="act__body">
                           <span className="act__head">
                             <span className="act__label">{a.nom}</span>
@@ -199,7 +202,9 @@ export function Appart({ onLundi }: { onLundi: () => void }) {
                           </span>
                           <span className="act__summary">{raison ?? a.description}</span>
                         </span>
-                        <span className="act__cost">{a.cout} ⬤</span>
+                        <span className="act__cost">
+                          <Jetons pleins={a.cout} total={a.cout} taille={7} />
+                        </span>
                       </button>
                     );
                   })}
@@ -220,7 +225,7 @@ export function Appart({ onLundi }: { onLundi: () => void }) {
                     disabled={state.argent < suivant.prix}
                     onClick={() => flash(store.performDemenager())}
                   >
-                    <span className="act__icon">🔑</span>
+                    <span className="act__icon"><Icone nom="cle" /></span>
                     <span className="act__body">
                       <span className="act__head">
                         <span className="act__label">{suivant.nom}</span>
@@ -284,7 +289,7 @@ export function Appart({ onLundi }: { onLundi: () => void }) {
                           )
                         }
                       >
-                        <span className="act__icon">{m.icone}</span>
+                        <span className="act__icon"><Icone nom={m.icone} /></span>
                         <span className="act__body">
                           <span className="act__head">
                             <span className="act__label">{m.nom}</span>

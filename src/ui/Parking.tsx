@@ -10,6 +10,7 @@ import type { ActionResult } from '@engine/actions';
 import { VOITURES, voitureDe } from '@engine/voitures';
 import { euros, salaireDe } from '@engine/argent';
 import { useGame } from './useGame';
+import { Icone } from './icones';
 
 export function Parking({ onResult }: { onResult: (r: ActionResult) => void }) {
   const { state, store } = useGame();
@@ -24,7 +25,7 @@ export function Parking({ onResult }: { onResult: (r: ActionResult) => void }) {
         {actuelle ? (
           <>
             <p className="parking__actuelle">
-              <span className="parking__icone">{actuelle.icone}</span>
+              <span className="parking__icone"><Icone nom={actuelle.icone} taille={26} /></span>
               <b>{actuelle.nom}</b> <em className="muted">{actuelle.marque}</em>
             </p>
             <p className="muted">{actuelle.description}</p>
@@ -65,7 +66,7 @@ export function Parking({ onResult }: { onResult: (r: ActionResult) => void }) {
                 disabled={possede || tropCher}
                 onClick={() => onResult(store.performAcheterVoiture(v.id))}
               >
-                <span className="act__icon">{v.icone}</span>
+                <span className="act__icon"><Icone nom={v.icone} /></span>
                 <span className="act__body">
                   <span className="act__head">
                     <span className="act__label">{v.nom}</span>

@@ -13,6 +13,7 @@ import { MAX_DEFAUTS, TRAIT_BUDGET, defauts, qualites } from '@data/traits';
 import { apparts, casino, titres } from '@data/vieprivee';
 import { euros } from '@engine/argent';
 import { ORDRES } from '@engine/subordonnes';
+import { Icone } from './icones';
 
 export function Manual({
   onClose,
@@ -32,7 +33,7 @@ export function Manual({
         <header className="manual__head">
           <h2 className="manual__title">Règlement intérieur</h2>
           <button className="btn btn--ghost" onClick={onClose} aria-label="Fermer">
-            ✕
+            <Icone nom="croix" />
           </button>
         </header>
 
@@ -368,7 +369,7 @@ export function Manual({
               {ORDRES.map((o) => (
                 <div key={o.kind} className="manual__pair">
                   <dt>
-                    {o.icone} {o.nom}
+                    <><Icone nom={o.icone} /> {o.nom}</>
                   </dt>
                   <dd>{o.description}</dd>
                 </div>

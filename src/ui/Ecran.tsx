@@ -28,21 +28,22 @@ import { euros } from '@engine/argent';
 import { valeurPortefeuille } from '@engine/marche';
 import { useGame } from './useGame';
 import { Bourse, Casino } from './Marche';
+import { Icone } from './icones';
 
 type Appli = 'bureau' | 'tableur' | 'bourse' | 'casino' | 'messagerie';
 
 interface Icone {
   id: Appli;
   nom: string;
-  glyphe: string;
+  icone: string;
   legende: string;
 }
 
 const ICONES: Icone[] = [
-  { id: 'tableur', nom: 'Consolidé_v7_FINAL.xlsx', glyphe: '▦', legende: 'Le fichier sur lequel on te juge.' },
-  { id: 'bourse', nom: 'Marché', glyphe: '▲', legende: 'Le cours des quatre titres accessibles.' },
-  { id: 'casino', nom: 'lucky‑spin.eu', glyphe: '◈', legende: 'Un onglet qu’on referme vite.' },
-  { id: 'messagerie', nom: 'Messagerie', glyphe: '✉', legende: 'Ce qui s’est dit cette semaine.' },
+  { id: 'tableur', nom: 'Consolidé_v7_FINAL.xlsx', icone: 'tableur', legende: 'Le fichier sur lequel on te juge.' },
+  { id: 'bourse', nom: 'Marché', icone: 'courbe-haut', legende: 'Le cours des quatre titres accessibles.' },
+  { id: 'casino', nom: 'lucky‑spin.eu', icone: 'de', legende: 'Un onglet qu’on referme vite.' },
+  { id: 'messagerie', nom: 'Messagerie', icone: 'enveloppe', legende: 'Ce qui s’est dit cette semaine.' },
 ];
 
 export function Ecran({ onClose }: { onClose: () => void }) {
@@ -94,7 +95,7 @@ export function Ecran({ onClose }: { onClose: () => void }) {
                     title={ic.legende}
                   >
                     <span className="icone__glyphe" aria-hidden="true">
-                      {ic.glyphe}
+                      <Icone nom={ic.icone} taille={26} />
                     </span>
                     <span className="icone__nom">{ic.nom}</span>
                   </button>
@@ -112,7 +113,7 @@ export function Ecran({ onClose }: { onClose: () => void }) {
                       onClick={() => setAppli('bureau')}
                       aria-label="Fermer la fenêtre"
                     >
-                      ✕
+                      <Icone nom="croix" />
                     </button>
                   </div>
                   <div className="fenetre__corps">
@@ -127,7 +128,7 @@ export function Ecran({ onClose }: { onClose: () => void }) {
                           disabled={!bosser.available}
                           onClick={() => flash(store.perform(bosser.id))}
                         >
-                          <span className="act__icon">▦</span>
+                          <span className="act__icon"><Icone nom="tableur" /></span>
                           <span className="act__body">
                             <span className="act__head">
                               <span className="act__label">{bosser.label}</span>

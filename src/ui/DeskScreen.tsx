@@ -44,6 +44,7 @@ import { balance } from '@data/balance';
 import { alertesDe, conseilDe, type Alerte, type PanneauId } from './alertes';
 import { tutorialSeen } from './tutorial';
 import type { Selection } from './iso';
+import { Icone, Jetons } from './icones';
 
 type Toast = { text: string; tone: 'good' | 'bad' | 'neutral' } | null;
 
@@ -54,12 +55,12 @@ const TIER_MEANING: Record<string, string> = {
   critique: 'Audit imminent. Sans alibi ni bouc émissaire, c’est le licenciement.',
 };
 
-const PANNEAUX: Array<{ id: PanneauId; nom: string; glyphe: string }> = [
-  { id: 'stats', nom: 'Ton dossier', glyphe: '▤' },
-  { id: 'agenda', nom: 'Ce qui se trame', glyphe: '⚑' },
-  { id: 'opportunites', nom: 'Opportunités', glyphe: '◆' },
-  { id: 'perimetre', nom: 'Ton équipe', glyphe: '👥' },
-  { id: 'journal', nom: 'Journal', glyphe: '✒' },
+const PANNEAUX: Array<{ id: PanneauId; nom: string; icone: string }> = [
+  { id: 'stats', nom: 'Ton dossier', icone: 'dossier-onglets' },
+  { id: 'agenda', nom: 'Ce qui se trame', icone: 'drapeau' },
+  { id: 'opportunites', nom: 'Opportunités', icone: 'losange' },
+  { id: 'perimetre', nom: 'Ton équipe', icone: 'groupe' },
+  { id: 'journal', nom: 'Journal', icone: 'plume' },
 ];
 
 export function DeskScreen({
@@ -163,8 +164,10 @@ export function DeskScreen({
           </span>
           <span className="ressource" title="Points d’action restants cette semaine">
             <em>Semaine {state.week}</em>
-            {'●'.repeat(state.actionPointsRemaining)}
-            {'○'.repeat(Math.max(0, balance.actionPointsPerWeek - state.actionPointsRemaining))}
+            <Jetons
+              pleins={state.actionPointsRemaining}
+              total={balance.actionPointsPerWeek}
+            />
           </span>
           <span
             className={`ressource ressource--${tier}`}
@@ -192,7 +195,11 @@ export function DeskScreen({
             onClick={onEndWeek}
           >
             {state.actionPointsRemaining > 0 ? 'Terminer la semaine' : '→ Vendredi soir'}
-            {landingFriday > 0 && <span className="btn__warn">⚠ {landingFriday}</span>}
+            {landingFriday > 0 && (
+              <span className="btn__warn">
+                <Icone nom="attention" /> {landingFriday}
+              </span>
+            )}
           </button>
         </div>
       </header>
@@ -214,7 +221,7 @@ export function DeskScreen({
         <aside className="rail" aria-label="Alertes">
           {alertes.map((a) => (
             <button key={a.id} className={`voyant voyant--${a.ton}`} onClick={() => suivreAlerte(a)}>
-              <span className="voyant__icone">{a.icone}</span>
+              <span className="voyant__icone"><Icone nom={a.icone} /></span>
               {a.compte !== undefined && a.compte > 1 && (
                 <span className="voyant__compte">{a.compte}</span>
               )}
@@ -241,7 +248,7 @@ export function DeskScreen({
             <header className="panneau__tete">
               <h2>{PANNEAUX.find((p) => p.id === panneau)?.nom}</h2>
               <button className="btn btn--ghost" onClick={() => setPanneau(null)} aria-label="Fermer">
-                ✕
+                <Icone nom="croix" />
               </button>
             </header>
             <div className="panneau__corps">
@@ -335,7 +342,7 @@ export function DeskScreen({
                               setPanneau(null);
                             }}
                           >
-                            <span className="agendaitem__icon">{c.intent!.icon}</span>
+                            <span className="agendaitem__icon"><Icone nom={c.intent!.icon} /></span>
                             <span className="agendaitem__body">
                               <b>{c.name}</b> — {c.intent!.label}
                             </span>
@@ -368,7 +375,7 @@ export function DeskScreen({
                               setPanneau(null);
                             }}
                           >
-                            <span className="agendaitem__icon">{def.icon}</span>
+                            <span className="agendaitem__icon"><Icone nom={def.icon} /></span>
                             <span className="agendaitem__body">
                               <b>{def.title}</b>
                               {target && <em> · {target.name}</em>}
@@ -400,7 +407,8 @@ export function DeskScreen({
                         >
                           <span className="agendaitem__icon">
                             {c.ordre
-                              ? (ORDRES.find((o) => o.kind === c.ordre!.kind)?.icone ?? '📋')
+                              ? (ORDRES.find((o) => o.kind === c.ordre!.kind)?.icone ??
+                                'presse-papier')
                               : '·'}
                           </span>
                           <span className="agendaitem__body">
@@ -445,7 +453,7 @@ export function DeskScreen({
                 className={`dock__bouton ${panneau === p.id ? 'is-on' : ''}`}
                 onClick={() => setPanneau((cur) => (cur === p.id ? null : p.id))}
               >
-                <span className="dock__glyphe">{p.glyphe}</span>
+                <span className="dock__glyphe"><Icone nom={p.icone} /></span>
                 {p.nom}
                 {compte !== undefined && compte > 0 && (
                   <span className="dock__pastille">{compte}</span>
@@ -462,7 +470,7 @@ export function DeskScreen({
               onClick={() => setConseilOuvert((o) => !o)}
               title={conseilOuvert ? 'Masquer le conseil' : 'Afficher le conseil'}
             >
-              ☞
+              <Icone nom="main" />
             </button>
             {conseilOuvert && <p className="conseil__texte">{conseil}</p>}
           </div>

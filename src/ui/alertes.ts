@@ -56,7 +56,7 @@ export function alertesDe(state: GameState): Alerte[] {
   if (state.loyersImpayes > 0) {
     a.push({
       id: 'loyer',
-      icone: '🏚',
+      icone: 'maison-fissuree',
       ton: 'danger',
       titre: `Loyer impayé (${state.loyersImpayes}/${balance.expulsionApres})`,
       detail: `Encore un et tu es expulsé. Il faut trouver ${euros(loyerDe(state))} avant vendredi — vendre des titres, revendre un meuble, ou reprendre plus petit.`,
@@ -73,7 +73,7 @@ export function alertesDe(state: GameState): Alerte[] {
   if (b && (b.siegeManquant || b.concurrent)) {
     a.push({
       id: 'siege',
-      icone: '🪑',
+      icone: 'chaise',
       ton: 'attention',
       titre: b.siegeManquant
         ? `Le poste de ${b.rang.name} est pris`
@@ -97,7 +97,7 @@ export function alertesDe(state: GameState): Alerte[] {
     const couvert = scapegoatOf(state);
     a.push({
       id: 'suspicion',
-      icone: '🔍',
+      icone: 'loupe',
       ton: tier === 'critique' ? 'danger' : 'attention',
       titre: tier === 'critique' ? 'Audit imminent' : 'On te surveille',
       detail: couvert
@@ -109,7 +109,7 @@ export function alertesDe(state: GameState): Alerte[] {
   if (state.player.stats.nerfs <= 20) {
     a.push({
       id: 'nerfs',
-      icone: '🫠',
+      icone: 'nerfs',
       ton: state.player.stats.nerfs <= 8 ? 'danger' : 'attention',
       titre: `Nerfs à ${state.player.stats.nerfs}`,
       detail: `Sous ${balance.burnoutSeuil} pendant ${balance.burnoutGraceWeeks} semaines, c'est le placard. Le coin détente les fait remonter.`,
@@ -124,7 +124,7 @@ export function alertesDe(state: GameState): Alerte[] {
   if (menaces.length > 0) {
     a.push({
       id: 'menaces',
-      icone: '⚠',
+      icone: 'attention',
       ton: 'danger',
       titre: `${menaces.length} manœuvre(s) se résolvent vendredi`,
       detail: menaces.map((c) => `${c.name} — ${c.intent!.label}`).join(' · '),
@@ -138,7 +138,7 @@ export function alertesDe(state: GameState): Alerte[] {
   if (state.opportunities.length > 0) {
     a.push({
       id: 'opportunites',
-      icone: '◆',
+      icone: 'losange',
       ton: 'attention',
       titre: `${state.opportunities.length} opportunité(s)`,
       detail: 'Elles disparaissent vendredi soir, saisies ou non.',
@@ -150,7 +150,7 @@ export function alertesDe(state: GameState): Alerte[] {
   if (state.actionPointsRemaining > 0) {
     a.push({
       id: 'pa',
-      icone: '●',
+      icone: 'jeton',
       ton: 'info',
       titre: `${state.actionPointsRemaining} point(s) d'action`,
       detail: 'Les points d’action ne se reportent pas d’une semaine sur l’autre.',
@@ -164,7 +164,7 @@ export function alertesDe(state: GameState): Alerte[] {
   if (libres > 0) {
     a.push({
       id: 'perimetre',
-      icone: '👥',
+      icone: 'groupe',
       ton: 'info',
       titre: `${libres} place(s) dans ton équipe`,
       detail: 'Un subordonné produit pour toi, rapporte, ou endosse. Il faut le rattacher.',
@@ -177,7 +177,7 @@ export function alertesDe(state: GameState): Alerte[] {
   if (sansOrdre.length > 0) {
     a.push({
       id: 'ordres',
-      icone: '📋',
+      icone: 'presse-papier',
       ton: 'info',
       titre: `${sansOrdre.length} subordonné(s) sans consigne`,
       detail: sansOrdre.map((c) => c.name).join(' · '),
@@ -197,7 +197,7 @@ export function alertesDe(state: GameState): Alerte[] {
   if (qui.length > 0) {
     a.push({
       id: 'romance',
-      icone: '💬',
+      icone: 'bulle',
       ton: 'attention',
       titre: `${qui.length} histoire(s) sur le point de retomber`,
       detail: qui.map((c) => `${c.name} (${romanceDe(c).niveau})`).join(' · '),
@@ -211,7 +211,7 @@ export function alertesDe(state: GameState): Alerte[] {
   if (suivant && state.player.reputation >= suivant.reputationRequired) {
     a.push({
       id: 'promo',
-      icone: '↑',
+      icone: 'fleche-haut',
       ton: 'bon',
       titre: `Promotion acquise : ${suivant.name}`,
       detail: 'Elle tombe à la clôture de vendredi.',
@@ -222,7 +222,7 @@ export function alertesDe(state: GameState): Alerte[] {
   if (valeurPortefeuille(state) > 0 && Math.abs(latente) >= 300) {
     a.push({
       id: 'bourse',
-      icone: latente >= 0 ? '▲' : '▼',
+      icone: latente >= 0 ? 'courbe-haut' : 'courbe-bas',
       ton: latente >= 0 ? 'bon' : 'attention',
       titre: `${latente >= 0 ? '+' : '−'}${euros(Math.abs(latente))} sur ton portefeuille`,
       detail: 'Une plus-value ne devient de l’argent qu’une fois vendue.',

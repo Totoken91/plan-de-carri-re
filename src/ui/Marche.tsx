@@ -19,6 +19,7 @@ import { coursDe, esperance, plusValue, serieDe, valeurPortefeuille } from '@eng
 import { euros } from '@engine/argent';
 import { useGame } from './useGame';
 import { CourbeMarche, Trace } from './Courbe';
+import { Icone } from './icones';
 
 /**
  * Variation depuis l'ouverture. On ne stocke que la fenêtre glissante
@@ -181,7 +182,7 @@ export function Casino({ onResult }: { onResult: (r: ActionResult) => void }) {
               disabled={state.argent < mise}
               onClick={() => onResult(store.performMiser(j.id, multiple))}
             >
-              <span className="act__icon">{j.icone}</span>
+              <span className="act__icon"><Icone nom={j.icone} /></span>
               <span className="act__body">
                 <span className="act__head">
                   <span className="act__label">{j.nom}</span>

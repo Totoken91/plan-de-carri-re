@@ -56,86 +56,128 @@
       "id": "lit",
       "nom": "Vrai lit",
       "description": "Le sommeil cesse d'être une pause technique.",
-      "icone": "🛏",
+      "icone": "lit",
       "prix": 900,
-      "hebdo": { "stats": { "nerfs": 6 } },
-      "bonus": { "repos": 6 }
+      "hebdo": {
+        "stats": {
+          "nerfs": 6
+        }
+      },
+      "bonus": {
+        "repos": 6
+      }
     },
     {
       "id": "bureau_perso",
       "nom": "Bureau et double écran",
       "description": "Tu peux enfin bosser chez toi. Ce n'est pas une bonne nouvelle.",
-      "icone": "🖥",
+      "icone": "ecran",
       "prix": 1400,
-      "bonus": { "dossiers": 8, "bourse": 4 }
+      "bonus": {
+        "dossiers": 8,
+        "bourse": 4
+      }
     },
     {
       "id": "machine_cafe",
       "nom": "Machine à café à grains",
       "description": "Celle du troisième étage devient officiellement insupportable.",
-      "icone": "☕",
+      "icone": "cafe",
       "prix": 700,
-      "hebdo": { "stats": { "nerfs": 3 } },
-      "bonus": { "recevoir": 4 }
+      "hebdo": {
+        "stats": {
+          "nerfs": 3
+        }
+      },
+      "bonus": {
+        "recevoir": 4
+      }
     },
     {
       "id": "canape",
       "nom": "Canapé d'angle",
       "description": "On y reste plus longtemps qu'on ne comptait. C'est tout l'intérêt.",
-      "icone": "🛋",
+      "icone": "canape",
       "prix": 1600,
-      "bonus": { "recevoir": 10 }
+      "bonus": {
+        "recevoir": 10
+      }
     },
     {
       "id": "sport",
       "nom": "Vélo d'appartement",
       "description": "Il servira trois semaines. Ces trois semaines comptent.",
-      "icone": "🚴",
+      "icone": "sport",
       "prix": 800,
-      "hebdo": { "stats": { "nerfs": 4 } },
-      "bonus": { "sport": 8 }
+      "hebdo": {
+        "stats": {
+          "nerfs": 4
+        }
+      },
+      "bonus": {
+        "sport": 8
+      }
     },
     {
       "id": "biblio",
       "nom": "Bibliothèque",
       "description": "Des livres que tu as lus, et d'autres qui disent aux invités qui tu voudrais être.",
-      "icone": "📚",
+      "icone": "biblio",
       "prix": 1100,
-      "hebdo": { "stats": { "combine": 2 } },
-      "bonus": { "reseaux": 6 }
+      "hebdo": {
+        "stats": {
+          "combine": 2
+        }
+      },
+      "bonus": {
+        "reseaux": 6
+      }
     },
     {
       "id": "cave",
       "nom": "Cave à vin",
       "description": "Douze bouteilles et un vocabulaire. Les deux servent à table.",
-      "icone": "🍷",
+      "icone": "verre",
       "prix": 2600,
-      "bonus": { "recevoir": 14, "diner": 12 }
+      "bonus": {
+        "recevoir": 14,
+        "diner": 12
+      }
     },
     {
       "id": "home_cinema",
       "nom": "Home cinéma",
       "description": "Une soirée chez toi devient un endroit où l'on veut être.",
-      "icone": "📽",
+      "icone": "projecteur",
       "prix": 3800,
-      "bonus": { "recevoir": 16 }
+      "bonus": {
+        "recevoir": 16
+      }
     },
     {
       "id": "art",
       "nom": "Une œuvre au mur",
       "description": "Personne ne sait si c'est bien. Tout le monde sait que c'était cher.",
-      "icone": "🖼",
+      "icone": "tableau",
       "prix": 9000,
-      "hebdo": { "stats": { "aura": 2 } },
-      "bonus": { "recevoir": 12 }
+      "hebdo": {
+        "stats": {
+          "aura": 2
+        }
+      },
+      "bonus": {
+        "recevoir": 12
+      }
     },
     {
       "id": "coffre",
       "nom": "Coffre",
       "description": "Il y a des documents qu'on ne laisse pas dans un tiroir de bureau.",
-      "icone": "🔐",
+      "icone": "coffre",
       "prix": 2200,
-      "hebdo": { "suspicion": -3 }
+      "hebdo": {
+        "suspicion": -3
+      }
     }
   ]
 }

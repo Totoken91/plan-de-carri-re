@@ -17,6 +17,7 @@ import { StatBar, OpinionPip } from './Bits';
 import { archetypeName, planViews } from './selectors';
 import { BlocDepenses, BlocRomance, BlocSubordonne, BlocToilettes } from './ViePrivee';
 import { zoneById, type Selection, type ZoneId } from './iso';
+import { Icone } from './icones';
 
 const ZONE_TEXT: Record<ZoneId, string> = {
   manager:
@@ -48,7 +49,7 @@ function ActionButton({
       onClick={onRun}
       title={opt.reason ?? opt.summary}
     >
-      <span className="act__icon">{opt.icon}</span>
+      <span className="act__icon"><Icone nom={opt.icon} /></span>
       <span className="act__body">
         <span className="act__head">
           <span className="act__label">{opt.label}</span>
@@ -136,14 +137,18 @@ export function Inspector({
             <h2 className="inspector__title">{c.name}</h2>
             <p className="inspector__sub">
               {archetypeName(c.archetype)}
-              {c.flags.includes('sous_emprise') && <span className="tag tag--hold"> ⛓️ sous emprise</span>}
+              {c.flags.includes('sous_emprise') && (
+              <span className="tag tag--hold">
+                <Icone nom="chaine" /> sous emprise
+              </span>
+            )}
               {c.flags.includes('discredite') && (
                 <span className="tag tag--bad"> réputation entamée</span>
               )}
             </p>
           </div>
           <button className="btn btn--ghost" onClick={() => onSelect(null)}>
-            ✕
+            <Icone nom="croix" />
           </button>
         </header>
 
@@ -157,7 +162,7 @@ export function Inspector({
 
         {c.intent && c.intent.kind !== 'idle' && (
           <div className={`intentcard intentcard--${c.intent.tone} intentcard--${c.intent.kind}`}>
-            <span className="intentcard__icon">{c.intent.icon}</span>
+            <span className="intentcard__icon"><Icone nom={c.intent.icon} /></span>
             <div>
               <div className="intentcard__label">
                 {c.intent.label}
@@ -275,7 +280,7 @@ export function Inspector({
         <header className="inspector__head">
           <h2 className="inspector__title">{zone.label}</h2>
           <button className="btn btn--ghost" onClick={() => onSelect(null)}>
-            ✕
+            <Icone nom="croix" />
           </button>
         </header>
         <p className="inspector__flavor">{ZONE_TEXT[zone.id]}</p>
@@ -311,12 +316,12 @@ export function Inspector({
         <div>
           <span className="inspector__tag">Opportunité · expire vendredi</span>
           <h2 className="inspector__title">
-            {def.icon} {def.title}
+            <><Icone nom={def.icon} /> {def.title}</>
           </h2>
           {target && <p className="inspector__sub">Concerne {target.name}</p>}
         </div>
         <button className="btn btn--ghost" onClick={() => onSelect(null)}>
-          ✕
+          <Icone nom="croix" />
         </button>
       </header>
 

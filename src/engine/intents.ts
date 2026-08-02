@@ -35,7 +35,7 @@ const PLOT_LABELS: Array<{ label: string; detail: string }> = [
 
 function plot(rng: Rng): Intent {
   const v = rng.pick(PLOT_LABELS)!;
-  return { kind: 'plot', label: v.label, detail: v.detail, icon: '🗂️', tone: 'threat', weeksLeft: 2 };
+  return { kind: 'plot', label: v.label, detail: v.detail, icon: 'dossier', tone: 'threat', weeksLeft: 2 };
 }
 
 // Coups montés entre collègues : l'open space a ses propres guerres, et
@@ -59,7 +59,7 @@ function scheme(rng: Rng, victim: Colleague, revenge = false): Intent {
     kind: 'scheme',
     label: rng.pick(labels)!.replace('{victim}', victim.name),
     detail: `Si ça aboutit, ${victim.name} y laisse sa réputation — et ne pèsera plus grand-chose comme appui.`,
-    icon: revenge ? '⚔️' : '🎯',
+    icon: revenge ? 'epees' : 'cible',
     tone: 'neutral',
     weeksLeft: 2,
     victimId: victim.id,
@@ -84,7 +84,7 @@ const watch = (): Intent => ({
   kind: 'watch',
   label: 'Te surveille',
   detail: 'Chaque semaine sous son œil fait monter la Suspicion.',
-  icon: '👁️',
+  icon: 'oeil',
   tone: 'threat',
   weeksLeft: 1,
 });
@@ -93,7 +93,7 @@ const gossip = (): Intent => ({
   kind: 'gossip',
   label: 'Colporte des ragots',
   detail: 'Finira par te lâcher un secret sur quelqu’un d’autre.',
-  icon: '💬',
+  icon: 'bulle',
   tone: 'good',
   weeksLeft: 1,
 });
@@ -102,7 +102,7 @@ const climb = (): Intent => ({
   kind: 'climb',
   label: 'Pousse sa propre carrière',
   detail: 'Prend du terrain. Le prochain palier sera plus disputé.',
-  icon: '📈',
+  icon: 'courbe-haut',
   tone: 'neutral',
   weeksLeft: 1,
 });
@@ -111,7 +111,7 @@ const bond = (): Intent => ({
   kind: 'bond',
   label: 'Se rapproche de toi',
   detail: 'Son opinion va continuer de monter toute seule.',
-  icon: '🤝',
+  icon: 'rapprochement',
   tone: 'good',
   weeksLeft: 1,
 });
@@ -120,7 +120,7 @@ const idle = (): Intent => ({
   kind: 'idle',
   label: 'Rien de notable',
   detail: 'Fait son travail. Ça arrive.',
-  icon: '·',
+  icon: 'jeton',
   tone: 'neutral',
   weeksLeft: 1,
 });

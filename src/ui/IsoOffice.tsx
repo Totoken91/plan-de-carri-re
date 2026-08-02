@@ -53,6 +53,7 @@ import {
   type ZoneId,
 } from './iso';
 import { attachViewport, parseViewBox } from './viewport';
+import { IconeSvg } from './icones';
 
 // ── Bulle d'intention ────────────────────────────────────────
 function IntentBubble({ c, x, y }: { c: Colleague; x: number; y: number }) {
@@ -69,10 +70,13 @@ function IntentBubble({ c, x, y }: { c: Colleague; x: number; y: number }) {
     >
       <rect x={-w / 2} y="-13" width={w} height="25" rx="3" className="iso-intent__box" />
       <path d="M -4 11.5 L 0 18 L 4 11.5 Z" className="iso-intent__tail" />
-      <text x={intent.weeksLeft > 1 ? -6 : 0} y="4" textAnchor="middle" fontSize="13"
-        className="iso-glyph">
-        {intent.icon}
-      </text>
+      <IconeSvg
+        className="iso-intent__icone"
+        nom={intent.icon}
+        x={intent.weeksLeft > 1 ? -6 : 0}
+        y={-0.5}
+        taille={15}
+      />
       {intent.weeksLeft > 1 && (
         <text x="11" y="4" textAnchor="middle" className="iso-intent__count">
           {intent.weeksLeft}
@@ -513,9 +517,7 @@ export function IsoOffice({
             return (
               <>
                 <circle cx={poignee.x} cy={poignee.y} r="1.5" fill={T.structure.metalClair} />
-                <text className="iso-wc__signe" x={signe.x} y={signe.y} textAnchor="middle">
-                  🚻
-                </text>
+                <IconeSvg className="iso-wc__signe" nom="toilettes" x={signe.x} y={signe.y} taille={17} />
                 {/* La porte EST la zone : l'emprise au sol étant nulle, la
                     surface cliquable générique n'existe pas ici. */}
                 <rect

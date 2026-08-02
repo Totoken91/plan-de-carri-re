@@ -4,6 +4,7 @@ import type { WeekSummary } from '@engine/week';
 import { describeEffect } from '@engine/preview';
 import { useGame } from './useGame';
 import { availableChoiceFlags, fillTemplate } from './selectors';
+import { Icone } from './icones';
 
 export function EventModal({ event, onDone }: { event: GameEvent; onDone: () => void }) {
   const { state, store } = useGame();
@@ -46,7 +47,11 @@ export function EventModal({ event, onDone }: { event: GameEvent; onDone: () => 
                       <span className="choice__label">
                         {/* le libellé porte lui aussi des {target}/{rival} */}
                         {fillTemplate(c.label, state)}
-                        {!flags[i] && <span className="lock"> 🔒</span>}
+                        {!flags[i] && (
+                <span className="lock">
+                  <Icone nom="cadenas" />
+                </span>
+              )}
                       </span>
                       {c.successChance !== undefined && (
                         <span className="choice__chance">{c.successChance}%</span>
